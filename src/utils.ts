@@ -1,0 +1,91 @@
+import { log } from '@clack/prompts'
+import { execAsync } from '@peiyanlu/cli-utils'
+import { castArray } from '@peiyanlu/ts-utils'
+import { dim, gray, green, rgb } from 'ansis'
+import { spawnSync } from 'node:child_process'
+import { inspect } from 'node:util'
+import { getLatestTag } from './git/commit.js'
+import { HookConfig, ReleaseContext, ReleaseHookKey, ResolvedConfig } from './types.js'
+
+
+export const info = (msg: string) => {
+  console.log(`${ rgb(33, 91, 184)(`i`) } ${ gray(msg) }`)
+}
+
+export const msg = (prefix: string, msg: string) => {
+  log.message(gray`${ rgb(33, 91, 184)(`[${ prefix }]`) } ${ msg }`)
+}
+
+export const question = (msg: string, type: 'version' | 'git' | 'npm' | 'github') => {
+  const map = {
+    version: green,
+    git: rgb(220, 94, 62),
+    npm: rgb(186, 70, 61),
+    github: rgb(64, 110, 228),
+  }
+  
+  return `${ map[type]`?` } ${ msg }`
+}
+
+export const success = (msg: string, dryRun: boolean) => {
+  const color = dryRun ? rgb(123, 115, 66) : green
+  return `${ color('✔') } ${ msg }`
+}
+
+
+export const runLifeCycleHook = async (hooks: HookConfig, key: ReleaseHookKey, dryRun: boolean) => {
+  const handler = hooks[key]
+  
+  if (typeof handler === 'function') {
+    if (!dryRun) await handler()
+    log.success(success(`${ dim`run` } ${ inspect(handler) }`, dryRun))
+    return
+  }
+  
+  return Promise.allSettled(castArray(handler).filter(Boolean).map(async hook => {
+    if (!dryRun) await execAsync(hook).catch(log.error)
+    log.success(success(hook.replace(/^echo$/, dim('echo')), dryRun))
+  }))
+}
+
+export const gitRollback = (ctx: ReleaseContext) => {
+  const { git: { currentTag, isCommitted, isTagged } } = ctx
+  
+  spawnSync('git', [ 'restore', '.' ])
+  
+  if (isTagged) {
+    spawnSync('git', [ 'tag', '--delete', currentTag ])
+  }
+  
+  spawnSync('git', [ 'reset', '--hard', isCommitted ? 'HEAD~1' : 'HEAD' ])
+}
+
+export const diff = (from: string, to: string, separator: string = '.') => {
+  const a = from.split(separator)
+  const b = to.split(separator)
+  
+  return b
+    .map((v, i) => (v === a[i]) ? dim(v) : green(v))
+    .join(separator)
+}
+
+export const stripNewlines = (str: string) =>
+  str.replace(/^\n|\n(\s+?)$/g, '')
+
+export const formatTemplate = async (ctx: ReleaseContext, config: ResolvedConfig) => {
+  const { pkg: { next } } = ctx
+  const { git: { commitMessage: cm, tagMessage: tm, tagName }, github: { releaseName: rm } } = config
+  
+  const f = (s: string, v: string) => s.replace('${version}', v)
+  
+  const latestTag = await getLatestTag() ?? ''
+  const template = tagName || (latestTag.match(/^v/) ? 'v${version}' : '${version}')
+  
+  const currentTag = f(template, next)
+  const commitMessage = f(cm, next)
+  const tagMessage = f(tm, next)
+  const releaseName = f(rm, next)
+  
+  Object.assign(ctx.git, { latestTag, currentTag, commitMessage, tagMessage })
+  Object.assign(ctx.github, { releaseName })
+}
