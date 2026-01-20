@@ -1,19 +1,20 @@
 import { log } from '@clack/prompts'
-import { execAsync } from '@peiyanlu/cli-utils'
+import { execAsync, readJsonFile } from '@peiyanlu/cli-utils'
 import { castArray } from '@peiyanlu/ts-utils'
-import { dim, gray, green, rgb } from 'ansis'
+import { dim, green, rgb } from 'ansis'
 import { spawnSync } from 'node:child_process'
+import { resolve } from 'node:path'
 import { inspect } from 'node:util'
 import { getLatestTag } from './git/commit.js'
 import { HookConfig, ReleaseContext, ReleaseHookKey, ResolvedConfig } from './types.js'
 
 
 export const info = (msg: string) => {
-  console.log(`${ rgb(33, 91, 184)(`i`) } ${ gray(msg) }`)
+  console.log(`${ rgb(33, 91, 184)(`i`) } ${ msg }`)
 }
 
 export const msg = (prefix: string, msg: string) => {
-  log.message(gray`${ rgb(33, 91, 184)(`[${ prefix }]`) } ${ msg }`)
+  log.message(`${ rgb(33, 91, 184)(`[${ prefix }]`) } ${ dim(msg) }`)
 }
 
 export const question = (msg: string, type: 'version' | 'git' | 'npm' | 'github') => {
@@ -37,7 +38,7 @@ export const runLifeCycleHook = async (hooks: HookConfig, key: ReleaseHookKey, d
   const handler = hooks[key]
   
   if (typeof handler === 'function') {
-    if (!dryRun) await handler()
+    if (!dryRun) await handler(log)
     log.success(success(`${ dim`run` } ${ inspect(handler) }`, dryRun))
     return
   }
@@ -88,4 +89,22 @@ export const formatTemplate = async (ctx: ReleaseContext, config: ResolvedConfig
   
   Object.assign(ctx.git, { latestTag, currentTag, commitMessage, tagMessage })
   Object.assign(ctx.github, { releaseName })
+}
+
+
+export const getPackageInfo = (pkgName: string, getPkgDir: (pkg: string) => string = (pkg) => `packages/${ pkg }`) => {
+  const pkgDir = resolve(getPkgDir(pkgName))
+  const pkgPath = resolve(pkgDir, 'package.json')
+  const pkg = readJsonFile(pkgPath) as {
+    name: string;
+    version: string;
+    private?: boolean;
+    publishConfig?: {
+      access: string
+      registry: string
+      [key: string]: string
+    };
+  }
+  
+  return { pkg, pkgDir, pkgPath }
 }

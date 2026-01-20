@@ -1,21 +1,31 @@
 import { intro, tasks } from '@clack/prompts'
 import { type CliOptions, eol, readJsonFile } from '@peiyanlu/cli-utils'
 import { dim, underline } from 'ansis'
-import { join } from 'node:path'
+import { join, resolve } from 'node:path'
+import { publint } from 'publint'
+import { formatMessage } from 'publint/utils'
 import { inc, ReleaseType } from 'semver'
 import { mergeConfig, resolveConfig } from './config.js'
 import { createDefaultConfig, createDefaultContext } from './defaults.js'
-import { writeChangelog } from './git/changelog.js'
-import { coloredChangeset, commitAndTag, getLog, getStatus, gitCheck, gitRollback } from './git/commit.js'
+import { generateChangelog } from './git/changelog.js'
+import {
+  coloredChangeset,
+  commitAndTag,
+  getLog,
+  getStatus,
+  gitCheck,
+  gitRollback,
+  resolveChangelogRange,
+} from './git/commit.js'
 import { runGitPrompts } from './git/prompts.js'
 import { runGithubPrompts } from './github/prompts.js'
 import { createRelease, getGithubReleaseUrl } from './github/release.js'
 import { MSG } from './messages.js'
 import { runNpmOptPrompts, runNpmPublishPrompts } from './npm/prompts.js'
-import { bump, getPackageUrl, isOtpError, npmCheck, publishNpm } from './npm/publish.js'
+import { bumpPackageVersion, getPackageUrl, isOtpError, npmCheck, publishNpm } from './npm/publish.js'
 import { abortOnError, taskEnd } from './prompts.js'
 import { ReleaseConfig, ReleaseContext, ResolvedConfig } from './types.js'
-import { diff, formatTemplate, info, msg, runLifeCycleHook, success } from './utils.js'
+import { diff, formatTemplate, getPackageInfo, info, msg, runLifeCycleHook, success } from './utils.js'
 import { getCIVersion, isPreRelease, parseVersion } from './version/bump.js'
 import { runVersionPrompts } from './version/prompts.js'
 
@@ -37,6 +47,9 @@ export class Action {
     process.env['dryRun'] = String(dryRun)
     
     const pkg = readJsonFile('package.json')
+    const pkk = getPackageInfo('', () => '.')
+    console.log(pkk)
+    
     const { version: pkgVersion, private: pkgPrivate, name: pkgName, publishConfig = {} } = pkg
     const nextVersion = inc(pkgVersion, cmdArgs as ReleaseType) ?? ''
     
@@ -71,6 +84,12 @@ export class Action {
       },
     )
     
+    
+    const { messages } = await publint({ pkgDir: resolve('.') })
+    for (const message of messages) {
+      const msg = formatMessage(message, pkg)
+      msg && info(msg)
+    }
     
     console.log()
     intro(MSG.INTRO(pkgName, dryRun))
@@ -152,7 +171,7 @@ export class Action {
       {
         title: MSG.TASK.VERSION.START,
         task: async () => {
-          await bump(next, isIncrement)
+          await bumpPackageVersion(next)
           await formatTemplate(ctx, config)
           
           const to = `(${ current }...${ diff(current, next) })`
@@ -163,24 +182,13 @@ export class Action {
     await runLifeCycleHook(hooks, 'after:bump', dryRun)
     
     // 打印 Changelog
-    const raw = await getLog(true, isIncrement)
-    const logStr = raw
-      ?.split('\n')
-      .filter(line => /^(\*\s+)?(\w+):\s(.+)\s\((\w{7})\)$/.test(line))
-      .join('\n')
+    const { from, to } = await resolveChangelogRange(isIncrement)
+    const logStr = await getLog(from, to)
     if (logStr) {
-      msg('GIT', `Changelog:${ eol(2) }` + dim(logStr))
+      msg('GIT', `Changelog:${ eol(2) }` + logStr)
       if (showChangelog) taskEnd(MSG.LOG.SHOW_CHANGELOG)
     } else {
       msg('GIT', MSG.LOG.CHANGELOG_EMPTY)
-    }
-    
-    // 打印 Changes
-    const changeset = await getStatus()
-    if (changeset) {
-      msg('GIT', `Changes:${ eol(2) }` + coloredChangeset(changeset))
-    } else {
-      msg('GIT', MSG.LOG.CHANGES_EMPTY)
     }
   }
   
@@ -190,12 +198,25 @@ export class Action {
       {
         title: MSG.TASK.CHANGELOG.START,
         task: async () => {
-          await writeChangelog(ctx, config)
+          const changelog = await generateChangelog({
+            getPkgDir() {
+              return '.'
+            },
+          })
+          Object.assign(ctx.github, { changelog })
           return success(MSG.TASK.CHANGELOG.END, dryRun)
         },
         enabled: isIncrement,
       },
     ]).catch((err) => abortOnError(err, ctx))
+    
+    // 打印 Changes
+    const changeset = await getStatus()
+    if (changeset) {
+      msg('GIT', `Changes:${ eol(2) }` + coloredChangeset(changeset))
+    } else {
+      msg('GIT', MSG.LOG.CHANGES_EMPTY)
+    }
   }
   
   async gitTask(ctx: ReleaseContext, config: ResolvedConfig) {
@@ -220,7 +241,7 @@ export class Action {
   }
   
   async npmTask(ctx: ReleaseContext, config: ResolvedConfig) {
-    const { noNpm, dryRun, isCI } = ctx
+    const { noNpm, dryRun, isCI, pkg: { name, next } } = ctx
     const { hooks } = config
     
     if (noNpm) return
@@ -241,7 +262,8 @@ export class Action {
                 throw err
               }
             })
-          const url = getPackageUrl(ctx)
+          
+          const url = getPackageUrl(name, next)
           return success(MSG.TASK.NPM.END(url), dryRun)
         },
       },

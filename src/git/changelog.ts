@@ -1,109 +1,103 @@
-import { eol, runGit } from '@peiyanlu/cli-utils'
-import { existsSync } from 'node:fs'
-import { readFile, writeFile } from 'node:fs/promises'
+import { eol } from '@peiyanlu/cli-utils'
+import { ConventionalChangelog, type Preset } from 'conventional-changelog'
+import createPreset, { DEFAULT_COMMIT_TYPES } from 'conventional-changelog-conventionalcommits'
+import { createWriteStream, existsSync, readFileSync } from 'node:fs'
+import { finished } from 'node:stream/promises'
 import { join } from 'path'
-import { getGithubUrl } from '../github/release.js'
-import { ReleaseContext, ResolvedConfig } from '../types.js'
-import { findType, mergeTypes } from './changetype.js'
-import { getLog } from './commit.js'
+import { defaultTypes } from './changetype.js'
 
 
-export const getCommits = async (isIncrement?: boolean) => {
-  const raw = await getLog(false, isIncrement)
-  return raw?.split('\n').filter(Boolean)
+interface Options {
+  /** @example () => `packages/${pkgName}` */
+  getPkgDir: () => string;
+  /** @example `${pkgName}@` */
+  tagPrefix?: string;
 }
 
-export const parseCommit = (message: string) => {
-  // const match = message.match(/^(\*\s+)?(\w+):\s(.+)\s\((\w{7})\)$/)
-  const match = message.match(/^(\w+):\s(.+)\s(\w{7})\s(\w{40})$/)
-  if (!match) return
+
+export const generateChangelog = async ({ getPkgDir, tagPrefix }: Options) => {
+  const preset: Preset = await createPreset({
+    types: defaultTypes.map((t) => ({ ...t, hidden: false })),
+  })
+  preset.writer ??= {}
   
-  return {
-    type: match[1],
-    description: match[2],
-    hash: match[3],
-    fullHash: match[4],
+  preset.writer.headerPartial = `
+## {{#if isPatch~}} <small> {{~/if~}}
+{{#if @root.linkCompare~}}
+[{{version}}](
+{{~#if @root.repository~}}
+  {{~#if @root.host}}
+    {{~@root.host}}/
+  {{~/if}}
+  {{~#if @root.owner}}
+    {{~@root.owner}}/
+  {{~/if}}
+  {{~@root.repository}}
+{{~else}}
+  {{~@root.repoUrl}}
+{{~/if~}}
+/compare/{{previousTag}}...{{currentTag}})
+{{~else}}
+{{~version}}
+{{~/if}}
+{{~#if title}} "{{title}}"
+{{~/if}}
+{{~#if date}} ({{date}})
+{{~/if}}
+{{~#if isPatch~}} </small> {{~/if}}
+`.trim() + eol(2)
+  
+  preset.writer.mainTemplate = `
+{{> header}}
+{{#if noteGroups}}
+{{#each noteGroups}}
+
+### ⚠ {{title}}
+
+{{#each notes}}
+* {{#if commit.scope}}**{{commit.scope}}:** {{/if}}{{commit.subject}} {{#if commit.hash}}([{{commit.shortHash}}](https://github.com/{{@root.owner}}/{{@root.repository}}/commit/{{commit.hash}})){{/if}}
+{{/each}}
+{{/each}}
+{{/if}}
+{{#each commitGroups}}
+
+{{#if title}}
+### {{title}}
+
+{{/if}}
+{{#each commits}}
+{{> commit root=@root}}
+{{/each}}
+{{/each}}`.trim() + eol(2)
+  
+  const pkgDir = getPkgDir()
+  
+  const generator = new ConventionalChangelog(pkgDir)
+    .readPackage()
+    .config(preset)
+    .options({ releaseCount: 1 })
+  
+  if (tagPrefix) {
+    generator.tags({ prefix: tagPrefix })
   }
-}
-
-export const classify = (commits: string[]) => {
-  const sections: Record<string, string[][]> = {}
   
-  for (const msg of commits) {
-    const parsed = parseCommit(msg)
-    if (!parsed) continue
-    const { type, description, hash, fullHash } = parsed
-    ;(sections[type] ??= []).push([ description, hash, fullHash ])
-  }
-  
-  return sections
-}
-
-export const renderChangelog = async (ctx: ReleaseContext, sections: Record<string, string[][]>) => {
-  const { github: { owner, repo }, git: { latestTag, currentTag } } = ctx
-  
-  const date = new Date().toISOString().split('T')[0]
-  const github = getGithubUrl(owner, repo)
-  
-  const title = latestTag
-    ? `## [${ currentTag }](${ github }/compare/${ latestTag }...${ currentTag }) (${ date })`
-    : `## ${ currentTag } (${ date })`
-  
-  const content = Object
-    .entries(sections)
-    .map(entry => {
-      const [ type, items ] = entry
-      const title = `### ${ findType(type) }`
-      const content = items.map(item => {
-        const [ desc, hash, fullHash ] = item
-        return `* **${ type }** ${ desc } [${ hash }](${ github }/commit/${ fullHash })`
-      }).join(eol(1))
-      return [ title, content ].join(eol(2))
-    })
-    .join(eol(2))
-  
-  
-  const footer = latestTag
-    ? `**Full Changelog**: ${ github }/compare/${ latestTag }...${ currentTag }`
+  const infile = join(pkgDir, 'CHANGELOG.md')
+  const originalChangelog = existsSync(infile)
+    ? readFileSync(infile, 'utf-8')
     : ''
   
-  return [ title, content, footer ].join(eol(3))
-}
-
-export const generateChangelog = async (ctx: ReleaseContext) => {
-  const { isIncrement } = ctx
-  const commits = await getCommits(isIncrement)
-  if (!commits) return ''
+  const writeStream = createWriteStream(infile)
   
-  const classified = classify(commits!)
-  const changelog = await renderChangelog(ctx, classified)
+  let changelog: string = ''
+  for await (const chunk of generator.write()) {
+    changelog += chunk
+    writeStream.write(chunk)
+  }
   
-  Object.assign(ctx.github, { changelog })
+  writeStream.write(originalChangelog)
+  writeStream.end()
+  
+  await finished(writeStream)
   
   return changelog
-}
-
-export const updateChangelog = async (file: string, newContent: string) => {
-  const infile = file || 'CHANGELOG.md'
-  const target = join(process.cwd(), infile)
-  const SHORT_TITLE = '# Changelog'
-  
-  const exist = (existsSync(target) ? (await readFile(target, 'utf-8')) : '').replace(/\r\n/g, '\n')
-  const hasTitle = exist.startsWith(SHORT_TITLE)
-  const old = hasTitle ? exist.slice(SHORT_TITLE.length) : exist
-  
-  const final = [ SHORT_TITLE, newContent, old ].map(k => k.trim()).join(eol(4))
-  const output = final + eol()
-  
-  await writeFile(target, output)
-  await runGit([ 'add', infile ])
-}
-
-
-export const writeChangelog = async (ctx: ReleaseContext, config: ResolvedConfig) => {
-  const { changelog: { infile, types } } = config
-  
-  mergeTypes(types)
-  const newContent = await generateChangelog(ctx)
-  await updateChangelog(infile, newContent)
 }

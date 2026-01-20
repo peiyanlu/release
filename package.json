@@ -33,15 +33,18 @@
     "@peiyanlu/ts-utils": "^0.0.4",
     "ansis": "^4.2.0",
     "commander": "^14.0.2",
+    "conventional-changelog": "^7.1.1",
+    "conventional-changelog-conventionalcommits": "^9.1.0",
     "mime-types": "^3.0.2",
     "open": "^11.0.0",
+    "publint": "^0.3.17",
     "semver": "^7.7.3",
     "tinyglobby": "^0.2.15"
   },
   "devDependencies": {
-    "@types/semver": "^7.7.1",
     "@types/mime-types": "^3.0.1",
     "@types/node": "^24.10.3",
+    "@types/semver": "^7.7.1",
     "tsdown": "^0.18.4",
     "typescript": "^5.9.3",
     "vitest": "^4.0.15"
@@ -66,7 +69,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/peiyanlu/release.git"
+    "url": "git+https://github.com/peiyanlu/release.git"
   },
   "bugs": {
     "url": "https://github.com/peiyanlu/release/issues"

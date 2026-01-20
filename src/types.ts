@@ -1,5 +1,5 @@
+import { log } from '@clack/prompts'
 import { DeepRequired } from '@peiyanlu/ts-utils'
-import { CommitType } from './git/changetype.js'
 
 
 export interface ReleaseContext {
@@ -42,6 +42,7 @@ export interface ReleaseContext {
     currentTag: string
     isCommitted: boolean
     isTagged: boolean
+    isPushed: boolean
     commitMessage: string
     tagMessage: string
     tagName: string
@@ -69,7 +70,7 @@ export type HookAction = 'bump' | 'publish' | 'push' | 'release'
 
 export type ReleaseHookKey = `${ HookTiming }:${ HookAction }`
 
-export type ReleaseHookValue = string | string[] | (() => Promise<void> | void)
+export type ReleaseHookValue = string | string[] | ((logger: typeof log) => Promise<void> | void)
 
 export type HookConfig = {
   [key in ReleaseHookKey]: ReleaseHookValue
@@ -78,15 +79,17 @@ export type HookConfig = {
 export interface ReleaseConfig {
   /**
    * 生命周期钩子配置
+   * 用于在 Release 关键阶段注入自定义逻辑（如 before/after hooks）。
    */
   hooks: HookConfig
   
   /**
    * Git 相关配置
+   * 影响提交、打 tag、推送等本地/远程 Git 行为。
    */
   git: {
     /**
-     * 是否创建提交
+     * 是否创建 Git 提交
      */
     commit: boolean | undefined
     
@@ -106,7 +109,7 @@ export interface ReleaseConfig {
     commitMessage: string
     
     /**
-     * 额外的 git commit 参数
+     * 额外的 git commit 参数（透传给 git CLI）
      */
     commitArgs: string[]
     
@@ -121,27 +124,27 @@ export interface ReleaseConfig {
     tagName: string
     
     /**
-     * 额外的 git tag 参数
+     * 额外的 git tag 参数（透传给 git CLI）
      */
     tagArgs: string[]
     
     /**
-     * 额外的 git push 参数
+     * 额外的 git push 参数（透传给 git CLI）
      */
     pushArgs: string[]
     
     /**
-     * 是否自动添加未追踪的文件
+     * 是否自动添加未追踪的文件（git add -A）
      */
     addUntrackedFiles: boolean
     
     /**
-     * 是否要求配置远程仓库
+     * 是否要求必须配置远程仓库（存在 git remote）
      */
     requireRemote: boolean
     
     /**
-     * 是否要求当前目录为 Git 仓库
+     * 是否要求当前工作目录必须是 Git 仓库
      */
     requireRepository: boolean
     
@@ -153,31 +156,33 @@ export interface ReleaseConfig {
   
   /**
    * NPM 发布相关配置
+   * 影响 npm publish 的目标路径、参数与前置校验。
    */
   npm: {
     /**
-     * 是否发布到 npm
+     * 是否启用 npm 发布流程
      */
     publish: boolean | undefined
     
     /**
-     * 发布目录路径
+     * npm 发布目标路径，对应 `npm publish <package-spec>`
      */
     publishPath: string
     
     /**
-     * 额外的 npm publish 参数
+     * 额外的 npm publish 参数（透传给 npm CLI）
      */
     pushArgs: string[]
     
     /**
-     * 是否跳过发布前检查
+     * 是否跳过发布前检查（如 ping、whoami 等校验）
      */
     skipChecks: boolean
   }
   
   /**
    * GitHub Release 相关配置
+   * 控制是否创建 Release、发布方式以及上传资源。
    */
   github: {
     /**
@@ -186,32 +191,32 @@ export interface ReleaseConfig {
     release: boolean | undefined
     
     /**
-     * Release 展示名称
+     * Release 展示名称（标题）
      */
     releaseName: string
     
     /**
-     * 是否自动生成 Release Notes (CI)
+     * 是否由 GitHub 自动生成 Release Notes（通常用于 CI）
      */
     autoGenerate: boolean
     
     /**
-     * 是否标记为预发布版本
+     * 是否标记为预发布版本（pre-release）
      */
     prerelease: boolean
     
     /**
-     * 是否创建为草稿
+     * 是否创建为草稿（draft）
      */
     draft: boolean
     
     /**
-     * GitHub Token 引用名称
+     * GitHub Token 引用名称（用于从环境变量或配置中读取）
      */
     tokenRef: string
     
     /**
-     * 需要上传的 Release 资源文件
+     * 需要上传到 Release 的资源文件列表
      */
     assets: string[]
     
@@ -219,21 +224,6 @@ export interface ReleaseConfig {
      * 是否跳过 GitHub 发布前检查
      */
     skipChecks: boolean
-  }
-  
-  /**
-   * Changelog 生成相关配置
-   */
-  changelog: {
-    /**
-     * Changelog 输入文件路径
-     */
-    infile: string
-    
-    /**
-     * 用于生成 Changelog 的提交类型映射规则
-     */
-    types: CommitType[]
   }
 }
 

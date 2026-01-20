@@ -1,18 +1,42 @@
 import { isGitRepo, runGit } from '@peiyanlu/cli-utils'
+import { dim } from 'ansis'
 import { spawnSync } from 'node:child_process'
-import { styleText } from 'node:util'
 import { clean, rcompare, valid } from 'semver'
 import { parseGithubUrl } from '../github/release.js'
 import { MSG } from '../messages.js'
 import { ReleaseContext, ResolvedConfig } from '../types.js'
 
 
-export const getBranchName = () => {
-  return runGit([ 'rev-parse', '--abbrev-ref', 'HEAD' ])
+export const getBranchName = async () => {
+  let branch = await runGit([ 'branch', '--show-current' ])
+  
+  if (!branch) {
+    // fallback for very old git
+    branch = await runGit([ 'rev-parse', '--abbrev-ref', 'HEAD' ])
+    if (branch === 'HEAD') return undefined
+  }
+  
+  return branch
 }
 
 export const getRemoteForBranch = (branch: string) => {
   return runGit([ 'config', '--get', `branch.${ branch }.remote` ])
+}
+
+export const getAllRemotes = async () => {
+  const res = await runGit([ 'remote' ])
+  return res?.split('\n').filter(Boolean) ?? []
+}
+
+export const getDefaultRemote = async (branch?: string) => {
+  const targetBranch = branch || await getBranchName()
+  return targetBranch ? await getRemoteForBranch(targetBranch) : undefined
+}
+
+export const getOtherRemotes = async (branch?: string) => {
+  const defaultRemote = await getDefaultRemote(branch)
+  const all = await getAllRemotes()
+  return all.filter(r => r !== defaultRemote)
 }
 
 export const fetchAllBranch = (remoteName = 'origin') => {
@@ -79,7 +103,7 @@ export const coloredChangeset = (log: string) => {
     .map((line) => {
       const status = line.slice(0, 2)
       const file = line.slice(3)
-      return `${ colorStatus(status) } ${ styleText([ 'dim' ], file) }`
+      return `${ colorStatus(status) } ${ dim(file) }`
     })
     .join('\n')
 }
@@ -125,7 +149,7 @@ export const getFullHash = (short: string) => {
   return runGit([ 'rev-parse', short ])
 }
 
-export const resolveChangelogRange = async (isIncrement?: boolean) => {
+export const resolveChangelogRange = async (isIncrement: boolean = true) => {
   const latestTag = await getLatestTag()
   const previousTag = await getPreviousTag(latestTag)
   
@@ -143,14 +167,9 @@ export const resolveChangelogRange = async (isIncrement?: boolean) => {
   return { from: latestTag, to: 'HEAD' }
 }
 
-export const getLog = async (print?: boolean, isIncrement?: boolean) => {
-  const format = print ? '* %s (%h)' : '%s %h %H'
-  const cmd = [ 'log', `--pretty=format:${ format }` ]
-  
-  const { from, to } = await resolveChangelogRange(isIncrement)
-  if (from) {
-    cmd.push(`${ from }...${ to }`)
-  }
+export const getLog = async (from = '', to = 'HEAD') => {
+  const cmd = [ 'log', `--pretty=format:* %s (%h)` ]
+  if (from) cmd.push(`${ from }...${ to }`)
   
   return runGit(cmd, { trim: false })
 }
@@ -176,14 +195,10 @@ export const getUpstreamArgs = async (remoteName: string) => {
   const branch = await getBranchName()
   
   if (!hasUpstream) {
-    return [ '--set-upstream', remoteName || 'origin', branch! ]
+    return [ '--set-upstream', remoteName, branch! ]
   }
   
-  if (remoteName) {
-    return [ remoteName ]
-  }
-  
-  return []
+  return [ remoteName, branch! ]
 }
 
 export const countCommitsSinceLatestTag = async () => {
@@ -260,13 +275,21 @@ export const commitAndTag = async (ctx: ReleaseContext, config: ResolvedConfig) 
   }
   
   if (push) {
-    const upstreamArgs = await getUpstreamArgs(remoteName)
-    await runGit([ 'push', ...upstreamArgs, '--follow-tags', ...pushArgs, ...args ])
+    const remotes = await getAllRemotes()
+    for (const remoteName of remotes) {
+      const upstreamArgs = await getUpstreamArgs(remoteName)
+      await runGit([ 'push', remoteName, `refs/tags/${ currentTag }`, ...args ])
+      await runGit([ 'push', ...upstreamArgs, ...pushArgs, ...args ])
+    }
+    
+    Object.assign(ctx.git, { isPushed: true })
   }
 }
 
 export const gitRollback = (ctx: ReleaseContext) => {
-  const { git: { currentTag, isCommitted, isTagged } } = ctx
+  const { git: { currentTag, isCommitted, isTagged, isPushed } } = ctx
+  
+  if (isPushed) return
   
   spawnSync('git', [ 'restore', '.' ])
   
