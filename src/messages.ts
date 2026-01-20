@@ -8,7 +8,7 @@ const t = () => green(`${ Math.floor(process.uptime()) }s`)
 export const MSG = {
   INTRO: (pkgName: string, dryRun: boolean) => `🚀  Starting release ${ yellow(pkgName) } ${ n(dryRun) }`,
   
-  OUTRO: (dryRun: boolean) => `🎉  Release finished successfully in ${ t() } ${ n(dryRun) }.`,
+  OUTRO: (dryRun: boolean) => `🎉  Release finished successfully in ${ t() } ${ n(dryRun) }`,
   
   LOG: {
     SHOW_VERSION: (version: string) => `🎉  Released ${ green(version) }`,
@@ -27,7 +27,7 @@ export const MSG = {
     NPM: {
       CHECKING: 'Checking npm registry',
       CHECKED: (registry: string, msg: string) =>
-        `NPM registry: ${ underline(dim(registry)) }${ msg ? ` ${ msg }` : '' }`,
+        `NPM registry: ${ underline(dim(registry)) }${ msg ? ` ${ underline(dim(msg)) }` : '' }`,
     },
   },
   

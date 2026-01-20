@@ -12,14 +12,24 @@ export const defaultTypes: CommitType[] = [
     description: '新增功能',
   },
   {
+    type: 'feature',
+    section: '✨ 新功能',
+    description: '新增功能',
+  },
+  {
     type: 'fix',
     section: '🐛 Bug 修复',
     description: '修复 bug',
   },
   {
-    type: 'chore',
-    section: '🎫 其他更新',
-    description: '非功能性更改',
+    type: 'perf',
+    section: '⚡ 性能优化',
+    description: '提升性能',
+  },
+  {
+    type: 'revert',
+    section: '⏪ 回退',
+    description: '回退到之前版本',
   },
   {
     type: 'docs',
@@ -32,24 +42,19 @@ export const defaultTypes: CommitType[] = [
     description: '样式或格式修改',
   },
   {
+    type: 'chore',
+    section: '🎫 其他更新',
+    description: '非功能性更改',
+  },
+  {
     type: 'refactor',
     section: '♻ 代码重构',
     description: '重构代码',
   },
   {
-    type: 'perf',
-    section: '⚡ 性能优化',
-    description: '提升性能',
-  },
-  {
     type: 'test',
     section: '✅ 测试',
     description: '测试更新',
-  },
-  {
-    type: 'revert',
-    section: '⏪ 回退',
-    description: '回退到之前版本',
   },
   {
     type: 'build',
@@ -61,6 +66,7 @@ export const defaultTypes: CommitType[] = [
     section: '🔧 CI 配置',
     description: '持续集成配置',
   },
+  // custom
   {
     type: 'config',
     section: '🔨 配置',
@@ -90,11 +96,6 @@ export const defaultTypes: CommitType[] = [
     type: 'hotfix',
     section: '🔥 热修复',
     description: '紧急修复',
-  },
-  {
-    type: 'break',
-    section: '💥 破坏性变更',
-    description: '破坏性变更',
   },
 ]
 

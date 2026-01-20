@@ -1,73 +1,87 @@
-import { log } from '@clack/prompts'
 import { runNpm } from '@peiyanlu/cli-utils'
-import { dim, underline } from 'ansis'
-import { gt } from 'semver'
+import { gt, lt } from 'semver'
 import { MSG } from '../messages.js'
 import { ReleaseContext, ResolvedConfig } from '../types.js'
 import { parseVersion } from '../version/bump.js'
 
 
-export const getRegistry = (publishConfig: Record<string, string> = {}) => {
-  const registries = publishConfig.registry
-    ? [ publishConfig.registry ]
-    : Object.keys(publishConfig)
-      .filter(key => key.endsWith('registry'))
-      .map(key => publishConfig[key])
+export const resolvePublishRegistry = (publishConfig: Record<string, string> = {}) => {
+  if (publishConfig.registry)
+    return publishConfig.registry
+  
+  const registries = Object.keys(publishConfig)
+    .filter(k => k.endsWith('registry'))
+    .map(k => publishConfig[k])
+  
   return registries[0]
 }
 
-
-export const isRegistryUp = async (registry?: string) => {
-  const registryArg = registry ? [ '--registry', registry ] : []
-  const cmd = [ 'ping', ...registryArg ]
-  return (undefined !== await runNpm(cmd))
+export const pingRegistry = async () => {
+  return (undefined !== await runNpm([ 'ping' ]))
 }
 
-
-export const isAuthenticated = (registry?: string) => {
-  const registryArg = registry ? [ '--registry', registry ] : []
-  const cmd = [ 'whoami', ...registryArg ]
-  return runNpm(cmd)
+export const getAuthenticatedUser = () => {
+  return runNpm([ 'whoami' ])
 }
 
-
-export const getLatestRegistryVersion = (name: string, tag: string, registry?: string) => {
-  const registryArg = registry ? [ '--registry', registry ] : []
-  const cmd = [ 'show', `${ name }@${ tag }`, 'version', ...registryArg ]
-  return runNpm(cmd)
+export const getVersionByTag = (name: string, tag: string) => {
+  return runNpm([ 'show', `${ name }@${ tag }`, 'version' ])
 }
 
+export const getPublishedVersion = (name: string) => {
+  return runNpm([ 'info', name, 'version' ])
+}
 
-export const getRegistryTags = async (name: string, registry?: string) => {
-  const registryArg = registry ? [ '--registry', registry ] : []
-  const cmd = [ 'view', name, 'dist-tags', '--json', ...registryArg ]
-  const res = await runNpm(cmd)
+export const resolvePublishTag = async (pkgName: string, version: string) => {
+  const { toPreRelease, preId } = parseVersion(version)
+  if (!toPreRelease) {
+    const active = await getPublishedVersion(pkgName)
+    return (active && lt(version, active)) ? 'previous' : 'latest'
+  } else {
+    return preId || 'prerelease'
+  }
+}
+
+export const getDistTags = async (name: string) => {
+  const res = await runNpm([ 'view', name, 'dist-tags', '--json' ])
   return Object.keys(JSON.parse(res || '{}'))
 }
 
-export const bump = (version: string, allowSameVersion?: boolean, args: string[] = []) => {
-  allowSameVersion && args.push(`--allow-same-version`)
+export const bumpPackageVersion = (version: string, args: string[] = [], cwd = '.') => {
   return runNpm([
     'version',
     version,
     '--no-git-tag-version',
     '--workspaces=false',
+    '--allow-same-version',
+    ...args,
+  ], { cwd })
+}
+
+export const isOtpError = (err: unknown) =>
+  err instanceof Error && /one-time password|otp/i.test(err.message)
+
+export const publishPackage = (pkg = '.', tag = 'latest', args: string[] = []) => {
+  return runNpm([
+    'publish',
+    pkg,
+    '--access',
+    'public',
+    '--tag',
+    tag,
+    '--workspaces=false',
     ...args,
   ])
 }
 
-export const resolveTag = async (version: string) => {
-  const { toPreRelease, preId } = parseVersion(version)
-  if (!toPreRelease) {
-    return 'latest'
-  } else {
-    return preId || 'next'
-  }
+export const getPackageUrl = (name: string, next: string) => {
+  return `https://www.npmjs.com/package/${ name }/v/${ next }`
 }
+
 
 export const isCollaborator = async (ctx: ReleaseContext) => {
   const { pkg: { name, publishConfig }, npm: { username } } = ctx
-  const registry = getRegistry(publishConfig)
+  const registry = resolvePublishRegistry(publishConfig)
   const registryArg = registry ? [ '--registry', registry ] : []
   
   let npmVersion = await runNpm([ '--version' ])
@@ -83,40 +97,32 @@ export const isCollaborator = async (ctx: ReleaseContext) => {
   const res = await runNpm(cmd)
   
   if (res) {
-    const collaborators = JSON.parse(res ?? '{}')
-    const permissions = collaborators[username]
-    return permissions && permissions.includes('write')
+    const collaborators: Record<string, any> = JSON.parse(res ?? '{}')
+    const permissions: string | undefined = collaborators[username]
+    return permissions?.includes('write')
   }
   
-  log.error(`Unable to verify if user ${ username } is a collaborator for ${ name }.`)
+  return false
 }
-
-
-export const getPackageUrl = (ctx: ReleaseContext) => {
-  const { pkg: { name, next } } = ctx
-  return `https://www.npmjs.com/package/${ name }/v/${ next }`
-}
-
 
 export const npmCheck = async (ctx: ReleaseContext, config: ResolvedConfig) => {
-  const { pkg: { name, current, publishConfig }, npm: { username } } = ctx
+  const { pkg: { name, current, publishConfig: { registry } }, npm: { username } } = ctx
   const { npm: { skipChecks } } = config
-  const registry = getRegistry(publishConfig)
-  const tag = await resolveTag(current)
+  const tag = await resolvePublishTag(name, current)
   
   Object.assign(ctx.npm, { tag })
   
   if (skipChecks) return ''
   
   // npm ping
-  const ping = await isRegistryUp()
+  const ping = await pingRegistry()
   if (!ping) {
     throw new Error(MSG.ERROR.NPM_REGISTRY(registry))
   }
   
   // npm whoami
   const getUser = async () => {
-    const username = await isAuthenticated(registry)
+    const username = await getAuthenticatedUser()
     if (!username) return false
     Object.assign(ctx.npm, { username })
     return true
@@ -127,40 +133,37 @@ export const npmCheck = async (ctx: ReleaseContext, config: ResolvedConfig) => {
   }
   
   // npm show project@latest version
-  const latestPublish = await getLatestRegistryVersion(name, tag, registry)
-  if (latestPublish) {
+  const latest = await getVersionByTag(name, tag)
+  if (latest) {
     // npm access list collaborators --json
     if (!(await isCollaborator(ctx))) {
       throw new Error(MSG.ERROR.NPM_USER(username, name))
     }
   }
   
-  return underline(dim(latestPublish ? `(latest is ${ latestPublish })` : '(new publish)'))
+  return latest ? `(${ tag } → ${ latest })` : '(${ tag } → no published version)'
 }
 
-export const isOtpError = (err: Error) => /one-time password|otp/i.test(err.message)
-
-
 export const publishNpm = async (ctx: ReleaseContext, config: ResolvedConfig) => {
-  const { dryRun, npm: { otp, tag }, pkg: { publishConfig } } = ctx
+  const { dryRun, npm: { otp, tag }, pkg: { publishConfig: { registry } } } = ctx
   const { npm: { publish, publishPath, pushArgs } } = config
-  const registry = getRegistry(publishConfig)
   
   if (!publish) return
   
   const otpArgs = otp ? [ '--otp', otp ] : []
-  const dryRunArg = dryRun ? [ '--dry-run' ] : []
   const registryArg = registry ? [ '--registry', registry ] : []
+  const dryRunArg = dryRun ? [ '--dry-run' ] : []
   
-  return runNpm([
-    'publish',
+  
+  return publishPackage(
     publishPath,
-    '--tag',
     tag,
-    '--workspaces=false',
-    ...otpArgs,
-    ...pushArgs,
-    ...registryArg,
-    ...dryRunArg,
-  ])
+    [
+      ...otpArgs,
+      ...pushArgs,
+      ...registryArg,
+      ...dryRunArg,
+    ],
+  )
 }
+

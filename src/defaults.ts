@@ -42,6 +42,7 @@ export const createDefaultContext = (): ReleaseContext => {
       currentTag: '',
       isCommitted: false,
       isTagged: false,
+      isPushed: false,
       commitMessage: '',
       tagMessage: '',
       tagName: '',
@@ -106,9 +107,5 @@ export const createDefaultConfig = (isCI?: boolean): DefaultConfig => {
       assets: [],
       skipChecks: false,
     },
-    changelog: {
-      infile: 'CHANGELOG.md',
-      types: []
-    }
   } satisfies DefaultConfig
 }

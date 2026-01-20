@@ -1,5 +1,5 @@
 import { select, text } from '@clack/prompts'
-import { gte, inc } from 'semver'
+import { eq, inc } from 'semver'
 import { MSG } from '../messages.js'
 import { abortSinglePrompt } from '../prompts.js'
 import { ReleaseContext, ResolvedConfig } from '../types.js'
@@ -135,7 +135,7 @@ export const runVersionPrompts = async (ctx: ReleaseContext, config: ResolvedCon
         ? current
         : type
   
-  ctx.isIncrement = gte(next, current)
+  ctx.isIncrement = !eq(next, current)
   
   
   return { next }
