@@ -1,7 +1,7 @@
-import { intro, tasks } from '@clack/prompts'
-import { type CliOptions, eol, readJsonFile } from '@peiyanlu/cli-utils'
-import { dim, underline } from 'ansis'
-import { join, resolve } from 'node:path'
+import { intro, select, tasks } from '@clack/prompts'
+import { type CliOptions, eol, readJsonFile, runGit } from '@peiyanlu/cli-utils'
+// import { generateChangelog } from '@vitejs/release-scripts'
+import { join } from 'node:path'
 import { publint } from 'publint'
 import { formatMessage } from 'publint/utils'
 import { inc, ReleaseType } from 'semver'
@@ -23,9 +23,9 @@ import { createRelease, getGithubReleaseUrl } from './github/release.js'
 import { MSG } from './messages.js'
 import { runNpmOptPrompts, runNpmPublishPrompts } from './npm/prompts.js'
 import { bumpPackageVersion, getPackageUrl, isOtpError, npmCheck, publishNpm } from './npm/publish.js'
-import { abortOnError, taskEnd } from './prompts.js'
+import { abortOnError, abortSinglePrompt, abortTask, taskEnd } from './prompts.js'
 import { ReleaseConfig, ReleaseContext, ResolvedConfig } from './types.js'
-import { diff, formatTemplate, getPackageInfo, info, msg, runLifeCycleHook, success } from './utils.js'
+import { diff, formatTemplate, getPackageInfo, info, msg, question, runLifeCycleHook, success } from './utils.js'
 import { getCIVersion, isPreRelease, parseVersion } from './version/bump.js'
 import { runVersionPrompts } from './version/prompts.js'
 
@@ -34,10 +34,7 @@ export class Action {
   public async handle(cmdArgs: string, options: CliOptions) {
     const { version: cVersion, name: cName } = readJsonFile(join(__dirname, '../package.json'))
     
-    info(`${ cName } ${ dim(`v${ cVersion }`) } `)
-    
-    
-    const { otp, ...others } = options
+    const { otp, package: defPkg, ...others } = options
     const { showChangelog, showRelease, ci, dryRun } = Object.fromEntries(
       Object
         .entries(others)
@@ -46,23 +43,60 @@ export class Action {
     
     process.env['dryRun'] = String(dryRun)
     
-    const pkg = readJsonFile('package.json')
-    const pkk = getPackageInfo('', () => '.')
-    console.log(pkk)
     
-    const { version: pkgVersion, private: pkgPrivate, name: pkgName, publishConfig = {} } = pkg
-    const nextVersion = inc(pkgVersion, cmdArgs as ReleaseType) ?? ''
-    
-    const local = await resolveConfig<ReleaseConfig>(process.cwd(), (path) => {
-      info(`config file: ${ underline(dim(path)) }`)
-    })
+    const { configPath, config: local } = await resolveConfig<ReleaseConfig>(process.cwd())
     const defaultConfig = createDefaultConfig(ci ? true : undefined)
     const config: ResolvedConfig = mergeConfig<ResolvedConfig>(defaultConfig, local)
+    
+    
+    info(MSG.INFO.TOOL(cName, cVersion))
+    info(MSG.INFO.CONFIG(configPath))
+    
+    console.log()
+    intro(MSG.INTRO(dryRun))
+    
+    const { isMonorepo, packages, getPkgDir } = config
+    
+    if (isMonorepo) {
+      if (ci) {
+        if (!defPkg) {
+          abortTask(MSG.ABORT.MONOREPO_CI_NO_PACKAGE)
+        }
+      } else {
+        if (packages.length < 1) {
+          abortTask(MSG.ABORT.MONOREPO_NO_PACKAGES)
+        }
+      }
+    }
+    
+    const selectPackage = async () => {
+      const pkg = await select({
+        message: question(MSG.PROMPT.SELECT_PACKAGE, 'package'),
+        options: packages.map(pkg => ({ label: pkg, value: pkg })),
+      }) as string
+      abortSinglePrompt(pkg)
+      return pkg
+    }
+    const selectedPkg =
+      !isMonorepo
+        ? ''
+        : ci
+          ? defPkg as string
+          : packages.length === 1
+            ? packages[0]
+            : (await selectPackage())
+    
+    
+    const { pkg, pkgDir } = getPackageInfo(selectedPkg, getPkgDir)
+    const { version: pkgVersion, private: pkgPrivate = false, name: pkgName, publishConfig = {} } = pkg
+    
+    const nextVersion = inc(pkgVersion, cmdArgs as ReleaseType) ?? ''
     
     const defaultContext = createDefaultContext()
     const ctx: ReleaseContext = mergeConfig<ReleaseContext>(
       defaultContext,
       {
+        selectedPkg,
         configFileExists: Object.keys(local).length > 0,
         dryRun,
         showRelease,
@@ -84,15 +118,11 @@ export class Action {
       },
     )
     
-    
-    const { messages } = await publint({ pkgDir: resolve('.') })
+    const { messages } = await publint({ pkgDir })
     for (const message of messages) {
-      const msg = formatMessage(message, pkg)
-      msg && info(msg)
+      const formated = formatMessage(message, pkg)
+      formated && msg('PKG', formated)
     }
-    
-    console.log()
-    intro(MSG.INTRO(pkgName, dryRun))
     
     
     // 1️⃣ 预检查阶段
@@ -145,8 +175,8 @@ export class Action {
   }
   
   async bumpTask(ctx: ReleaseContext, config: ResolvedConfig) {
-    const { pkg: { current }, dryRun, isCI, showRelease, showChangelog } = ctx
-    const { hooks } = config
+    const { pkg: { current }, dryRun, isCI, showRelease, showChangelog, selectedPkg } = ctx
+    const { hooks, getPkgDir } = config
     
     const need = (ctx: ReleaseContext) => {
       const { pkg: { next }, isIncrement } = ctx
@@ -171,7 +201,7 @@ export class Action {
       {
         title: MSG.TASK.VERSION.START,
         task: async () => {
-          await bumpPackageVersion(next)
+          await bumpPackageVersion(next, [], getPkgDir(selectedPkg))
           await formatTemplate(ctx, config)
           
           const to = `(${ current }...${ diff(current, next) })`
@@ -183,7 +213,7 @@ export class Action {
     
     // 打印 Changelog
     const { from, to } = await resolveChangelogRange(isIncrement)
-    const logStr = await getLog(from, to)
+    const logStr = await getLog(from, to, getPkgDir(selectedPkg))
     if (logStr) {
       msg('GIT', `Changelog:${ eol(2) }` + logStr)
       if (showChangelog) taskEnd(MSG.LOG.SHOW_CHANGELOG)
@@ -193,16 +223,19 @@ export class Action {
   }
   
   async changelogTask(ctx: ReleaseContext, config: ResolvedConfig) {
-    const { isIncrement, dryRun } = ctx
+    const { isIncrement, dryRun, selectedPkg } = ctx
+    const { getPkgDir, changelogTagPrefix } = config
+    
     await tasks([
       {
         title: MSG.TASK.CHANGELOG.START,
         task: async () => {
           const changelog = await generateChangelog({
-            getPkgDir() {
-              return '.'
-            },
+            getPkgDir: () => getPkgDir(selectedPkg),
+            tagPrefix: changelogTagPrefix?.(selectedPkg),
           })
+          await runGit([ 'add', `${ getPkgDir(selectedPkg) }/CHANGELOG.md` ])
+          
           Object.assign(ctx.github, { changelog })
           return success(MSG.TASK.CHANGELOG.END, dryRun)
         },

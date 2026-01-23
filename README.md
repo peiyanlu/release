@@ -24,6 +24,7 @@
 - [**Git**：暂存 → 提交 → 打 Tag → 推送][3]
 - [**发布到 npm**][4]
 - [**GitHub**：创建 Release][5]
+- [**Monorepo**][6]
 
 ## 安装
 
@@ -35,14 +36,66 @@ yarn add -D @peiyanlu/release
 pnpm add -D @peiyanlu/release
 ```
 
+## CLI
+
+```bash
+release [release-type] [options]
+```
+
+`release-type` 用于指定版本升级类型，支持：
+
+- `patch`：Bug 修复版本（默认）
+- `minor`：向后兼容的新功能
+- `major`：不向后兼容的破坏性更新
+
+当未传入 `release-type` 时，默认使用 `patch`
+
+```bash
+pnpm release minor --ci
+```
+
+### 通用参数
+
+| 参数                 | 说明                                                         |
+|--------------------|------------------------------------------------------------|
+| `-v, --version`    | 输出当前 CLI 版本并退出                                             |
+| `-h, --help`       | 显示帮助信息                                                     |
+| `-n, --dry-run`    | 空跑模式，展示将要执行的发布流程但不做任何修改                                    |
+| `--show-release`   | 打印即将发布的版本号并退出                                              |
+| `--show-changelog` | 打印生成的 Changelog 并退出                                        |
+| `--ci`             | 启用 CI 模式：禁用交互提示，缺少必要参数时直接失败；GitHub Actions 等 CI/CD 环境中默认启用 |
+
+### Monorepo / CI 相关参数
+
+| 参数                    | 说明                               |
+|-----------------------|----------------------------------|
+| `-p, --package <pkg>` | 指定要发布的子包名称（仅用于 Monorepo 的 CI 场景） |
+
+```bash
+pnpm release minor --ci --package test-a
+```
+
+### npm 发布相关参数
+
+| 参数             | 说明                             |
+|----------------|--------------------------------|
+| `--otp <code>` | npm 发布时使用的一次性验证码（用于开启 2FA 的账户） |
+
+> 当使用 **Trusted Publishing（OIDC）** 时，通常无需提供 `--otp`。
+
+
 ## 配置
 
-发布流程可以通过配置文件进行自定义。如果项目中**未提供配置文件**，工具会自动使用**内置默认配置**。
+发布流程可以通过配置文件进行自定义。  
+如果项目中**未提供配置文件**，工具会自动使用**内置默认配置**。
+
+默认配置适用于 **单仓库（Single Repo）** 项目。  
+当项目为 **Monorepo** 结构时，**必须显式提供配置文件**，并开启 Monorepo 模式以正确识别各个子包。
 
 支持的配置文件格式：
 
 ```
-release.config.{ts,mts,cts,js,mjs,cjs}
+release.config.{ts,mts,js,mjs}
 ```
 
 示例配置：
@@ -53,19 +106,89 @@ import { defineConfig } from '@peiyanlu/release'
 
 
 export default defineConfig({
+  isMonorepo: false,
+  packages: [],
+  getPkgDir: (pkg) => `.`,
+  toTag: (pkg: string, version: string) => `v${ version }`,
+  changelogTagPrefix: undefined,
+  
   git: {
-    commitMessage: 'chore(release): ${version}',
-    tagName: '${version}',
+    commit: true,
+    tag: true,
+    push: true,
+    commitMessage: 'chore(release): ${tag}',
+    tagMessage: '${tag}',
   },
   npm: {
     publish: true,
   },
   github: {
     release: true,
-    autoGenerate: false,
+    releaseName: '${tag}',
   },
 })
 ```
+
+### Monorepo 配置
+
+在 Monorepo 场景下，需要显式声明仓库结构、子包列表以及 Tag / Changelog 的生成规则。
+
+示例配置：
+
+```ts
+// release.config.ts
+import { defineConfig } from '@peiyanlu/release'
+
+
+export default defineConfig({
+  isMonorepo: true,
+  packages: [ 'demo-a', 'demo-b' ],
+  getPkgDir: (pkg) => `packages/${ pkg }`,
+  toTag: (pkg: string, version: string) => `${ pkg }@${ version }`,
+  changelogTagPrefix: (pkg: string) => `${ pkg }@`,
+  
+  git: {
+    commit: true,
+    tag: true,
+    push: true,
+    commitMessage: 'chore(release): ${tag}',
+    tagMessage: '${tag}',
+  },
+  npm: {
+    publish: true,
+  },
+  github: {
+    release: true,
+    releaseName: '${tag}',
+  },
+})
+```
+
+### 使用 CLI 生成配置文件
+
+工具内置 `init` 子命令，可用于快速生成发布配置文件。
+
+```bash
+release init
+```
+
+#### init 参数说明
+
+| 参数               | 说明                  |
+|------------------|---------------------|
+| `-f, --force`    | 覆盖已存在的配置文件          |
+| `-m, --monorepo` | 生成 Monorepo 项目的配置模板 |
+
+#### 行为说明
+
+- 自动检测项目模块类型（ESM / CJS）
+- 自动检测是否使用 TypeScript
+- 根据检测结果生成对应格式的配置文件：
+    - `release.config.ts`
+    - `release.config.mts`
+    - `release.config.js`
+    - `release.config.mjs`
+- 若配置文件已存在且未使用 `--force`，将终止并提示错误
 
 ## Bump 版本号
 
@@ -86,19 +209,17 @@ export default defineConfig({
 
 ## Changelog
 
-基于 Git 提交历史自动生成结构化 Changelog，底层依赖以下命令分析提交范围：
+基于 Git **Conventional Commits** 规范提交历史自动生成结构化 Changelog
 
-```bash
-git log --pretty=format:"%s %h %H" {from}...{to}
-```
+COMMIT_TYPES：
+
+- 默认：`feat | feature | fix | perf | revert | docs | style | chore | refactor | test | build | ci`
+- 自定义：`config | deps | security | i18n | ux | hotfix`
 
 支持 **--show-changelog** 预览模式：
 
 - 仅展示用于生成 Changelog 的 Commits
 - 不会修改任何文件或提交历史
-
-可与 **Conventional Commits** 规范结合使用，实现规范化、可读性更高的变更日志。
-
 
 ## Git 自动化
 
@@ -143,6 +264,10 @@ GitHub Release 可基于 Git Tag 自动创建，并支持附带：
 1. **自动化方式**：使用 `GITHUB_TOKEN` 直接创建
 2. **手动方式**：通过 GitHub Web UI 创建（工具预填充字段）
 
+## Monorepo
+
+工具默认配置偏向于 **单仓库（Single Repo）** 项目，但是可以通过配置使其支持 **Monorepo**
+
 ## Dry Run
 
 ```bash
@@ -166,3 +291,5 @@ pnpm release --dry-run
 [4]: #npm-发布trusted-publishing
 
 [5]: #github-releases
+
+[6]: #monorepo

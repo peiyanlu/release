@@ -14,6 +14,7 @@ export interface ReleaseContext {
   increment: string
   isIncrement: boolean
   configFileExists: boolean
+  selectedPkg: string
   pkg: {
     name: string
     isPrivate: boolean
@@ -45,7 +46,6 @@ export interface ReleaseContext {
     isPushed: boolean
     commitMessage: string
     tagMessage: string
-    tagName: string
   },
   github: {
     username: string
@@ -64,13 +64,15 @@ export interface ReleaseContext {
 }
 
 
+export type Logger = typeof log
+
 export type HookTiming = 'before' | 'after'
 
 export type HookAction = 'bump' | 'publish' | 'push' | 'release'
 
 export type ReleaseHookKey = `${ HookTiming }:${ HookAction }`
 
-export type ReleaseHookValue = string | string[] | ((logger: typeof log) => Promise<void> | void)
+export type ReleaseHookValue = string | string[] | ((logger: Logger) => Promise<void> | void)
 
 export type HookConfig = {
   [key in ReleaseHookKey]: ReleaseHookValue
@@ -82,6 +84,21 @@ export interface ReleaseConfig {
    * 用于在 Release 关键阶段注入自定义逻辑（如 before/after hooks）。
    */
   hooks: HookConfig
+  
+  /** 是否是 monorepo */
+  isMonorepo: boolean
+  
+  /** 使用 monorepo 时发布的包列表，后续回调的 `pkg`。默认为 `[]` 作为单仓库 */
+  packages: string[]
+  
+  /** 使用 monorepo 时使用 getPkgDir，例如 `packages/${pkg}`。 默认为 `.` 作为单仓库 */
+  getPkgDir: (pkg: string) => string
+  
+  /** 使用 monorepo 时使用 toTag，例如 `${pkg}@${version}`，默认为 `v${version}` 作为单仓库 */
+  toTag: (pkg: string, version: string) => string
+  
+  /** 作为 CHANGELOG 标题的 Tag 前缀，多包场景下需要 `${pkg}@` */
+  changelogTagPrefix: ((pkg: string) => string | undefined) | undefined
   
   /**
    * Git 相关配置
@@ -117,11 +134,6 @@ export interface ReleaseConfig {
      * Git Tag 的消息内容
      */
     tagMessage: string
-    
-    /**
-     * Git Tag 名称模板
-     */
-    tagName: string
     
     /**
      * 额外的 git tag 参数（透传给 git CLI）

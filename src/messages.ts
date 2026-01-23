@@ -6,7 +6,7 @@ const n = (b: boolean) => b ? '(dry run)' : ''
 const t = () => green(`${ Math.floor(process.uptime()) }s`)
 
 export const MSG = {
-  INTRO: (pkgName: string, dryRun: boolean) => `🚀  Starting release ${ yellow(pkgName) } ${ n(dryRun) }`,
+  INTRO: (dryRun: boolean) => `🚀  Starting release ${ n(dryRun) }`,
   
   OUTRO: (dryRun: boolean) => `🎉  Release finished successfully in ${ t() } ${ n(dryRun) }`,
   
@@ -21,13 +21,13 @@ export const MSG = {
     GIT: {
       CHECKING: 'Checking Git repository',
       CHECKED: (name: string, url: string) =>
-        `Git remote resolved: ${ dim(name) } → ${ underline(dim(url)) }`,
+        `Git remote resolved: ${ url ? `${ dim(name) } → ${ underline(dim(url)) }` : 'not found' }`,
     },
     
     NPM: {
       CHECKING: 'Checking npm registry',
       CHECKED: (registry: string, msg: string) =>
-        `NPM registry: ${ underline(dim(registry)) }${ msg ? ` ${ underline(dim(msg)) }` : '' }`,
+        `NPM registry: ${ underline(dim(registry)) } ${ underline(dim(msg)) }`,
     },
   },
   
@@ -59,6 +59,7 @@ export const MSG = {
   },
   
   PROMPT: {
+    SELECT_PACKAGE: 'Select package release:',
     SELECT_VERSION: 'Select version bump:',
     INPUT_VERSION: 'Enter custom version:',
     NPM_PUBLISH: (pkg: string) => `Publish to npm ${ underline(dim`(${ pkg })`) }?`,
@@ -82,5 +83,16 @@ export const MSG = {
     NPM_REGISTRY: (registry: string) => `[npm] Unable to reach npm registry ${ underline(dim(registry)) }`,
     NPM_AUTH: `[npm] Not authenticated with npm. Please run ${ yellow('npm login') } and try again.`,
     NPM_USER: (user: string, name: string) => `[npm] User ${ dim(user) } is not a collaborator of ${ dim(name) }.`,
+  },
+  
+  ABORT: {
+    CANCEL: 'Operation cancelled',
+    MONOREPO_CI_NO_PACKAGE: 'CI mode requires a target package in monorepo. Please specify it via "--package <pkg>"',
+    MONOREPO_NO_PACKAGES: 'Monorepo detected, but no packages found. Please configure "config.packages"',
+  },
+  
+  INFO: {
+    TOOL: (name: string, version: string) => `${ name } ${ dim(`v${ version }`) }`,
+    CONFIG: (path: string) => `config file: ${ underline(dim(path || 'not found')) }`,
   },
 }

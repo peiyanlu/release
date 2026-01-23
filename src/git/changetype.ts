@@ -1,7 +1,8 @@
 export interface CommitType {
   type: string
   section: string
-  description: string
+  
+  [key: string]: string
 }
 
 
@@ -98,20 +99,3 @@ export const defaultTypes: CommitType[] = [
     description: '紧急修复',
   },
 ]
-
-
-export const mergeTypes = (types: CommitType[]) => {
-  types.forEach((item) => {
-    const index = defaultTypes.findIndex(it => it.type === item.type)
-    if (index >= 0) {
-      defaultTypes.splice(index, 1, { ...item })
-    } else {
-      defaultTypes.push({ ...item })
-    }
-  })
-}
-
-export const findType = (type: string) => {
-  const res = defaultTypes.find((item) => item.type === type)
-  return res?.section ?? type
-}

@@ -2,20 +2,27 @@ import { eol } from '@peiyanlu/cli-utils'
 import { ConventionalChangelog, type Preset } from 'conventional-changelog'
 import createPreset, { DEFAULT_COMMIT_TYPES } from 'conventional-changelog-conventionalcommits'
 import { createWriteStream, existsSync, readFileSync } from 'node:fs'
+import { writeFile } from 'node:fs/promises'
 import { finished } from 'node:stream/promises'
 import { join } from 'path'
-import { defaultTypes } from './changetype.js'
+import { defaultTypes, CommitType } from './changetype.js'
 
 
 interface Options {
-  /** @example () => `packages/${pkgName}` */
+  /** @example () => `packages/${pkg}` */
   getPkgDir: () => string;
-  /** @example `${pkgName}@` */
+  /** @example `${pkg}@` */
   tagPrefix?: string;
 }
 
 
 export const generateChangelog = async ({ getPkgDir, tagPrefix }: Options) => {
+  const pkgDir = getPkgDir()
+  const infile = join(pkgDir, 'CHANGELOG.md')
+  
+  if (!existsSync(infile)) await writeFile(infile, '')
+  const originalChangelog = readFileSync(infile, 'utf-8')
+  
   const preset: Preset = await createPreset({
     types: defaultTypes.map((t) => ({ ...t, hidden: false })),
   })
@@ -45,7 +52,7 @@ export const generateChangelog = async ({ getPkgDir, tagPrefix }: Options) => {
 {{~#if date}} ({{date}})
 {{~/if}}
 {{~#if isPatch~}} </small> {{~/if}}
-`.trim() + eol(2)
+`.trim() + eol()
   
   preset.writer.mainTemplate = `
 {{> header}}
@@ -70,21 +77,12 @@ export const generateChangelog = async ({ getPkgDir, tagPrefix }: Options) => {
 {{/each}}
 {{/each}}`.trim() + eol(2)
   
-  const pkgDir = getPkgDir()
-  
-  const generator = new ConventionalChangelog(pkgDir)
-    .readPackage()
+  const generator = new ConventionalChangelog()
+    .readPackage(`${ pkgDir }/package.json`)
     .config(preset)
     .options({ releaseCount: 1 })
-  
-  if (tagPrefix) {
-    generator.tags({ prefix: tagPrefix })
-  }
-  
-  const infile = join(pkgDir, 'CHANGELOG.md')
-  const originalChangelog = existsSync(infile)
-    ? readFileSync(infile, 'utf-8')
-    : ''
+    .commits({ path: pkgDir })
+    .tags({ prefix: tagPrefix })
   
   const writeStream = createWriteStream(infile)
   
