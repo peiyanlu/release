@@ -57,15 +57,15 @@ export const uploadAssets = async (ctx: ReleaseContext, config: ResolvedConfig) 
 }
 
 export const createWebRelease = async (ctx: ReleaseContext, config: ResolvedConfig) => {
-  const { pkg: { next, toPreRelease }, github: { owner, repo, changelog, releaseName } } = ctx
+  const { pkg: { toPreRelease }, github: { owner, repo, changelog, releaseName }, git: { currentTag } } = ctx
   const { github: { prerelease } } = config
   
   const github = getGithubUrl(owner, repo)
   
   const url = new URL(`${ github }/releases/new`)
   
-  url.searchParams.set('tag', next)
-  url.searchParams.set('title', releaseName ?? `Release ${ next }`)
+  url.searchParams.set('tag', currentTag)
+  url.searchParams.set('title', releaseName)
   url.searchParams.set('body', truncateBody(changelog))
   url.searchParams.set('prelease', String(toPreRelease || prerelease))
   
@@ -75,7 +75,7 @@ export const createWebRelease = async (ctx: ReleaseContext, config: ResolvedConf
 }
 
 export const createCiRelease = async (ctx: ReleaseContext, config: ResolvedConfig) => {
-  const { pkg: { next, toPreRelease }, github: { owner, repo, token, changelog, releaseName } } = ctx
+  const { pkg: { toPreRelease }, github: { owner, repo, token, changelog, releaseName }, git: { currentTag } } = ctx
   const { github: { prerelease, draft, autoGenerate } } = config
   
   const octokit = new Octokit({ auth: token })
@@ -84,9 +84,9 @@ export const createCiRelease = async (ctx: ReleaseContext, config: ResolvedConfi
       owner,
       repo,
       // requestBody
-      tag_name: next,
+      tag_name: currentTag,
       target_commitish: undefined,
-      name: releaseName ?? `Release ${ next }`,
+      name: releaseName,
       body: autoGenerate ? '' : truncateBody(changelog),
       draft: draft ?? false,
       prerelease: (toPreRelease || prerelease) ?? false,
@@ -105,7 +105,7 @@ export const createCiRelease = async (ctx: ReleaseContext, config: ResolvedConfi
     })
   } catch (e: any) {
     if (e?.status === 422) {
-      throw new Error(MSG.ERROR.GITHUB_TAG_EXIT(next))
+      throw new Error(MSG.ERROR.GITHUB_TAG_EXIT(currentTag))
     }
     
     throw e

@@ -15,6 +15,7 @@ export const createDefaultContext = (): ReleaseContext => {
     increment: '',
     isIncrement: false,
     configFileExists: false,
+    selectedPkg: '',
     pkg: {
       current: '',
       next: '',
@@ -45,7 +46,6 @@ export const createDefaultContext = (): ReleaseContext => {
       isPushed: false,
       commitMessage: '',
       tagMessage: '',
-      tagName: '',
     },
     github: {
       username: '',
@@ -76,16 +76,24 @@ export const createDefaultConfig = (isCI?: boolean): DefaultConfig => {
       'before:release': '',
       'after:release': '',
     },
+    isMonorepo: false,
+    packages: [],
+    getPkgDir(pkg: string): string {
+      return '.'
+    },
+    toTag(pkg: string, version: string): string {
+      return `v${ version }`
+    },
+    changelogTagPrefix: undefined,
     git: {
       commit: isCI,
       tag: isCI,
       push: isCI,
-      commitMessage: 'chore(release): ${version}',
-      commitArgs:[],
-      tagMessage: 'Release ${version}',
-      tagName: '${version}',
-      tagArgs:[],
-      pushArgs:[],
+      commitMessage: 'chore(release): ${tag}',
+      commitArgs: [],
+      tagMessage: '${tag}',
+      tagArgs: [],
+      pushArgs: [],
       addUntrackedFiles: false,
       requireRemote: true,
       requireRepository: true,
@@ -99,7 +107,7 @@ export const createDefaultConfig = (isCI?: boolean): DefaultConfig => {
     },
     github: {
       release: isCI,
-      releaseName: 'Release ${version}',
+      releaseName: '${tag}',
       autoGenerate: false,
       prerelease: false,
       draft: false,

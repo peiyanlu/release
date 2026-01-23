@@ -167,9 +167,10 @@ export const resolveChangelogRange = async (isIncrement: boolean = true) => {
   return { from: latestTag, to: 'HEAD' }
 }
 
-export const getLog = async (from = '', to = 'HEAD') => {
+export const getLog = async (from = '', to = 'HEAD', scope?: string) => {
   const cmd = [ 'log', `--pretty=format:* %s (%h)` ]
   if (from) cmd.push(`${ from }...${ to }`)
+  if (scope) cmd.push(...[ '--', scope ])
   
   return runGit(cmd, { trim: false })
 }
@@ -282,7 +283,9 @@ export const commitAndTag = async (ctx: ReleaseContext, config: ResolvedConfig) 
       await runGit([ 'push', ...upstreamArgs, ...pushArgs, ...args ])
     }
     
-    Object.assign(ctx.git, { isPushed: true })
+    if (!dryRun) {
+      Object.assign(ctx.git, { isPushed: true })
+    }
   }
 }
 

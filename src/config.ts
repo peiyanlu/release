@@ -30,7 +30,7 @@ export function defineConfig(config: UserConfigExport): UserConfigExport {
 }
 
 const findConfigFile = (cwd = process.cwd()) => {
-  for (const ext of [ 'ts', 'mts', 'cts', 'js', 'mjs', 'cjs' ]) {
+  for (const ext of [ 'ts', 'mts', 'js', 'mjs' ]) {
     const path = resolve(cwd, `release.config.${ ext }`)
     if (existsSync(path)) {
       return path
@@ -45,13 +45,19 @@ const loadConfig = async <T = unknown>(file: string): Promise<T> => {
   return (typeof temp === 'function') ? temp() : temp
 }
 
-export const resolveConfig = async <T = unknown>(cwd?: string, log?: (path: string) => void): Promise<T | {}> => {
+export const resolveConfig = async <T = unknown>(cwd?: string): Promise<{ configPath: string, config: T}> => {
   const configFile = findConfigFile(cwd)
   
-  if (!configFile) return {}
+  if (!configFile) return {
+    configPath: '',
+    config: {} as T
+  }
   
-  log?.(configFile)
-  return loadConfig<T>(configFile)
+  const config = await loadConfig<T>(configFile)
+  return {
+    configPath: configFile,
+    config: config
+  }
 }
 
 

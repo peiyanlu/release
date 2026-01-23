@@ -13,7 +13,7 @@ const config: UserConfig[] = defineConfig([
   },
   {
     entry: 'src/index.ts',
-    format: [ 'esm', 'cjs' ],
+    format: [ 'esm' ],
     outDir: 'dist',
     platform: 'node',
     nodeProtocol: true,

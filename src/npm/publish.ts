@@ -6,8 +6,9 @@ import { parseVersion } from '../version/bump.js'
 
 
 export const resolvePublishRegistry = (publishConfig: Record<string, string> = {}) => {
-  if (publishConfig.registry)
+  if (publishConfig.registry) {
     return publishConfig.registry
+  }
   
   const registries = Object.keys(publishConfig)
     .filter(k => k.endsWith('registry'))
@@ -64,14 +65,13 @@ export const isOtpError = (err: unknown) =>
 export const publishPackage = (pkg = '.', tag = 'latest', args: string[] = []) => {
   return runNpm([
     'publish',
-    pkg,
     '--access',
     'public',
     '--tag',
     tag,
     '--workspaces=false',
     ...args,
-  ])
+  ], { cwd: pkg })
 }
 
 export const getPackageUrl = (name: string, next: string) => {
@@ -141,29 +141,25 @@ export const npmCheck = async (ctx: ReleaseContext, config: ResolvedConfig) => {
     }
   }
   
-  return latest ? `(${ tag } → ${ latest })` : '(${ tag } → no published version)'
+  return latest ? `(${ tag } → ${ latest })` : `(${ tag } → no published version)`
 }
 
 export const publishNpm = async (ctx: ReleaseContext, config: ResolvedConfig) => {
-  const { dryRun, npm: { otp, tag }, pkg: { publishConfig: { registry } } } = ctx
-  const { npm: { publish, publishPath, pushArgs } } = config
+  const { dryRun, selectedPkg, npm: { otp, tag } } = ctx
+  const { npm: { publish, pushArgs }, getPkgDir } = config
   
   if (!publish) return
   
   const otpArgs = otp ? [ '--otp', otp ] : []
-  const registryArg = registry ? [ '--registry', registry ] : []
   const dryRunArg = dryRun ? [ '--dry-run' ] : []
   
-  
   return publishPackage(
-    publishPath,
+    getPkgDir(selectedPkg),
     tag,
     [
       ...otpArgs,
       ...pushArgs,
-      ...registryArg,
       ...dryRunArg,
     ],
   )
 }
-
