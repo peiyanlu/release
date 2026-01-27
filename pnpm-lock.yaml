@@ -15,8 +15,8 @@ importers:
         specifier: ^22.0.1
         version: 22.0.1
       '@peiyanlu/cli-utils':
-        specifier: ^0.0.4
-        version: 0.0.4
+        specifier: ^0.0.5
+        version: 0.0.5
       '@peiyanlu/ts-utils':
         specifier: ^0.0.4
         version: 0.0.4
@@ -357,8 +357,8 @@ packages:
   '@oxc-project/types@0.107.0':
     resolution: {integrity: sha512-QFDRbYfV2LVx8tyqtyiah3jQPUj1mK2+RYwxyFWyGoys6XJnwTdlzO6rdNNHOPorHAu5Uo34oWRKcvNpbJarmQ==}
 
-  '@peiyanlu/cli-utils@0.0.4':
-    resolution: {integrity: sha512-HR3xvUmpZT94DTwmMIeD80preNpFNTkxA61SblnNPxEKl7Kxh3cZD/44dP3CLg7aTFnNmAAyvWGyNjo7F0vqkA==}
+  '@peiyanlu/cli-utils@0.0.5':
+    resolution: {integrity: sha512-nZtD0UibEXJ6HsdCU40NDkJUAV7dH/+CSjqEBryuRpRLFtKT6IAiduJGPTycGuWq5m5JURgyFU3Eyit3dCT0zA==}
     engines: {node: '>=20'}
 
   '@peiyanlu/ts-utils@0.0.4':
@@ -1502,7 +1502,7 @@ snapshots:
 
   '@oxc-project/types@0.107.0': {}
 
-  '@peiyanlu/cli-utils@0.0.4': {}
+  '@peiyanlu/cli-utils@0.0.5': {}
 
   '@peiyanlu/ts-utils@0.0.4': {}
 

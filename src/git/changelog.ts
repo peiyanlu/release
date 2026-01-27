@@ -1,11 +1,11 @@
 import { eol } from '@peiyanlu/cli-utils'
 import { ConventionalChangelog, type Preset } from 'conventional-changelog'
-import createPreset, { DEFAULT_COMMIT_TYPES } from 'conventional-changelog-conventionalcommits'
+import createPreset from 'conventional-changelog-conventionalcommits'
 import { createWriteStream, existsSync, readFileSync } from 'node:fs'
 import { writeFile } from 'node:fs/promises'
 import { finished } from 'node:stream/promises'
 import { join } from 'path'
-import { defaultTypes, CommitType } from './changetype.js'
+import { defaultTypes } from './changetype.js'
 
 
 interface Options {

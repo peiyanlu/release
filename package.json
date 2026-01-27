@@ -28,7 +28,7 @@
   "dependencies": {
     "@clack/prompts": "^0.11.0",
     "@octokit/rest": "^22.0.1",
-    "@peiyanlu/cli-utils": "^0.0.4",
+    "@peiyanlu/cli-utils": "^0.0.5",
     "@peiyanlu/ts-utils": "^0.0.4",
     "ansis": "^4.2.0",
     "commander": "^14.0.2",
@@ -44,10 +44,10 @@
     "@types/mime-types": "^3.0.1",
     "@types/node": "^24.10.3",
     "@types/semver": "^7.7.1",
+    "@vitest/coverage-v8": "^4.0.15",
     "tsdown": "^0.18.4",
     "typescript": "^5.9.3",
-    "vitest": "^4.0.18",
-    "@vitest/coverage-v8": "^4.0.15"
+    "vitest": "^4.0.18"
   },
   "author": {
     "name": "YanluPei",

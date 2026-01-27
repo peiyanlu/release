@@ -1,21 +1,17 @@
 import { Octokit } from '@octokit/rest'
-import { parseGitHubRepo } from '@peiyanlu/cli-utils'
+import { getGithubUrl, parseGitHubRepo } from '@peiyanlu/cli-utils'
 import { contentType } from 'mime-types'
 import { createReadStream, statSync } from 'node:fs'
 import open from 'open'
 import { glob } from 'tinyglobby'
-import { normalizeTag } from '../git/commit.js'
 import { MSG } from '../messages.js'
 import { ReleaseContext, ResolvedConfig } from '../types.js'
 
 
-export const getGithubUrl = (owner: string, repo: string) => {
-  return `https://github.com/${ owner }/${ repo }`
-}
-
-
 const truncateBody = (body: string) => {
-  if (body && body.length >= 124000) return body.substring(0, 124000) + '...'
+  if (body && body.length >= 124000) {
+    return body.substring(0, 124000) + '...'
+  }
   return body
 }
 
@@ -107,7 +103,6 @@ export const createCiRelease = async (ctx: ReleaseContext, config: ResolvedConfi
     if (e?.status === 422) {
       throw new Error(MSG.ERROR.GITHUB_TAG_EXIT(currentTag))
     }
-    
     throw e
   }
 }
@@ -169,9 +164,4 @@ export const createRelease = async (ctx: ReleaseContext, config: ResolvedConfig)
     await createCiRelease(ctx, config)
     await uploadAssets(ctx, config)
   }
-}
-
-export const getGithubReleaseUrl = (ctx: ReleaseContext) => {
-  const { github: { owner, repo }, git: { currentTag } } = ctx
-  return `${ getGithubUrl(owner, repo) }/releases/tag/${ normalizeTag(currentTag) }`
 }

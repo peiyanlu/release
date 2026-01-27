@@ -2,7 +2,7 @@ import { cancel, isCancel, log, outro } from '@clack/prompts'
 import { red } from 'ansis'
 import { MSG } from './messages.js'
 import { ReleaseContext } from './types.js'
-import { gitRollback } from './utils.js'
+import { gitRollback } from './git/commit.js'
 
 
 export const abortTask = (msg?: string) => {
