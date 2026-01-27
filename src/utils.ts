@@ -1,11 +1,8 @@
 import { log } from '@clack/prompts'
-import { execAsync, readJsonFile } from '@peiyanlu/cli-utils'
+import { execAsync, getLatestTag } from '@peiyanlu/cli-utils'
 import { castArray } from '@peiyanlu/ts-utils'
 import { dim, green, rgb, yellow } from 'ansis'
-import { spawnSync } from 'node:child_process'
-import { resolve } from 'node:path'
 import { inspect } from 'node:util'
-import { getLatestTag } from './git/commit.js'
 import { HookConfig, ReleaseContext, ReleaseHookKey, ResolvedConfig } from './types.js'
 
 
@@ -50,18 +47,6 @@ export const runLifeCycleHook = async (hooks: HookConfig, key: ReleaseHookKey, d
   }))
 }
 
-export const gitRollback = (ctx: ReleaseContext) => {
-  const { git: { currentTag, isCommitted, isTagged } } = ctx
-  
-  spawnSync('git', [ 'restore', '.' ])
-  
-  if (isTagged) {
-    spawnSync('git', [ 'tag', '--delete', currentTag ])
-  }
-  
-  spawnSync('git', [ 'reset', '--hard', isCommitted ? 'HEAD~1' : 'HEAD' ])
-}
-
 export const diff = (from: string, to: string, separator: string = '.') => {
   const a = from.split(separator)
   const b = to.split(separator)
@@ -70,9 +55,6 @@ export const diff = (from: string, to: string, separator: string = '.') => {
     .map((v, i) => (v === a[i]) ? dim(v) : green(v))
     .join(separator)
 }
-
-export const stripNewlines = (str: string) =>
-  str.replace(/^\n|\n(\s+)?$/g, '')
 
 export const formatTemplate = async (ctx: ReleaseContext, config: ResolvedConfig) => {
   const { pkg: { next }, selectedPkg } = ctx
@@ -89,22 +71,4 @@ export const formatTemplate = async (ctx: ReleaseContext, config: ResolvedConfig
   
   Object.assign(ctx.git, { latestTag, currentTag, commitMessage, tagMessage })
   Object.assign(ctx.github, { releaseName })
-}
-
-
-export const getPackageInfo = (pkgName: string, getPkgDir: (pkg: string) => string = (pkg) => `packages/${ pkg }`) => {
-  const pkgDir = resolve(getPkgDir(pkgName))
-  const pkgPath = resolve(pkgDir, 'package.json')
-  const pkg = readJsonFile(pkgPath) as {
-    name: string;
-    version: string;
-    private?: boolean;
-    publishConfig?: {
-      access: string
-      registry: string
-      [key: string]: string
-    };
-  }
-  
-  return { pkg, pkgDir, pkgPath }
 }

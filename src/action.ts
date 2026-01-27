@@ -1,6 +1,18 @@
 import { intro, select, tasks } from '@clack/prompts'
-import { type CliOptions, eol, readJsonFile, runGit } from '@peiyanlu/cli-utils'
-// import { generateChangelog } from '@vitejs/release-scripts'
+import {
+  bumpPackageVersion,
+  type CliOptions,
+  coloredChangeset,
+  eol,
+  getGithubReleaseUrl,
+  getLog,
+  getPackageInfo,
+  getPackageUrl,
+  getStatus,
+  readJsonFile,
+  resolveChangelogRange,
+  runGit,
+} from '@peiyanlu/cli-utils'
 import { join } from 'node:path'
 import { publint } from 'publint'
 import { formatMessage } from 'publint/utils'
@@ -8,24 +20,16 @@ import { inc, ReleaseType } from 'semver'
 import { mergeConfig, resolveConfig } from './config.js'
 import { createDefaultConfig, createDefaultContext } from './defaults.js'
 import { generateChangelog } from './git/changelog.js'
-import {
-  coloredChangeset,
-  commitAndTag,
-  getLog,
-  getStatus,
-  gitCheck,
-  gitRollback,
-  resolveChangelogRange,
-} from './git/commit.js'
+import { commitAndTag, gitCheck, gitRollback } from './git/commit.js'
 import { runGitPrompts } from './git/prompts.js'
 import { runGithubPrompts } from './github/prompts.js'
-import { createRelease, getGithubReleaseUrl } from './github/release.js'
+import { createRelease } from './github/release.js'
 import { MSG } from './messages.js'
 import { runNpmOptPrompts, runNpmPublishPrompts } from './npm/prompts.js'
-import { bumpPackageVersion, getPackageUrl, isOtpError, npmCheck, publishNpm } from './npm/publish.js'
+import { isOtpError, npmCheck, publishNpm } from './npm/publish.js'
 import { abortOnError, abortSinglePrompt, abortTask, taskEnd } from './prompts.js'
 import { ReleaseConfig, ReleaseContext, ResolvedConfig } from './types.js'
-import { diff, formatTemplate, getPackageInfo, info, msg, question, runLifeCycleHook, success } from './utils.js'
+import { diff, formatTemplate, info, msg, question, runLifeCycleHook, success } from './utils.js'
 import { getCIVersion, isPreRelease, parseVersion } from './version/bump.js'
 import { runVersionPrompts } from './version/prompts.js'
 
@@ -317,8 +321,10 @@ export class Action {
       {
         title: MSG.TASK.GITHUB.START,
         task: async () => {
+          const { github: { owner, repo }, git: { currentTag } } = ctx
+          
           await createRelease(ctx, config)
-          const url = getGithubReleaseUrl(ctx)
+          const url = getGithubReleaseUrl(owner, repo, currentTag)
           return success(MSG.TASK.GITHUB.END(url), dryRun)
         },
       },
