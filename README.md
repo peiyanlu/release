@@ -1,17 +1,17 @@
 # Release Project
 
 <p>
-  <a href="https://www.npmjs.com/package/@peiyanlu/create-release" target="_blank">
-    <img src="https://img.shields.io/badge/npm-@peiyanlu/create--release-blue.svg?logo=npm" alt="NPM Package" />
+  <a href="https://www.npmjs.com/package/@peiyanlu/release" target="_blank">
+    <img src="https://img.shields.io/badge/npm-@peiyanlu/release-blue.svg?logo=npm" alt="NPM Package" />
   </a>
-  <a href="https://www.npmjs.com/package/@peiyanlu/create-release" target="_blank">
-    <img src="https://img.shields.io/npm/v/@peiyanlu/create-release.svg" alt="NPM Version" />
+  <a href="https://www.npmjs.com/package/@peiyanlu/release" target="_blank">
+    <img src="https://img.shields.io/npm/v/@peiyanlu/release.svg" alt="NPM Version" />
   </a>
-  <a href="https://www.npmjs.com/package/@peiyanlu/create-release" target="_blank">
-    <img src="https://img.shields.io/npm/l/@peiyanlu/create-release.svg" alt="Package License" />
+  <a href="https://www.npmjs.com/package/@peiyanlu/release" target="_blank">
+    <img src="https://img.shields.io/npm/l/@peiyanlu/release.svg" alt="Package License" />
   </a>
-  <a href="https://www.npmjs.com/package/@peiyanlu/create-release" target="_blank">
-    <img src="https://img.shields.io/npm/dm/@peiyanlu/create-release.svg" alt="NPM Downloads" />
+  <a href="https://www.npmjs.com/package/@peiyanlu/release" target="_blank">
+    <img src="https://img.shields.io/npm/dm/@peiyanlu/release.svg" alt="NPM Downloads" />
   </a>
 </p>
 
