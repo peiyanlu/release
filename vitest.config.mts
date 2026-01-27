@@ -6,6 +6,9 @@ export default defineConfig({
     clearMocks: true,
     restoreMocks: true,
     testTimeout: 10000,
+    coverage: {
+      provider: 'v8',
+    },
     projects: [
       {
         test: {
