@@ -110,7 +110,7 @@ export default defineConfig({
   packages: [],
   getPkgDir: (pkg) => `.`,
   toTag: (pkg: string, version: string) => `v${ version }`,
-  changelogTagPrefix: undefined,
+  tagPrefix: undefined,
   
   git: {
     commit: true,
@@ -145,7 +145,7 @@ export default defineConfig({
   packages: [ 'demo-a', 'demo-b' ],
   getPkgDir: (pkg) => `packages/${ pkg }`,
   toTag: (pkg: string, version: string) => `${ pkg }@${ version }`,
-  changelogTagPrefix: (pkg: string) => `${ pkg }@`,
+  tagPrefix: (pkg: string) => `${ pkg }@`,
   
   git: {
     commit: true,

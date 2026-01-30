@@ -84,7 +84,7 @@ export const createDefaultConfig = (isCI?: boolean): DefaultConfig => {
     toTag(pkg: string, version: string): string {
       return `v${ version }`
     },
-    changelogTagPrefix: undefined,
+    tagPrefix: undefined,
     git: {
       commit: isCI,
       tag: isCI,

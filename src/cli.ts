@@ -56,7 +56,7 @@ program
   packages: [ 'demo-a', 'demo-b' ],
   getPkgDir: (pkg) => \`packages/\${ pkg }\`,
   toTag: (pkg, version) => \`\${ pkg }@\${ version }\`,
-  changelogTagPrefix: (pkg) => \`\${ pkg }@\`,
+  tagPrefix: (pkg) => \`\${ pkg }@\`,
 }`
     
     const template = `import { defineConfig } from '@peiyanlu/release'

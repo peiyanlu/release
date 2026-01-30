@@ -98,7 +98,7 @@ export interface ReleaseConfig {
   toTag: (pkg: string, version: string) => string
   
   /** 作为 CHANGELOG 标题的 Tag 前缀，多包场景下需要 `${pkg}@` */
-  changelogTagPrefix: ((pkg: string) => string | undefined) | undefined
+  tagPrefix: ((pkg: string) => string | undefined) | undefined
   
   /**
    * Git 相关配置
