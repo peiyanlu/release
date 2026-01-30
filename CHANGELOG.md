@@ -1,3 +1,14 @@
+## <small>[0.0.5](https://github.com/peiyanlu/release/compare/v0.0.4...v0.0.5) (2026-01-30)</small>
+
+### 🐛 Bug 修复
+
+* 修复 Github release url 错误 ([ec94292](https://github.com/peiyanlu/release/commit/ec942920d4d591146c9b6362440ebbe6c8345ebb))
+* 修复 monorepo 打印 changelog 范围计算错误 ([a349f5b](https://github.com/peiyanlu/release/commit/a349f5b00234d3b65dc37b4f438bcc36435eae61))
+
+### 📝 文档
+
+* **readme:** 更新 shields.io 徽章 ([18445dc](https://github.com/peiyanlu/release/commit/18445dc8d55548595b75e1110892a636f7d37f0d))
+
 ## <small>[0.0.4](https://github.com/peiyanlu/release/compare/0.0.3...0.0.4) (2026-01-26)</small>
 
 ### ✨ 新功能
