@@ -69,16 +69,12 @@ export const commitAndTag = async (ctx: ReleaseContext, config: ResolvedConfig) 
   addUntrackedFiles ? await gitAddAll() : await gitAddTracked(args)
   await gitCommit(commitMessage, [ ...commitArgs, ...args ])
   
-  // await runGit([ 'add', '.', addUntrackedFiles ? '--all' : '--update', ...args ])
-  // await runGit([ 'commit', '--message', commitMessage, ...commitArgs, ...args ])
-  
   if (!dryRun) {
     Object.assign(ctx.git, { isCommitted: true })
   }
   
   if (tag) {
     await gitTagAnnotated(currentTag, tagMessage, [ ...tagArgs, ...args ])
-    // await runGit([ 'tag', '--annotate', '--message', tagMessage, currentTag, ...tagArgs, ...args ])
     
     if (!dryRun) {
       Object.assign(ctx.git, { isTagged: true })
@@ -89,11 +85,7 @@ export const commitAndTag = async (ctx: ReleaseContext, config: ResolvedConfig) 
     const remotes = await getAllRemotes()
     for (const remoteName of remotes) {
       await pushTag(remoteName, currentTag, args)
-      await pushBranch(remoteName, (await getCurrentBranch())!, [ ...pushArgs, ...args ])
-      
-      // await runGit([ 'push', remoteName, `refs/tags/${ currentTag }`, ...args ])
-      // const upstreamArgs = await getUpstreamArgs(remoteName)
-      // await runGit([ 'push', ...upstreamArgs, ...pushArgs, ...args ])
+      await pushBranch(remoteName, await getCurrentBranch(), [ ...pushArgs, ...args ])
     }
     
     if (!dryRun) {

@@ -180,7 +180,7 @@ export class Action {
   
   async bumpTask(ctx: ReleaseContext, config: ResolvedConfig) {
     const { pkg: { current }, dryRun, isCI, showRelease, showChangelog, selectedPkg } = ctx
-    const { hooks, getPkgDir } = config
+    const { isMonorepo, hooks, getPkgDir, tagPrefix } = config
     
     const need = (ctx: ReleaseContext) => {
       const { pkg: { next }, isIncrement } = ctx
@@ -216,10 +216,11 @@ export class Action {
     await runLifeCycleHook(hooks, 'after:bump', dryRun)
     
     // 打印 Changelog
-    const { from, to } = await resolveChangelogRange(isIncrement)
+    const match = isMonorepo ? `${ tagPrefix?.(selectedPkg) }*` : '*'
+    const { from, to } = await resolveChangelogRange(isIncrement, match)
     const logStr = await getLog(from, to, getPkgDir(selectedPkg))
     if (logStr) {
-      msg('GIT', `Changelog:${ eol(2) }` + logStr)
+      msg('GIT', `Changelog(${ from }...${ to }):${ eol(2) }` + logStr)
       if (showChangelog) taskEnd(MSG.LOG.SHOW_CHANGELOG)
     } else {
       msg('GIT', MSG.LOG.CHANGELOG_EMPTY)
@@ -228,7 +229,7 @@ export class Action {
   
   async changelogTask(ctx: ReleaseContext, config: ResolvedConfig) {
     const { isIncrement, dryRun, selectedPkg } = ctx
-    const { getPkgDir, changelogTagPrefix } = config
+    const { getPkgDir, tagPrefix } = config
     
     await tasks([
       {
@@ -236,7 +237,7 @@ export class Action {
         task: async () => {
           const changelog = await generateChangelog({
             getPkgDir: () => getPkgDir(selectedPkg),
-            tagPrefix: changelogTagPrefix?.(selectedPkg),
+            tagPrefix: tagPrefix?.(selectedPkg),
           })
           await runGit([ 'add', `${ getPkgDir(selectedPkg) }/CHANGELOG.md` ])
           
