@@ -16,12 +16,8 @@ interface Options {
 }
 
 
-export const generateChangelog = async ({ getPkgDir, tagPrefix }: Options) => {
+export const createGenerator = async ({ getPkgDir, tagPrefix }: Options) => {
   const pkgDir = getPkgDir()
-  const infile = join(pkgDir, 'CHANGELOG.md')
-  
-  if (!existsSync(infile)) await writeFile(infile, '')
-  const originalChangelog = readFileSync(infile, 'utf-8')
   
   const preset: Preset = await createPreset({
     types: defaultTypes.map((t) => ({ ...t, hidden: false })),
@@ -77,18 +73,37 @@ export const generateChangelog = async ({ getPkgDir, tagPrefix }: Options) => {
 {{/each}}
 {{/each}}`.trim() + eol(2)
   
-  const generator = new ConventionalChangelog()
+   return new ConventionalChangelog()
     .readPackage(`${ pkgDir }/package.json`)
     .config(preset)
     .options({ releaseCount: 1 })
     .commits({ path: pkgDir })
     .tags({ prefix: tagPrefix })
-  
-  const writeStream = createWriteStream(infile)
+}
+
+export const getChangelog = async ({ getPkgDir, tagPrefix }: Options) => {
+  const generator = await createGenerator({ getPkgDir, tagPrefix })
   
   let changelog: string = ''
   for await (const chunk of generator.write()) {
     changelog += chunk
+  }
+  
+  return changelog
+}
+
+export const generateChangelog = async ({ getPkgDir, tagPrefix }: Options) => {
+  const pkgDir = getPkgDir()
+  const infile = join(pkgDir, 'CHANGELOG.md')
+  
+  if (!existsSync(infile)) await writeFile(infile, '')
+  const originalChangelog = readFileSync(infile, 'utf-8')
+
+  const generator = await createGenerator({ getPkgDir, tagPrefix })
+  
+  const writeStream = createWriteStream(infile)
+  
+  for await (const chunk of generator.write()) {
     writeStream.write(chunk)
   }
   
@@ -96,6 +111,4 @@ export const generateChangelog = async ({ getPkgDir, tagPrefix }: Options) => {
   writeStream.end()
   
   await finished(writeStream)
-  
-  return changelog
 }
