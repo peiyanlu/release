@@ -177,14 +177,9 @@ export interface ReleaseConfig {
     publish: boolean | undefined
     
     /**
-     * npm 发布目标路径，对应 `npm publish <package-spec>`
-     */
-    publishPath: string
-    
-    /**
      * 额外的 npm publish 参数（透传给 npm CLI）
      */
-    pushArgs: string[]
+    publishArgs: string[]
     
     /**
      * 是否跳过发布前检查（如 ping、whoami 等校验）

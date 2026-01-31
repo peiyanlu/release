@@ -1,11 +1,51 @@
 import { Octokit } from '@octokit/rest'
-import { getGithubUrl, parseGitHubRepo } from '@peiyanlu/cli-utils'
+import { getGithubUrl } from '@peiyanlu/cli-utils'
 import { contentType } from 'mime-types'
 import { createReadStream, statSync } from 'node:fs'
 import open from 'open'
 import { glob } from 'tinyglobby'
 import { MSG } from '../messages.js'
 import { ReleaseContext, ResolvedConfig } from '../types.js'
+
+
+interface UploadAssets {
+  owner: string
+  repo: string
+  name: string
+  uploadUrl: string
+  releaseId: number
+  assets: string[]
+}
+
+interface WebRelease {
+  owner: string
+  repo: string
+  tag: string
+  title: string
+  body: string
+  prerelease: string
+}
+
+interface BaseOptions {
+  owner: string
+  repo: string
+  tag: string
+}
+
+interface CreateRelease extends BaseOptions {
+  name: string
+  body: string
+  draft: boolean
+  prerelease: boolean
+  generateReleaseNotes: boolean
+  makeLatest?: 'true' | 'false' | 'legacy'
+  targetCommitish?: string
+  discussionCategoryName?: string
+}
+
+interface UpdateRelease extends CreateRelease {
+  releaseId: number
+}
 
 
 const truncateBody = (body: string) => {
@@ -15,26 +55,96 @@ const truncateBody = (body: string) => {
   return body
 }
 
-
-const getLatestRelease = async (octokit: Octokit, owner: string, repo: string) => {
-  const { data } = await octokit.repos.listReleases({
-    owner,
-    repo,
-    per_page: 1,
-    page: 1,
-  })
-  return data[0]
+const getReleaseByTagSafe = async (octokit: Octokit, options: BaseOptions) => {
+  try {
+    const { data } = await octokit.repos.getReleaseByTag({ ...options })
+    return data
+  } catch (e: any) {
+    if (e?.status === 404) return null
+    throw e
+  }
 }
 
-export const uploadAssets = async (ctx: ReleaseContext, config: ResolvedConfig) => {
-  const { github: { assets } } = config
-  const { github: { isReleased, owner, repo, uploadUrl, releaseId, token }, pkg: { name } } = ctx
+const createCRelease = async (octokit: Octokit, options: CreateRelease) => {
+  const {
+    owner,
+    repo,
+    tag,
+    name,
+    body,
+    draft,
+    prerelease,
+    generateReleaseNotes,
+    makeLatest,
+    targetCommitish,
+    discussionCategoryName,
+  } = options
+  const { data } = await octokit.repos.createRelease({
+    owner,
+    repo,
+    tag_name: tag,
+    name: name,
+    body: body,
+    draft: draft,
+    prerelease: prerelease,
+    generate_release_notes: generateReleaseNotes,
+    make_latest: makeLatest,
+    target_commitish: targetCommitish,
+    discussion_category_name: discussionCategoryName,
+  })
+  return data
+}
+
+const updateCRelease = async (octokit: Octokit, options: UpdateRelease) => {
+  const {
+    owner,
+    repo,
+    tag,
+    name,
+    body,
+    draft,
+    prerelease,
+    generateReleaseNotes,
+    makeLatest,
+    targetCommitish,
+    discussionCategoryName,
+    releaseId,
+  } = options
+  const { data } = await octokit.repos.updateRelease({
+    owner,
+    repo,
+    release_id: releaseId,
+    tag_name: tag,
+    name: name,
+    body: body,
+    draft: draft,
+    prerelease: prerelease,
+    generate_release_notes: generateReleaseNotes,
+    make_latest: makeLatest,
+    target_commitish: targetCommitish,
+    discussion_category_name: discussionCategoryName,
+  })
+  return data
+}
+
+const createCReleaseByTag = async (octokit: Octokit, options: CreateRelease) => {
+  const existing = await getReleaseByTagSafe(octokit, options)
   
-  if (!assets?.length || !isReleased) {
-    return
+  if (!existing) {
+    return createCRelease(octokit, { ...(options as CreateRelease) })
   }
   
-  const octokit = new Octokit({ auth: token })
+  const { draft, id: releaseId } = existing
+  
+  if (!draft) {
+    throw new Error(`Release for tag "${ options.tag }" already exists and is not a draft`)
+  }
+  
+  return updateCRelease(octokit, { releaseId, ...options })
+}
+
+const uploadAssets = async (octokit: Octokit, options: UploadAssets) => {
+  const { owner, repo, name, uploadUrl, releaseId, assets } = options
   const files = await glob(assets)
   await Promise.all(files.map(file => {
     return octokit.repos.uploadReleaseAsset({
@@ -52,116 +162,98 @@ export const uploadAssets = async (ctx: ReleaseContext, config: ResolvedConfig) 
   }))
 }
 
-export const createWebRelease = async (ctx: ReleaseContext, config: ResolvedConfig) => {
-  const { pkg: { toPreRelease }, github: { owner, repo, changelog, releaseName }, git: { currentTag } } = ctx
-  const { github: { prerelease } } = config
+const createWebRelease = async (options: WebRelease) => {
+  const { owner, repo, tag, title, body, prerelease } = options
   
-  const github = getGithubUrl(owner, repo)
+  const url = new URL(`${ getGithubUrl(owner, repo) }/releases/new`)
   
-  const url = new URL(`${ github }/releases/new`)
-  
-  url.searchParams.set('tag', currentTag)
-  url.searchParams.set('title', releaseName)
-  url.searchParams.set('body', truncateBody(changelog))
-  url.searchParams.set('prelease', String(toPreRelease || prerelease))
+  Object
+    .entries({ tag, title, body, prerelease })
+    .forEach(([ key, value ]) => {
+      url.searchParams.set(key, value)
+    })
   
   const isWindows = process.platform === 'win32'
-  
   await open(url.toString(), { wait: isWindows })
 }
 
-export const createCiRelease = async (ctx: ReleaseContext, config: ResolvedConfig) => {
-  const { pkg: { toPreRelease }, github: { owner, repo, token, changelog, releaseName }, git: { currentTag } } = ctx
-  const { github: { prerelease, draft, autoGenerate } } = config
-  
-  const octokit = new Octokit({ auth: token })
-  try {
-    const { data } = await octokit.repos.createRelease({
-      owner,
-      repo,
-      // requestBody
-      tag_name: currentTag,
-      target_commitish: undefined,
-      name: releaseName,
-      body: autoGenerate ? '' : truncateBody(changelog),
-      draft: draft ?? false,
-      prerelease: (toPreRelease || prerelease) ?? false,
-      discussion_category_name: undefined,
-      generate_release_notes: autoGenerate,
-      make_latest: 'true',
-    })
-    
-    const { html_url, upload_url, id, discussion_url } = data
-    Object.assign(ctx.github, {
-      isReleased: true,
-      releaseId: id,
-      releaseUrl: html_url,
-      uploadUrl: upload_url,
-      discussionUrl: discussion_url,
-    })
-  } catch (e: any) {
-    if (e?.status === 422) {
-      throw new Error(MSG.ERROR.GITHUB_TAG_EXIT(currentTag))
-    }
-    throw e
-  }
-}
 
-export const parseGithubUrl = (ctx: ReleaseContext) => {
-  const { git: { remoteUrl } } = ctx
-  const [ owner, repo ] = parseGitHubRepo(remoteUrl)
-  Object.assign(ctx.github, { owner, repo })
-}
-
-export const createRelease = async (ctx: ReleaseContext, config: ResolvedConfig) => {
+export const githubCheck = async (ctx: ReleaseContext, config: ResolvedConfig) => {
   const { github: { owner, repo }, isCI } = ctx
-  const { github: { tokenRef, release, skipChecks } } = config
-  
-  if (!release) return
+  const { github: { tokenRef, skipChecks } } = config
   
   const token = tokenRef ? process.env[tokenRef] : process.env.GITHUB_TOKEN
-  
   if (!token) {
     Object.assign(ctx.github, { isWeb: true })
     
     if (isCI && process.env.GITHUB_ACTIONS) {
       throw new Error(MSG.ERROR.GITHUB_TOKEN(tokenRef))
     }
+    
+    return ''
   }
-  
   Object.assign(ctx.github, { token })
-  const octokit = new Octokit({ auth: token })
   
-  if (token && !skipChecks) {
-    if (process.env.GITHUB_ACTIONS) {
-      Object.assign(ctx.github, { username: process.env.GITHUB_ACTOR })
-    } else {
-      try {
-        const { data: { login: username } } = await octokit.users.getAuthenticated()
-        Object.assign(ctx.github, { username })
-      } catch (e) {
-        throw new Error(MSG.ERROR.GITHUB_AUTH)
-      }
-      
-      try {
-        const { github: { username } } = ctx
-        await octokit.repos.checkCollaborator({ owner, repo, username })
-      } catch (e) {
-        throw new Error(MSG.ERROR.GITHUB_USER)
-      }
+  if (skipChecks) return ''
+  
+  let username = ''
+  if (process.env.GITHUB_ACTIONS) {
+    username = process.env.GITHUB_ACTOR!
+  } else {
+    
+    const octokit = new Octokit({ auth: token })
+    try {
+      const { data: { login } } = await octokit.users.getAuthenticated()
+      username = login
+    } catch (e) {
+      throw new Error(MSG.ERROR.GITHUB_AUTH)
+    }
+    
+    try {
+      await octokit.repos.checkCollaborator({ owner, repo, username })
+    } catch (e) {
+      throw new Error(MSG.ERROR.GITHUB_USER)
     }
   }
   
-  const { github: { isWeb }, dryRun } = ctx
+  return username
+}
+
+export const createRelease = async (ctx: ReleaseContext, config: ResolvedConfig) => {
+  const { pkg: { name, toPreRelease }, git: { currentTag }, isCI, dryRun } = ctx
+  const { github: { isWeb, token, owner, repo, changelog, releaseName } } = ctx
+  const { github: { release, assets, prerelease, autoGenerate, draft } } = config
   
-  if (dryRun) {
-    return true
-  }
+  if (!release || dryRun) return
+  
+  const octokit = new Octokit({ auth: token })
   
   if (isWeb) {
-    await createWebRelease(ctx, config)
+    await createWebRelease({
+      owner,
+      repo,
+      tag: currentTag,
+      title: releaseName,
+      body: truncateBody(changelog),
+      prerelease: String(toPreRelease || prerelease),
+    })
   } else if (isCI) {
-    await createCiRelease(ctx, config)
-    await uploadAssets(ctx, config)
+    const res = await createCReleaseByTag(octokit, {
+      owner,
+      repo,
+      tag: currentTag,
+      name: releaseName,
+      body: autoGenerate ? '' : truncateBody(changelog),
+      draft: draft,
+      prerelease: toPreRelease || prerelease,
+      generateReleaseNotes: autoGenerate,
+      makeLatest: 'true',
+    })
+    if (!res) return
+    
+    if (assets.length) {
+      const { id: releaseId, upload_url: uploadUrl } = res
+      await uploadAssets(octokit, { owner, repo, name, uploadUrl, releaseId, assets })
+    }
   }
 }

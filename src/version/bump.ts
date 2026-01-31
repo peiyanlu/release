@@ -1,4 +1,4 @@
-import { coerce, inc, parse, prerelease, valid } from 'semver'
+import { coerce, inc, neq, parse, prerelease, valid } from 'semver'
 import { Release } from './prompts.js'
 
 
@@ -22,5 +22,9 @@ export const parseVersion = (raw: string) => {
 }
 
 export const getCIVersion = (current: string) => {
-  return inc(current, Release.PATCH) ?? ''
+  return inc(current, Release.PATCH)!
+}
+
+export const isNeq = (current: string, next: string) => {
+  return neq(current, next)
 }

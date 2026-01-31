@@ -1,6 +1,6 @@
 import { type CliOptions, readJsonFile } from '@peiyanlu/cli-utils'
 import { green, red, yellow } from 'ansis'
-import { program } from 'commander'
+import { Command, program } from 'commander'
 import { existsSync, writeFileSync } from 'node:fs'
 import { join } from 'path'
 import { Action } from './action.js'
@@ -8,21 +8,35 @@ import { Action } from './action.js'
 
 const pkg = readJsonFile(join(__dirname, '..', 'package.json'))
 
-program
-  .name('release')
-  .description(pkg.description)
-  .version(pkg.version, '-v, --version', 'Print the tool version and exit.')
-  .usage('[release-type] [options]')
-  .argument('[release-type]', 'Version bump type: patch | minor | major')
-  .option('-n, --dry-run', 'Run in dry mode: show what would be released without making any changes.', false)
-  .option('-p, --package <pkg>', 'Specify package name for mono-repo release (CI only).', '')
-  .option('--otp <code>', 'One-time password for npm publish (used for 2FA).', '')
-  .option('--ci', 'Enable CI mode: disable prompts and fail on missing required options.', false)
-  .option('--show-changelog', 'Print the generated changelog and exit.', false)
-  .option('--show-release', 'Print the version that would be released and exit.', false)
-  .helpOption('-h, --help', 'Display help information.')
-  .action(async (releaseType: string, options: CliOptions) => {
-    await new Action().handle(releaseType, options)
+function withCommonOptions(cmd: typeof program) {
+  return cmd
+    .version(pkg.version, '-v, --version', 'Print the tool version and exit.')
+    .usage('[release-type] [options]')
+    .argument('[release-type]', 'Version bump type: patch | minor | major')
+    .option('-n, --dry-run', 'Run in dry mode', false)
+    .option('-p, --package <pkg>', 'Specify package name (CI only).', '')
+    .option('--otp <code>', 'One-time password for npm publish.', '')
+    .option('--ci', 'Enable CI mode.', false)
+    .option('--show-changelog', 'Print changelog and exit.', false)
+    .option('--show-release', 'Print release version and exit.', false)
+    .helpOption('-h, --help', 'Display help information.')
+}
+
+withCommonOptions(
+  program
+    .name('release')
+    .description(pkg.description)
+).action(async (releaseType: string, options: CliOptions) => {
+  await new Action().handleRelease(releaseType, options)
+})
+
+withCommonOptions(
+  program
+    .command('prepare')
+    .description('Prepare a release (bump version, commit, tag)')
+)
+  .action(async (releaseType, options) => {
+    await new Action().handlePrepareRelease(releaseType, options)
   })
 
 

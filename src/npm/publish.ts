@@ -13,12 +13,13 @@ import { parseVersion } from '../version/bump.js'
 
 export const resolvePublishTag = async (pkgName: string, version: string) => {
   const { toPreRelease, preId } = parseVersion(version)
-  if (!toPreRelease) {
-    const active = await getPublishedVersion(pkgName)
-    return (active && lt(version, active)) ? 'previous' : 'latest'
-  } else {
-    return preId || 'prerelease'
-  }
+  
+  if (toPreRelease) return preId || 'next'
+  
+  const active = await getPublishedVersion(pkgName)
+  if (!active) return 'latest'
+  
+  return lt(version, active) ? 'previous' : 'latest'
 }
 
 export const isOtpError = (err: unknown) =>
@@ -56,7 +57,7 @@ export const npmCheck = async (ctx: ReleaseContext, config: ResolvedConfig) => {
 
 export const publishNpm = async (ctx: ReleaseContext, config: ResolvedConfig) => {
   const { dryRun, selectedPkg, npm: { otp, tag } } = ctx
-  const { npm: { publish, pushArgs }, getPkgDir } = config
+  const { npm: { publish, publishArgs }, getPkgDir } = config
   
   if (!publish) return
   
@@ -65,7 +66,8 @@ export const publishNpm = async (ctx: ReleaseContext, config: ResolvedConfig) =>
   
   return publishPackage({
     tag,
-    args: [ ...otpArgs, ...pushArgs, ...dryRunArg ],
+    args: [ ...otpArgs, ...publishArgs, ...dryRunArg ],
     cwd: getPkgDir(selectedPkg),
   })
 }
+
