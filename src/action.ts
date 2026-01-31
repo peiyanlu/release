@@ -9,9 +9,9 @@ import {
   getPackageInfo,
   getPackageUrl,
   getStatus,
+  gitAddAll,
   readJsonFile,
   resolveChangelogRange,
-  runGit,
 } from '@peiyanlu/cli-utils'
 import { join } from 'node:path'
 import { publint } from 'publint'
@@ -19,7 +19,7 @@ import { formatMessage } from 'publint/utils'
 import { inc, ReleaseType } from 'semver'
 import { mergeConfig, resolveConfig } from './config.js'
 import { createDefaultConfig, createDefaultContext } from './defaults.js'
-import { generateChangelog } from './git/changelog.js'
+import { generateChangelog, getChangelog } from './git/changelog.js'
 import { commitAndTag, gitCheck, gitRollback } from './git/commit.js'
 import { runGitPrompts } from './git/prompts.js'
 import { runGithubPrompts } from './github/prompts.js'
@@ -218,9 +218,16 @@ export class Action {
     // 打印 Changelog
     const match = isMonorepo ? `${ tagPrefix?.(selectedPkg) }*` : '*'
     const { from, to } = await resolveChangelogRange(isIncrement, match)
-    const logStr = await getLog(from, to, getPkgDir(selectedPkg))
-    if (logStr) {
-      msg('GIT', `Changelog(${ from }...${ to }):${ eol(2) }` + logStr)
+    const commits = await getLog(from, to, getPkgDir(selectedPkg))
+    const changelog = await getChangelog({
+      getPkgDir: () => getPkgDir(selectedPkg),
+      tagPrefix: tagPrefix?.(selectedPkg),
+    })
+    Object.assign(ctx.github, { changelog })
+    
+    if (commits) {
+      msg('GIT', `Changelog(${ from }...${ to }):${ eol(2) }` + changelog.trimEnd())
+      msg('GIT', `Commits(${ from }...${ to }):${ eol(2) }` + commits)
       if (showChangelog) taskEnd(MSG.LOG.SHOW_CHANGELOG)
     } else {
       msg('GIT', MSG.LOG.CHANGELOG_EMPTY)
@@ -235,13 +242,12 @@ export class Action {
       {
         title: MSG.TASK.CHANGELOG.START,
         task: async () => {
-          const changelog = await generateChangelog({
+          await generateChangelog({
             getPkgDir: () => getPkgDir(selectedPkg),
             tagPrefix: tagPrefix?.(selectedPkg),
           })
-          await runGit([ 'add', `${ getPkgDir(selectedPkg) }/CHANGELOG.md` ])
+          await gitAddAll()
           
-          Object.assign(ctx.github, { changelog })
           return success(MSG.TASK.CHANGELOG.END, dryRun)
         },
         enabled: isIncrement,

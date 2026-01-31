@@ -21,7 +21,7 @@
     "dev": "tsdown -w",
     "build": "tsdown",
     "prepublish": "tsdown",
-    "release": "tsdown && node index.js",
+    "release": "node index.js",
     "test": "vitest run",
     "test:cov": "vitest run --coverage"
   },
