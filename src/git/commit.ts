@@ -7,12 +7,11 @@ import {
   gitCommit,
   gitTagAnnotated,
   isGitRepo,
-  isWorkingDirClean,
+  isWorkingDirClean, parseGitHubRepo,
   pushBranch,
   pushTag,
 } from '@peiyanlu/cli-utils'
 import { spawnSync } from 'node:child_process'
-import { parseGithubUrl } from '../github/release.js'
 import { MSG } from '../messages.js'
 import { ReleaseContext, ResolvedConfig } from '../types.js'
 
@@ -46,7 +45,10 @@ export const gitCheck = async (ctx: ReleaseContext, config: ResolvedConfig) => {
   }
   Object.assign(ctx.git, { remoteName, remoteUrl })
   
-  parseGithubUrl(ctx)
+  // parseGithubUrl(ctx)
+  
+  const [ owner, repo ] = parseGitHubRepo(remoteUrl)
+  Object.assign(ctx.github, { owner, repo })
 }
 
 export const commitAndTag = async (ctx: ReleaseContext, config: ResolvedConfig) => {

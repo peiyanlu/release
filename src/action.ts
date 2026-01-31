@@ -5,6 +5,7 @@ import {
   coloredChangeset,
   eol,
   getGithubReleaseUrl,
+  getGithubUrl,
   getLog,
   getPackageInfo,
   getPackageUrl,
@@ -23,19 +24,63 @@ import { generateChangelog, getChangelog } from './git/changelog.js'
 import { commitAndTag, gitCheck, gitRollback } from './git/commit.js'
 import { runGitPrompts } from './git/prompts.js'
 import { runGithubPrompts } from './github/prompts.js'
-import { createRelease } from './github/release.js'
+import { createRelease, githubCheck } from './github/release.js'
 import { MSG } from './messages.js'
 import { runNpmOptPrompts, runNpmPublishPrompts } from './npm/prompts.js'
 import { isOtpError, npmCheck, publishNpm } from './npm/publish.js'
 import { abortOnError, abortSinglePrompt, abortTask, taskEnd } from './prompts.js'
 import { ReleaseConfig, ReleaseContext, ResolvedConfig } from './types.js'
 import { diff, formatTemplate, info, msg, question, runLifeCycleHook, success } from './utils.js'
-import { getCIVersion, isPreRelease, parseVersion } from './version/bump.js'
+import { getCIVersion, isNeq, isPreRelease, parseVersion } from './version/bump.js'
 import { runVersionPrompts } from './version/prompts.js'
 
 
 export class Action {
-  public async handle(cmdArgs: string, options: CliOptions) {
+  async handleRelease(cmdArgs: string, options: CliOptions) {
+    const { ctx, config } = await this.createContext(cmdArgs, options)
+    
+    // 1️⃣ 预检查阶段
+    await this.checkTask(ctx, config)
+    
+    // 2️⃣ 版本升级阶段
+    await this.bumpTask(ctx, config)
+    
+    // 3️⃣ 生成 Changelog
+    await this.changelogTask(ctx, config)
+    
+    // 4️⃣ Git 操作阶段
+    await this.gitTask(ctx, config)
+    
+    // 5️⃣ 发布 npm
+    await this.npmTask(ctx, config)
+    
+    // 6️⃣ GitHub 操作
+    await this.githubTask(ctx, config)
+    
+    if (ctx.dryRun) gitRollback(ctx)
+    taskEnd(MSG.OUTRO(ctx.dryRun))
+  }
+  
+  async handlePrepareRelease(cmdArgs: string, options: CliOptions) {
+    const { ctx, config } = await this.createContext(cmdArgs, options)
+    
+    // 1️⃣ 预检查阶段
+    await this.checkTask(ctx, config)
+    
+    // 2️⃣ 版本升级阶段
+    await this.bumpTask(ctx, config)
+    
+    // 3️⃣ 生成 Changelog
+    await this.changelogTask(ctx, config)
+    
+    // 4️⃣ Git 操作阶段
+    await this.gitTask(ctx, config)
+    
+    if (ctx.dryRun) gitRollback(ctx)
+    taskEnd(MSG.OUTRO_PREPARE(ctx.dryRun))
+  }
+  
+  async createContext(cmdArgs: string, options: CliOptions) {
     const { version: cVersion, name: cName } = readJsonFile(join(__dirname, '../package.json'))
     
     const { otp, package: defPkg, ...others } = options
@@ -128,33 +173,11 @@ export class Action {
       formated && msg('PKG', formated)
     }
     
-    
-    // 1️⃣ 预检查阶段
-    await this.checkTask(ctx, config)
-    
-    // 2️⃣ 版本升级阶段
-    await this.bumpTask(ctx, config)
-    
-    // 3️⃣ 生成 Changelog
-    await this.changelogTask(ctx, config)
-    
-    // 4️⃣ Git 操作阶段
-    await this.gitTask(ctx, config)
-    
-    // 5️⃣ 发布 npm
-    await this.npmTask(ctx, config)
-    
-    // 6️⃣ GitHub 操作
-    await this.githubTask(ctx, config)
-    
-    
-    if (dryRun) gitRollback(ctx)
-    
-    taskEnd(MSG.OUTRO(dryRun))
+    return { ctx, config }
   }
   
   async checkTask(ctx: ReleaseContext, config: ResolvedConfig) {
-    const { noNpm, dryRun } = ctx
+    const { dryRun } = ctx
     await tasks([
       {
         title: MSG.CHECK.GIT.CHECKING,
@@ -173,7 +196,18 @@ export class Action {
           
           return success(MSG.CHECK.NPM.CHECKED(registry, msg), dryRun)
         },
-        enabled: !noNpm,
+        enabled: !ctx.noNpm,
+      },
+      {
+        title: MSG.CHECK.GITHUB.CHECKING,
+        task: async () => {
+          const msg = await githubCheck(ctx, config)
+          const { github: { owner, repo } } = ctx
+          const repository = getGithubUrl(owner, repo)
+          
+          return success(MSG.CHECK.GITHUB.CHECKED(repository, msg), dryRun)
+        },
+        enabled: !ctx.noGitHub,
       },
     ]).catch(abortOnError)
   }
@@ -188,8 +222,11 @@ export class Action {
     }
     
     if (need(ctx)) {
-      const ciVersion = isCI && getCIVersion(current)
-      const next = ciVersion || (await runVersionPrompts(ctx, config)).next
+      const ciVersion = isCI ? getCIVersion(current) : undefined
+      const next = ciVersion || await runVersionPrompts(ctx, config)
+      
+      ctx.isIncrement = isNeq(current, next)
+      
       const parsed = parseVersion(next)
       Object.assign(ctx.pkg, { ...parsed })
     }

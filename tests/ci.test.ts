@@ -7,7 +7,7 @@ describe('ci mode tests', () => {
     process.env.CI = 'true'
     
     const action = new Action()
-    const actual = action.handle('patch', {})
+    const actual = action.handleRelease('patch', {})
     
     await expect(actual).rejects.toMatchObject({ code: 0 })
     
@@ -27,7 +27,7 @@ describe('ci mode tests', () => {
   
   it('use --ci option', async () => {
     const action = new Action()
-    const actual = action.handle('patch', { ci: true })
+    const actual = action.handleRelease('patch', { ci: true })
     
     await expect(actual).rejects.toMatchObject({ code: 0 })
     
@@ -49,7 +49,7 @@ describe('ci mode tests', () => {
 describe('dryRun tests', () => {
   it('rolls back in dry run', async () => {
     const action = new Action()
-    const actual = action.handle('patch', { dryRun: true })
+    const actual = action.handleRelease('patch', { dryRun: true })
     
     await expect(actual).rejects.toMatchObject({ code: 0 })
     

@@ -1,5 +1,5 @@
 import { select, text } from '@clack/prompts'
-import { eq, inc } from 'semver'
+import { inc } from 'semver'
 import { MSG } from '../messages.js'
 import { abortSinglePrompt } from '../prompts.js'
 import { ReleaseContext, ResolvedConfig } from '../types.js'
@@ -11,6 +11,7 @@ export enum Release {
   MAJOR = 'major',
   MINOR = 'minor',
   PATCH = 'patch',
+  RELEASE = 'release',
 }
 
 export enum PreRelease {
@@ -30,87 +31,61 @@ export enum PreId {
   DEV = 'dev',
 }
 
+const createVersionMap = (current: string) => ({
+  patch: inc(current, Release.PATCH)!,
+  minor: inc(current, Release.MINOR)!,
+  major: inc(current, Release.MAJOR)!,
+  
+  release: inc(current, Release.RELEASE)!,
+  prerelease: inc(current, PreRelease.RELEASE)!,
+  
+  prepatch: inc(current, PreRelease.PATCH, PreId.BETA)!,
+  preminor: inc(current, PreRelease.MINOR, PreId.BETA)!,
+  premajor: inc(current, PreRelease.MAJOR, PreId.BETA)!,
+})
+
+const option = (label: string, value: string, hint?: string) => ({
+  label,
+  value,
+  hint: hint ?? value,
+})
+
 
 export const runVersionPrompts = async (ctx: ReleaseContext, config: ResolvedConfig) => {
   const { pkg: { current, fromPreRelease } } = ctx
   
   const selectVersion = async () => {
-    const patch = inc(current, Release.PATCH)!
-    const minor = inc(current, Release.MINOR)!
-    const major = inc(current, Release.MAJOR)!
+    const versions = createVersionMap(current)
     
-    const prerelease = inc(current, PreRelease.RELEASE)!
-    
-    const prepatch = inc(current, PreRelease.PATCH, PreId.BETA)!
-    const preminor = inc(current, PreRelease.MINOR, PreId.BETA)!
-    const premajor = inc(current, PreRelease.MAJOR, PreId.BETA)!
-    
-    const pr = [
-      {
-        label: 'Pre-Release',
-        value: prerelease,
-        hint: prerelease,
-      },
-    ]
-    const pre = [
-      {
-        label: 'Pre-Patch',
-        value: prepatch,
-        hint: prepatch,
-      },
-      {
-        label: 'Pre-Minor',
-        value: preminor,
-        hint: preminor,
-      },
-      {
-        label: 'Pre-Major',
-        value: premajor,
-        hint: premajor,
-      },
-    ]
-    const release = [
-      {
-        label: 'Patch',
-        value: patch,
-        hint: patch,
-      },
-      {
-        label: 'Minor',
-        value: minor,
-        hint: minor,
-      },
-      {
-        label: 'Major',
-        value: major,
-        hint: major,
-      },
-    ]
-    const custom = [
-      {
-        label: 'As-Is',
-        value: 'ignore',
-        hint: current,
-      },
-      {
-        label: 'Custom',
-        value: 'custom',
-        hint: 'custom specified',
-      },
+    const options = [
+      ...(fromPreRelease
+        ? [ option('Pre-Release', 'prerelease', versions.prerelease) ]
+        : []),
+      
+      option('Patch', 'patch', versions.patch),
+      option('Minor', 'minor', versions.minor),
+      option('Major', 'major', versions.major),
+      
+      ...(!fromPreRelease
+        ? [
+          option('Pre-Patch', 'prepatch', versions.prepatch),
+          option('Pre-Minor', 'preminor', versions.preminor),
+          option('Pre-Major', 'premajor', versions.premajor),
+        ]
+        : []),
+      
+      option('As-Is', 'ignore', current),
+      option('Custom', 'custom', 'custom specified'),
     ]
     
-    const version = await select({
+    const type = await select({
       message: question(MSG.PROMPT.SELECT_VERSION, 'version'),
-      options: [
-        ...(fromPreRelease ? pr : []),
-        ...release,
-        ...(fromPreRelease ? [] : pre),
-        ...custom,
-      ],
-      initialValue: fromPreRelease ? prerelease : patch,
+      options,
+      initialValue: fromPreRelease ? 'prerelease' : 'patch',
     }) as string
-    abortSinglePrompt(version)
-    return version
+    
+    abortSinglePrompt(type)
+    return type
   }
   
   const inputVersion = async () => {
@@ -127,16 +102,15 @@ export const runVersionPrompts = async (ctx: ReleaseContext, config: ResolvedCon
     return version
   }
   
+  const resolveNextVersion = async (type: string, current: string) => {
+    if (type === 'ignore') return current
+    if (type === 'custom') return inputVersion()
+    
+    const versions = createVersionMap(current)
+    return versions[type as keyof typeof versions]
+  }
+  
   const type = await selectVersion()
-  const next: string =
-    type === 'custom'
-      ? await inputVersion()
-      : type === 'ignore'
-        ? current
-        : type
-  
-  ctx.isIncrement = !eq(next, current)
-  
-  
-  return { next }
+  return await resolveNextVersion(type, current)
 }
+1

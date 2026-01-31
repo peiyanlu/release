@@ -9,6 +9,7 @@ export const MSG = {
   INTRO: (dryRun: boolean) => `🚀  Starting release ${ n(dryRun) }`,
   
   OUTRO: (dryRun: boolean) => `🎉  Release finished successfully in ${ t() } ${ n(dryRun) }`,
+  OUTRO_PREPARE: (dryRun: boolean) => `🎉  PrepareRelease finished successfully in ${ t() } ${ n(dryRun) }`,
   
   LOG: {
     SHOW_VERSION: (version: string) => `🎉  Released ${ green(version) }`,
@@ -28,6 +29,12 @@ export const MSG = {
       CHECKING: 'Checking npm registry',
       CHECKED: (registry: string, msg: string) =>
         `NPM registry: ${ underline(dim(registry)) } ${ underline(dim(msg)) }`,
+    },
+    
+    GITHUB: {
+      CHECKING: 'Checking github repository',
+      CHECKED: (repository: string, msg: string) =>
+        `GitHub repository: ${ underline(dim(repository)) } ${ underline(dim(msg)) }`,
     },
   },
   

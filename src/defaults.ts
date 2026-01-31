@@ -101,8 +101,7 @@ export const createDefaultConfig = (isCI?: boolean): DefaultConfig => {
     },
     npm: {
       publish: isCI,
-      publishPath: '.',
-      pushArgs: [],
+      publishArgs: [],
       skipChecks: false,
     },
     github: {
