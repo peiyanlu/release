@@ -1,4 +1,4 @@
-import { DeepPartial, DeepRequired, isPlainObject } from '@peiyanlu/ts-utils'
+import { DeepPartial, DeepRequired, isFunction, isPlainObject } from '@peiyanlu/ts-utils'
 import { existsSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { pathToFileURL } from 'node:url'
@@ -59,10 +59,6 @@ export const resolveConfig = async <T = unknown>(cwd?: string): Promise<{ config
     config: config
   }
 }
-
-
-const isFunction = (v: unknown) => typeof v === 'function'
-
 
 export const mergeConfig = <T extends object>(
   defaults: DeepRequired<T>,

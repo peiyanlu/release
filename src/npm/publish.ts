@@ -2,19 +2,19 @@ import {
   getAuthenticatedUser,
   getPublishedVersion,
   hasWriteAccess,
+  parseVersion,
   pingRegistry,
   publishPackage,
 } from '@peiyanlu/cli-utils'
 import { lt } from 'semver'
 import { MSG } from '../messages.js'
 import { ReleaseContext, ResolvedConfig } from '../types.js'
-import { parseVersion } from '../version/bump.js'
 
 
 export const resolvePublishTag = async (pkgName: string, version: string) => {
-  const { toPreRelease, preId } = parseVersion(version)
+  const { isPrerelease, preId } = parseVersion(version)
   
-  if (toPreRelease) return preId || 'next'
+  if (isPrerelease) return preId || 'next'
   
   const active = await getPublishedVersion(pkgName)
   if (!active) return 'latest'

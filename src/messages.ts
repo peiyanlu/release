@@ -7,9 +7,10 @@ const t = () => green(`${ Math.floor(process.uptime()) }s`)
 
 export const MSG = {
   INTRO: (dryRun: boolean) => `🚀  Starting release ${ n(dryRun) }`,
+  INTRO_PREPARE: (dryRun: boolean) => `🚀  Starting prepare release ${ n(dryRun) }`,
   
   OUTRO: (dryRun: boolean) => `🎉  Release finished successfully in ${ t() } ${ n(dryRun) }`,
-  OUTRO_PREPARE: (dryRun: boolean) => `🎉  PrepareRelease finished successfully in ${ t() } ${ n(dryRun) }`,
+  OUTRO_PREPARE: (dryRun: boolean) => `🎉  Prepare release finished successfully in ${ t() } ${ n(dryRun) }`,
   
   LOG: {
     SHOW_VERSION: (version: string) => `🎉  Released ${ green(version) }`,

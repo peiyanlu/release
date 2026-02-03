@@ -11,13 +11,15 @@ import {
   getPackageUrl,
   getStatus,
   gitAddAll,
+  isPrerelease,
+  parseVersion,
   readJsonFile,
   resolveChangelogRange,
 } from '@peiyanlu/cli-utils'
 import { join } from 'node:path'
 import { publint } from 'publint'
 import { formatMessage } from 'publint/utils'
-import { inc, ReleaseType } from 'semver'
+import { inc, neq, ReleaseType } from 'semver'
 import { mergeConfig, resolveConfig } from './config.js'
 import { createDefaultConfig, createDefaultContext } from './defaults.js'
 import { generateChangelog, getChangelog } from './git/changelog.js'
@@ -31,7 +33,6 @@ import { isOtpError, npmCheck, publishNpm } from './npm/publish.js'
 import { abortOnError, abortSinglePrompt, abortTask, taskEnd } from './prompts.js'
 import { ReleaseConfig, ReleaseContext, ResolvedConfig } from './types.js'
 import { diff, formatTemplate, info, msg, question, runLifeCycleHook, success } from './utils.js'
-import { getCIVersion, isNeq, isPreRelease, parseVersion } from './version/bump.js'
 import { runVersionPrompts } from './version/prompts.js'
 
 
@@ -62,7 +63,7 @@ export class Action {
   }
   
   async handlePrepareRelease(cmdArgs: string, options: CliOptions) {
-    const { ctx, config } = await this.createContext(cmdArgs, options)
+    const { ctx, config } = await this.createContext(cmdArgs, options, true)
     
     // 1️⃣ 预检查阶段
     await this.checkTask(ctx, config)
@@ -80,7 +81,7 @@ export class Action {
     taskEnd(MSG.OUTRO_PREPARE(ctx.dryRun))
   }
   
-  async createContext(cmdArgs: string, options: CliOptions) {
+  async createContext(cmdArgs: string, options: CliOptions, prepare: boolean = false) {
     const { version: cVersion, name: cName } = readJsonFile(join(__dirname, '../package.json'))
     
     const { otp, package: defPkg, ...others } = options
@@ -102,7 +103,7 @@ export class Action {
     info(MSG.INFO.CONFIG(configPath))
     
     console.log()
-    intro(MSG.INTRO(dryRun))
+    intro(prepare ? MSG.INTRO_PREPARE(dryRun) : MSG.INTRO(dryRun))
     
     const { isMonorepo, packages, getPkgDir } = config
     
@@ -157,7 +158,7 @@ export class Action {
         pkg: {
           name: pkgName,
           isPrivate: pkgPrivate,
-          fromPreRelease: isPreRelease(pkgVersion),
+          fromPreRelease: isPrerelease(pkgVersion),
           current: pkgVersion,
           next: nextVersion,
           toPreRelease: false,
@@ -222,13 +223,13 @@ export class Action {
     }
     
     if (need(ctx)) {
-      const ciVersion = isCI ? getCIVersion(current) : undefined
-      const next = ciVersion || await runVersionPrompts(ctx, config)
+      const ciVersion = isCI ? inc(current, 'patch')! : undefined
+      const nextVersion = ciVersion || await runVersionPrompts(ctx, config)
       
-      ctx.isIncrement = isNeq(current, next)
+      ctx.isIncrement = neq(current, nextVersion)
       
-      const parsed = parseVersion(next)
-      Object.assign(ctx.pkg, { ...parsed })
+      const { version: next, isPrerelease: toPreRelease, preId, preBase } = parseVersion(nextVersion)
+      Object.assign(ctx.pkg, { next, toPreRelease, preId, preBase })
     }
     
     const { pkg: { next }, isIncrement } = ctx
