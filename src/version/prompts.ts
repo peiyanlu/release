@@ -1,10 +1,10 @@
 import { select, text } from '@clack/prompts'
+import { isValid } from '@peiyanlu/cli-utils'
 import { inc } from 'semver'
 import { MSG } from '../messages.js'
 import { abortSinglePrompt } from '../prompts.js'
 import { ReleaseContext, ResolvedConfig } from '../types.js'
 import { question } from '../utils.js'
-import { isValid } from './bump.js'
 
 
 export enum Release {
@@ -113,4 +113,3 @@ export const runVersionPrompts = async (ctx: ReleaseContext, config: ResolvedCon
   const type = await selectVersion()
   return await resolveNextVersion(type, current)
 }
-1

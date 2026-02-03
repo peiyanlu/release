@@ -65,6 +65,18 @@ pnpm release minor --ci
 | `--show-changelog` | 打印生成的 Changelog 并退出                                        |
 | `--ci`             | 启用 CI 模式：禁用交互提示，缺少必要参数时直接失败；GitHub Actions 等 CI/CD 环境中默认启用 |
 
+### Prepare 相关参数
+
+| 参数          | 说明                       |
+|-------------|--------------------------|
+| `--prepare` | 仅仅变更版本、提交代码、创建 Tag、推送到远程 |
+
+```bash
+pnpm release minor --prepare --ci --package pkg-a
+```
+
+> 后续可以通过 tag 进行 npm 发布和创建 GitHub release
+
 ### Monorepo / CI 相关参数
 
 | 参数                    | 说明                               |
@@ -72,7 +84,7 @@ pnpm release minor --ci
 | `-p, --package <pkg>` | 指定要发布的子包名称（仅用于 Monorepo 的 CI 场景） |
 
 ```bash
-pnpm release minor --ci --package test-a
+pnpm release minor --ci --package pkg-a
 ```
 
 ### npm 发布相关参数
@@ -267,6 +279,36 @@ GitHub Release 可基于 Git Tag 自动创建，并支持附带：
 ## Monorepo
 
 工具默认配置偏向于 **单仓库（Single Repo）** 项目，但是可以通过配置使其支持 **Monorepo**
+
+## 流程拆分
+
+### 本地准备 Release（仅创建 Tag）
+
+在本地完成版本确认与变更准备：
+
+- 确定下一个版本
+- 更新 `package.json` / `CHANGELOG`
+- 创建发布提交
+- 创建并推送 git 标签
+
+### CI/CD 自动发布（由 Tag 触发）
+
+当 Tag 推送到远端后，CI/CD 自动执行：
+
+- 发布到 npm
+- 创建 GItHub release
+
+```ts
+// publishCI.ts
+import { publishTagToNpm } from '@peiyanlu/release'
+
+
+await publishTagToNpm({
+  gitTag: '1.0.16',
+  getPkgDir: () => '.',
+  defaultPackage: '.',
+})
+```
 
 ## Dry Run
 

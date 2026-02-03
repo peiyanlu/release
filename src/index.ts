@@ -1,4 +1,5 @@
 import { getPackageInfo, publishPackage } from '@peiyanlu/cli-utils'
+import { blue, cyan, green, magenta, red, underline, yellow } from 'ansis'
 import { resolvePublishTag } from './npm/publish.js'
 
 
@@ -38,17 +39,17 @@ export const publishTagToNpm = async (options: PublishTagOptions) => {
     throw new Error(`❌ No git tag specified.`)
   }
   
-  console.log(`\n📦 Start publishing from git tag: ${ tag }`)
+  console.log(`\n📦 Start publishing from git tag: ${ cyan(tag) }`)
   
   let pkgName = defaultPackage
   let version
   
   if (tag.includes(tagSeparator)) {
     [ pkgName, version ] = tag.split(tagSeparator)
-    console.log(`🔍 Parsed tag → package: "${ pkgName }", version: "${ version }"`)
+    console.log(`🔍 Parsed tag → package: "${ yellow(pkgName) }", version: "${ green(version) }"`)
   } else {
     version = tag
-    console.log(`🔍 Parsed tag → version only: "${ version }"`)
+    console.log(`🔍 Parsed tag → version only: "${ green(version) }"`)
   }
   
   if (version.startsWith('v')) {
@@ -60,13 +61,13 @@ export const publishTagToNpm = async (options: PublishTagOptions) => {
     throw new Error(`❌ Package name should be specified in tag "${ tag }" when defaultPackage is not set`)
   }
   
-  console.log(`📁 Resolving package info for "${ pkgName }"...`)
+  console.log(`📁 Resolving package info for "${ magenta(pkgName) }"...`)
   
   const { pkg, pkgDir } = getPackageInfo(pkgName, getPkgDir)
   
   
-  console.log(`📄 package.json → name: ${ pkg.name }, version: ${ pkg.version }`)
-  console.log(`📂 Package directory: ${ pkgDir }`)
+  console.log(`📄 package.json → name: ${ yellow(pkg.name) }, version: ${ green(pkg.version) }`)
+  console.log(`📂 Package directory: ${ underline(pkgDir) }`)
   
   if (pkg.version !== version) {
     throw new Error(`❌ Package version from tag "${ version }" mismatches with current version "${ pkg.version }"`)
@@ -74,8 +75,8 @@ export const publishTagToNpm = async (options: PublishTagOptions) => {
   
   const publishTag = await resolvePublishTag(pkg.name, version)
   
-  console.log(`🏷 Resolved npm dist-tag: "${ publishTag }" (version ${ version })`)
-  console.log(`🚀 Publishing "${ pkg.name }@${ version }" to npm...`)
+  console.log(`🏷 Resolved npm dist-tag: "${ blue(publishTag) }" (version ${ green(version) })`)
+  console.log(`🚀 Publishing "${ red`${ pkg.name }@${ version }` }" to npm...`)
   
   await publishPackage({
     tag: publishTag,
@@ -83,6 +84,6 @@ export const publishTagToNpm = async (options: PublishTagOptions) => {
     cwd: pkgDir,
   })
   
-  console.log(`✅ Successfully published ${ pkg.name }@${ version } with dist-tag "${ publishTag }"\n`)
+  console.log(`🎉 Successfully published ${ red`${ pkg.name }@${ version }` } with dist-tag "${ blue(publishTag) }"\n`)
 }
 
