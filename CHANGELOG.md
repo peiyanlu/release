@@ -1,3 +1,10 @@
+## <small>[0.0.6](https://github.com/peiyanlu/release/compare/v0.0.5...v0.0.6) (2026-02-03)</small>
+
+### ✨ 新功能
+
+* 拆分工作流程支持分步工作 ([7520fc6](https://github.com/peiyanlu/release/commit/7520fc616dd9603840b1758fdb063b1e449504c2))
+* 增强 changelog 生成和获取 ([b4814f0](https://github.com/peiyanlu/release/commit/b4814f03a3b5202949673fc377286bf44c97e34e))
+
 ## <small>[0.0.5](https://github.com/peiyanlu/release/compare/v0.0.4...v0.0.5) (2026-01-30)</small>
 
 ### 🐛 Bug 修复
