@@ -1,3 +1,9 @@
+## <small>[0.0.7](https://github.com/peiyanlu/release/compare/v0.0.6...v0.0.7) (2026-02-03)</small>
+
+### 🐛 Bug 修复
+
+* 修复 prepare 子命令错误 ([b5f815e](https://github.com/peiyanlu/release/commit/b5f815e0697fc369cad32597ee91c2cacf4da537))
+
 ## <small>[0.0.6](https://github.com/peiyanlu/release/compare/v0.0.5...v0.0.6) (2026-02-03)</small>
 
 ### ✨ 新功能
