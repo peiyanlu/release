@@ -11,6 +11,7 @@ import {
   getPackageUrl,
   getStatus,
   gitAddAll,
+  isOtpError,
   isPrerelease,
   parseVersion,
   readJsonFile,
@@ -29,7 +30,7 @@ import { runGithubPrompts } from './github/prompts.js'
 import { createRelease, githubCheck } from './github/release.js'
 import { MSG } from './messages.js'
 import { runNpmOptPrompts, runNpmPublishPrompts } from './npm/prompts.js'
-import { isOtpError, npmCheck, publishNpm } from './npm/publish.js'
+import { npmCheck, publishNpm } from './npm/publish.js'
 import { abortOnError, abortSinglePrompt, abortTask, taskEnd } from './prompts.js'
 import { ReleaseConfig, ReleaseContext, ResolvedConfig } from './types.js'
 import { diff, formatTemplate, info, msg, question, runLifeCycleHook, success } from './utils.js'

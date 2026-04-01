@@ -4,7 +4,7 @@ import createPreset from 'conventional-changelog-conventionalcommits'
 import { createWriteStream, existsSync, readFileSync } from 'node:fs'
 import { writeFile } from 'node:fs/promises'
 import { finished } from 'node:stream/promises'
-import { join } from 'path'
+import { join } from 'node:path'
 import { defaultTypes } from './changetype.js'
 
 
@@ -15,10 +15,7 @@ interface Options {
   tagPrefix?: string;
 }
 
-
-export const createGenerator = async ({ getPkgDir, tagPrefix }: Options) => {
-  const pkgDir = getPkgDir()
-  
+export const parsePreset = async () => {
   const preset: Preset = await createPreset({
     types: defaultTypes.map((t) => ({ ...t, hidden: false })),
   })
@@ -73,7 +70,15 @@ export const createGenerator = async ({ getPkgDir, tagPrefix }: Options) => {
 {{/each}}
 {{/each}}`.trim() + eol(2)
   
-   return new ConventionalChangelog()
+  return preset
+}
+
+export const createGenerator = async ({ getPkgDir, tagPrefix }: Options) => {
+  const pkgDir = getPkgDir()
+  
+  const preset: Preset = await parsePreset()
+  
+  return new ConventionalChangelog()
     .readPackage(`${ pkgDir }/package.json`)
     .config(preset)
     .options({ releaseCount: 1 })
@@ -98,7 +103,7 @@ export const generateChangelog = async ({ getPkgDir, tagPrefix }: Options) => {
   
   if (!existsSync(infile)) await writeFile(infile, '')
   const originalChangelog = readFileSync(infile, 'utf-8')
-
+  
   const generator = await createGenerator({ getPkgDir, tagPrefix })
   
   const writeStream = createWriteStream(infile)
