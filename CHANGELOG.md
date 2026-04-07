@@ -1,3 +1,8 @@
+## <small>[0.0.8](https://github.com/peiyanlu/release/compare/v0.0.7...v0.0.8) (2026-04-07)</small>
+
+### 🎫 其他更新
+
+* 依赖升级 ([1b8f18b](https://github.com/peiyanlu/release/commit/1b8f18b5bedc66bcb5c2a1a443d8b91e35fbbd9a))
 ## <small>[0.0.7](https://github.com/peiyanlu/release/compare/v0.0.6...v0.0.7) (2026-02-03)</small>
 
 ### 🐛 Bug 修复
