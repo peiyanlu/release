@@ -1,3 +1,8 @@
+## <small>[0.0.10](https://github.com/peiyanlu/release/compare/v0.0.9...v0.0.10) (2026-04-14)</small>
+
+### 🐛 Bug 修复
+
+* 修复 GitHub Action 错误 ([407072b](https://github.com/peiyanlu/release/commit/407072b38142b57fc8b2b1951fc60e00edd6deae))
 ## <small>[0.0.9](https://github.com/peiyanlu/release/compare/v0.0.8...v0.0.9) (2026-04-14)</small>
 
 ### ✨ 新功能
