@@ -1,3 +1,8 @@
+## <small>[0.0.11](https://github.com/peiyanlu/release/compare/v0.0.10...v0.0.11) (2026-04-14)</small>
+
+### 🐛 Bug 修复
+
+* 修复 GitHub Action 编译错误 ([2d22bb8](https://github.com/peiyanlu/release/commit/2d22bb883083aed1d7b30989e9b5b7cc698db763))
 ## <small>[0.0.10](https://github.com/peiyanlu/release/compare/v0.0.9...v0.0.10) (2026-04-14)</small>
 
 ### 🐛 Bug 修复
