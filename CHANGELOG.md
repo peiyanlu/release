@@ -1,3 +1,12 @@
+## <small>[0.0.9](https://github.com/peiyanlu/release/compare/v0.0.8...v0.0.9) (2026-04-14)</small>
+
+### ✨ 新功能
+
+* 支持 GitHub Action ([acefcfa](https://github.com/peiyanlu/release/commit/acefcfa3f84c2047884695bf42277c64d5b215c8))
+
+### 🔨 配置
+
+* 升级 tsconfig ([49b28fc](https://github.com/peiyanlu/release/commit/49b28fc874ddc4fc4987c5ce50fc6dfd9f5c7e4f))
 ## <small>[0.0.8](https://github.com/peiyanlu/release/compare/v0.0.7...v0.0.8) (2026-04-07)</small>
 
 ### 🎫 其他更新
