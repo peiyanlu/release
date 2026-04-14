@@ -3,7 +3,7 @@ import { defineConfig, type UserConfig } from 'tsdown'
 
 const config: UserConfig[] = defineConfig([
   {
-    entry: [ 'src/cli.ts', 'src/release.ts' ],
+    entry: [ 'src/cli.ts' ],
     format: 'esm',
     outDir: 'dist',
     platform: 'node',
@@ -12,7 +12,17 @@ const config: UserConfig[] = defineConfig([
     dts: false,
   },
   {
-    entry: 'src/index.ts',
+    entry: [ 'src/release.ts' ],
+    format: 'esm',
+    outDir: '.',
+    platform: 'node',
+    nodeProtocol: true,
+    shims: true,
+    dts: false,
+    clean: false,
+  },
+  {
+    entry: [ 'src/index.ts' ],
     format: [ 'esm' ],
     outDir: 'dist',
     platform: 'node',
