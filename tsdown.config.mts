@@ -20,6 +20,10 @@ const config: UserConfig[] = defineConfig([
     shims: true,
     dts: false,
     clean: false,
+    deps: {
+      alwaysBundle: [ '@actions/github', '@actions/core' ],
+    },
+    minify: true,
   },
   {
     entry: [ 'src/index.ts' ],
