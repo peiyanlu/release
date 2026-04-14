@@ -296,18 +296,63 @@ GitHub Release 可基于 Git Tag 自动创建，并支持附带：
 当 Tag 推送到远端后，CI/CD 自动执行：
 
 - 发布到 npm
-- 创建 GItHub release
+- 创建 GitHub Release
 
+### 示例用法
+
+- 发布到 npm
 ```ts
 // publishCI.ts
+
 import { publishTagToNpm } from '@peiyanlu/release'
+await publishTagToNpm({})
+```
 
+```json5
+// package.json
 
-await publishTagToNpm({
-  gitTag: '1.0.16',
-  getPkgDir: () => '.',
-  defaultPackage: '.',
-})
+{
+  "scripts": {
+    "ci-publish": "tsx src/publishCI.ts"
+  }
+}
+```
+
+```yaml
+# .github/workflows/publish.yml
+
+jobs:
+  publish:
+    name: Publish
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Publish
+        run: npm i -g npm@^11.5.2 && pnpm run ci-publish "$REF_NAME"
+        env:
+          REF_NAME: ${{ github.ref_name }}
+```
+
+- 创建 GitHub Release
+```yaml
+# .github/workflows/release.yml
+
+jobs:
+  release:
+    name: Release
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Release
+        uses: peiyanlu/release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref_name }}
+          release_name: Release ${{ github.ref_name }}
+          body: |
+            Please refer to [CHANGELOG.md](./CHANGELOG.md) for details.
+          draft: false
 ```
 
 ## Dry Run

@@ -1,0 +1,25 @@
+name: 'Release Tag'
+description: 'Create a release on tag push'
+
+branding:
+  icon: 'tag'
+  color: 'gray-dark'
+  
+inputs:
+  tag_name:
+    description: 'The name of the tag. This should come from the webhook payload, `github.GITHUB_REF_NAME` when a user pushes a new tag'
+    required: true
+  release_name:
+    description: 'The name of the release. For example, `Release v1.0.1`'
+    required: false
+  body:
+    description: 'Text describing the contents of the tag.'
+    required: false
+  draft:
+    description: '`true` to create a draft (unpublished) release, `false` to create a published one. Default: `false`'
+    required: false
+    default: 'false'
+    
+runs:
+  using: 'node20'
+  main: 'dist/release.mjs'

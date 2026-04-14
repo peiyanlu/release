@@ -1,3 +1,2 @@
-neverBuiltDependencies: [ ]
-
-#dlxCacheMaxAge = 60
+onlyBuiltDependencies:
+  - esbuild

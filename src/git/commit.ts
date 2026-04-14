@@ -7,7 +7,8 @@ import {
   gitCommit,
   gitTagAnnotated,
   isGitRepo,
-  isWorkingDirClean, parseGitHubRepo,
+  isWorkingDirClean,
+  parseGitHubRepo,
   pushBranch,
   pushTag,
 } from '@peiyanlu/cli-utils'
