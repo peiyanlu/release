@@ -99,6 +99,7 @@ export const publishTagToNpm = async (options: PublishTagOptions) => {
     [ pkgName, version ] = tag.split(tagSeparator)
     console.log(`🔍 Parsed tag → package: "${ yellow(pkgName) }", version: "${ green(version) }"`)
   } else {
+    pkgName = '.'
     version = tag
     console.log(`🔍 Parsed tag → version only: "${ green(version) }"`)
   }
