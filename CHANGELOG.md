@@ -1,3 +1,12 @@
+## <small>[0.0.12](https://github.com/peiyanlu/release/compare/v0.0.11...v0.0.12) (2026-04-15)</small>
+
+### 🎫 其他更新
+
+* 依赖升级 ([d5511d6](https://github.com/peiyanlu/release/commit/d5511d6556bcea308b2626ef43d2faa4d7a30bbb))
+
+### 🔧 CI 配置
+
+* 版本升级 ([7a42eb9](https://github.com/peiyanlu/release/commit/7a42eb96adafcfd0a5bb368f4a125a96b3439e8e))
 ## <small>[0.0.11](https://github.com/peiyanlu/release/compare/v0.0.10...v0.0.11) (2026-04-14)</small>
 
 ### 🐛 Bug 修复
