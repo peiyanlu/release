@@ -106,7 +106,7 @@ export class Action {
     console.log()
     intro(prepare ? MSG.INTRO_PREPARE(dryRun) : MSG.INTRO(dryRun))
     
-    const { isMonorepo, packages, getPkgDir } = config
+    const { isMonorepo, packages, getPkgDir, ignoreNpm } = config
     
     if (isMonorepo) {
       if (ci) {
@@ -165,7 +165,7 @@ export class Action {
           toPreRelease: false,
           publishConfig: { ...publishConfig },
         },
-        noNpm: pkgPrivate,
+        noNpm: pkgPrivate || ignoreNpm,
       },
     )
     

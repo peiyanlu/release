@@ -19,7 +19,13 @@ import { ReleaseContext, ResolvedConfig } from '../types.js'
 
 export const gitCheck = async (ctx: ReleaseContext, config: ResolvedConfig) => {
   const { pkg: { name } } = ctx
-  const { git: { requireRepository, requireRemote, requireWorkDirClean } } = config
+  const { git: { requireRepository, requireRemote, requireWorkDirClean }, ignoreGit, ignoreGithub } = config
+  
+  if (ignoreGit) {
+    ctx.noGit = true
+    ctx.noGitHub = true
+    return
+  }
   
   const isRepo = await isGitRepo()
   if (!isRepo) {
@@ -27,12 +33,18 @@ export const gitCheck = async (ctx: ReleaseContext, config: ResolvedConfig) => {
       throw new Error(MSG.ERROR.GIT_REGISTRY(name))
     } else {
       ctx.noGit = true
+      ctx.noGitHub = true
       return
     }
   }
   
   if (requireWorkDirClean && !await isWorkingDirClean()) {
     throw new Error(MSG.ERROR.GIT_WORKDIR)
+  }
+  
+  if (ignoreGithub) {
+    ctx.noGitHub = true
+    return
   }
   
   const { remoteName, remoteUrl } = await getRemote()
@@ -45,8 +57,6 @@ export const gitCheck = async (ctx: ReleaseContext, config: ResolvedConfig) => {
     }
   }
   Object.assign(ctx.git, { remoteName, remoteUrl })
-  
-  // parseGithubUrl(ctx)
   
   const [ owner, repo ] = parseGitHubRepo(remoteUrl)
   Object.assign(ctx.github, { owner, repo })
