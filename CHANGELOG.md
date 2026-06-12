@@ -1,3 +1,13 @@
+## <small>[0.0.13](https://github.com/peiyanlu/release/compare/v0.0.12...v0.0.13) (2026-06-12)</small>
+
+### ✨ 新功能
+
+* 发布流程中断不影响后续流程 ([fa215af](https://github.com/peiyanlu/release/commit/fa215aff7a3b7ffcad5331b21925c5e4eed36989))
+* 支持显示配置跳过流程 ([c92dffa](https://github.com/peiyanlu/release/commit/c92dffa41a8d06ced32b4e789a26a3193a16358c))
+
+### 🔧 CI 配置
+
+* 优化依赖更新策略 ([aba48e2](https://github.com/peiyanlu/release/commit/aba48e2a34692d5d9f9302710e58c0ec12a109b0))
 ## <small>[0.0.12](https://github.com/peiyanlu/release/compare/v0.0.11...v0.0.12) (2026-04-15)</small>
 
 ### 🎫 其他更新
