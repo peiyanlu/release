@@ -215,7 +215,7 @@ export class Action {
   }
   
   async bumpTask(ctx: ReleaseContext, config: ResolvedConfig) {
-    const { pkg: { current }, dryRun, isCI, showRelease, showChangelog, selectedPkg } = ctx
+    const { pkg: { current }, dryRun, isCI, showRelease, showChangelog, selectedPkg, noGit } = ctx
     const { isMonorepo, hooks, getPkgDir, tagPrefix } = config
     
     const need = (ctx: ReleaseContext) => {
@@ -254,6 +254,8 @@ export class Action {
     ]).catch((err) => abortOnError(err, ctx))
     await runLifeCycleHook(hooks, 'after:bump', dryRun)
     
+    if (noGit) return
+    
     // 打印 Changelog
     const match = isMonorepo ? `${ tagPrefix?.(selectedPkg) }*` : '*'
     const { from, to } = await resolveChangelogRange(isIncrement, match)
@@ -274,8 +276,10 @@ export class Action {
   }
   
   async changelogTask(ctx: ReleaseContext, config: ResolvedConfig) {
-    const { isIncrement, dryRun, selectedPkg } = ctx
+    const { isIncrement, dryRun, selectedPkg, noGit } = ctx
     const { getPkgDir, tagPrefix } = config
+    
+    if (noGit) return
     
     await tasks([
       {
@@ -350,7 +354,7 @@ export class Action {
           return success(MSG.TASK.NPM.END(url), dryRun)
         },
       },
-    ]).catch((err) => abortOnError(err, ctx))
+    ]).catch((err) => abortOnError(err, ctx, false))
     await runLifeCycleHook(hooks, 'after:publish', dryRun)
   }
   
@@ -374,7 +378,7 @@ export class Action {
           return success(MSG.TASK.GITHUB.END(url), dryRun)
         },
       },
-    ]).catch((err) => abortOnError(err, ctx))
+    ]).catch((err) => abortOnError(err, ctx, false))
     await runLifeCycleHook(hooks, 'after:release', dryRun)
   }
 }

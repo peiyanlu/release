@@ -1,8 +1,8 @@
 import { cancel, isCancel, log, outro } from '@clack/prompts'
 import { red } from 'ansis'
+import { gitRollback } from './git/commit.js'
 import { MSG } from './messages.js'
 import { ReleaseContext } from './types.js'
-import { gitRollback } from './git/commit.js'
 
 
 export const abortTask = (msg?: string) => {
@@ -21,11 +21,11 @@ export const abortGroupPrompt = (ctx?: ReleaseContext) => {
   abortTask(MSG.ABORT.CANCEL)
 }
 
-export const abortOnError = (err: Error, ctx?: ReleaseContext) => {
+export const abortOnError = (err: Error, ctx?: ReleaseContext, exit = true) => {
   ctx && gitRollback(ctx)
   const msg = err.message.replace(/^\[(github|npm|git)]/, a => red(a))
   log.message(`\n${ msg }\n`)
-  process.exit(1)
+  exit && process.exit(1)
 }
 
 export const taskEnd = (msg?: string) => {
