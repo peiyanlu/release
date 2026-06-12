@@ -68,7 +68,7 @@ export const parsePreset = async () => {
 {{#each commits}}
 {{> commit root=@root}}
 {{/each}}
-{{/each}}`.trim() + eol(2)
+{{/each}}`.trim()
   
   return preset
 }
@@ -102,7 +102,7 @@ export const generateChangelog = async ({ getPkgDir, tagPrefix }: Options) => {
   const infile = join(pkgDir, 'CHANGELOG.md')
   
   if (!existsSync(infile)) await writeFile(infile, '')
-  const originalChangelog = readFileSync(infile, 'utf-8')
+  const exist = readFileSync(infile, 'utf-8')
   
   const generator = await createGenerator({ getPkgDir, tagPrefix })
   
@@ -112,7 +112,11 @@ export const generateChangelog = async ({ getPkgDir, tagPrefix }: Options) => {
     writeStream.write(chunk)
   }
   
-  writeStream.write(originalChangelog)
+  if (exist.trim().length) {
+    writeStream.write(eol(2))
+  }
+  
+  writeStream.write(exist)
   writeStream.end()
   
   await finished(writeStream)

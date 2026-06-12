@@ -116,6 +116,7 @@ export interface ReleaseConfig {
   git: {
     /**
      * 是否创建 Git 提交
+     * 影响创建 Tag 和推送
      */
     commit: boolean | undefined
     

@@ -320,7 +320,9 @@ export class Action {
         title: MSG.TASK.GIT.START,
         task: async () => {
           await commitAndTag(ctx, config)
-          return success(MSG.TASK.GIT.END, dryRun)
+          
+          const { git: { push } } = config
+          return success(MSG.TASK.GIT.END(Boolean(push)), dryRun)
         },
       },
     ]).catch((err) => abortOnError(err, ctx))
@@ -350,7 +352,8 @@ export class Action {
               }
             })
           
-          const url = getPackageUrl(name, next)
+          const { npm: { publish } } = config
+          const url = publish ? getPackageUrl(name, next) : undefined
           return success(MSG.TASK.NPM.END(url), dryRun)
         },
       },
@@ -371,10 +374,11 @@ export class Action {
       {
         title: MSG.TASK.GITHUB.START,
         task: async () => {
-          const { github: { owner, repo }, git: { currentTag } } = ctx
-          
           await createRelease(ctx, config)
-          const url = getGithubReleaseUrl(owner, repo, currentTag)
+          
+          const { github: { owner, repo }, git: { currentTag } } = ctx
+          const { github: { release } } = config
+          const url = release ? getGithubReleaseUrl(owner, repo, currentTag) : undefined
           return success(MSG.TASK.GITHUB.END(url), dryRun)
         },
       },

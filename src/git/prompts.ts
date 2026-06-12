@@ -24,17 +24,25 @@ export const runGitPrompts = async (ctx: ReleaseContext, config: ResolvedConfig)
             return Promise.resolve(commit)
           })()
       },
-      tag: () => {
+      tag: ({ results: { commit } }) => {
         return shouldPrompt(tag)
-          ? confirm({ message: question(MSG.PROMPT.GIT_TAG(currentTag), 'git') })
+          ? commit
+            ? confirm({ message: question(MSG.PROMPT.GIT_TAG(currentTag), 'git') })
+            : (() => {
+              return Promise.resolve(false)
+            })()
           : (() => {
             logs.push(yellow`git.tag`)
             return Promise.resolve(tag)
           })()
       },
-      push: () => {
+      push: ({ results: { commit, tag } }) => {
         return shouldPrompt(push)
-          ? confirm({ message: question(MSG.PROMPT.GIT_PUSH, 'git') })
+          ? (commit || tag)
+            ? confirm({ message: question(MSG.PROMPT.GIT_PUSH, 'git') })
+            : (() => {
+              return Promise.resolve(false)
+            })()
           : (() => {
             logs.push(yellow`git.push`)
             return Promise.resolve(push)

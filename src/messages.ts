@@ -52,17 +52,23 @@ export const MSG = {
     
     NPM: {
       START: 'Publishing npm package',
-      END: (url: string) => `NPM package published: ${ underline(dim(url)) }`,
+      END: (url?: string) => url
+        ? `Published npm package: ${ underline(dim(url)) }`
+        : 'NPM publish skipped',
     },
     
     GIT: {
       START: 'Creating git commit, tag & push',
-      END: 'Git commit, tag & push completed',
+      END: (push: boolean) => push
+        ? 'Git commit, tag & push completed'
+        : 'Git commit, tag & push skipped',
     },
     
     GITHUB: {
       START: 'Creating GitHub release',
-      END: (url: string) => `GitHub release created: ${ underline(dim(url)) }`,
+      END: (url?: string) => url
+        ? `Created GitHub release: ${ underline(dim(url)) }`
+        : 'GitHub release skipped',
     },
   },
   
