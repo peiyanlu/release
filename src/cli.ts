@@ -62,7 +62,9 @@ program
   packages: [ 'demo-a', 'demo-b' ],
   getPkgDir: (pkg) => \`packages/\${ pkg }\`,
   toTag: (pkg, version) => \`\${ pkg }@\${ version }\`,
-  tagPrefix: (pkg) => \`\${ pkg }@\`,
+  changelog: {
+    tagPrefix: (pkg) => \`\${ pkg }@\`,
+  },
 }`
     
     const content = [

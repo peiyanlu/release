@@ -1,5 +1,6 @@
 import { log } from '@clack/prompts'
-import { DeepRequired } from '@peiyanlu/ts-utils'
+import { type DeepRequired } from '@peiyanlu/ts-utils'
+import { type Options } from 'conventional-changelog'
 
 
 export interface ReleaseContext {
@@ -97,17 +98,26 @@ export interface ReleaseConfig {
   /** 使用 monorepo 时使用 toTag，例如 `${pkg}@${version}`，默认为 `v${version}` 作为单仓库 */
   toTag: (pkg: string, version: string) => string
   
-  /** 作为 CHANGELOG 标题的 Tag 前缀，多包场景下需要 `${pkg}@` */
-  tagPrefix: ((pkg: string) => string) | undefined
+  /**
+   * CHANGELOG 相关配置
+   * 影响生成的日志数量、日志标题（monorepo）。
+   */
+  changelog: {
+    /** 作为 CHANGELOG 标题的 Tag 前缀，多包场景下需要 `${pkg}@` */
+    tagPrefix: ((pkg: string) => string)
+    
+    /** 生成多少个版本的变更日志，详见 {@link Options} */
+    releaseCount: number
+  }
   
   /** 忽略 git、github 环境检查以及后续操作  */
-  ignoreGit: boolean | undefined
+  ignoreGit: boolean
   
   /** 忽略 npm 环境检查以及后续操作 */
-  ignoreNpm:boolean | undefined
+  ignoreNpm: boolean
   
   /** 忽略 github 环境检查以及后续操作 */
-  ignoreGithub: boolean | undefined
+  ignoreGithub: boolean
   
   /**
    * Git 相关配置

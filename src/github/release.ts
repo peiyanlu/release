@@ -137,7 +137,7 @@ const createCReleaseByTag = async (octokit: Octokit, options: CreateRelease) => 
   const { draft, id: releaseId } = existing
   
   if (!draft) {
-    throw new Error(`Release for tag "${ options.tag }" already exists and is not a draft`)
+    throw new Error(MSG.ERROR.GITHUB_TAG_EXIT(options.tag))
   }
   
   return updateCRelease(octokit, { releaseId, ...options })

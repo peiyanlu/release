@@ -84,8 +84,11 @@ export const createDefaultConfig = (isCI?: boolean): DefaultConfig => {
     toTag(pkg: string, version: string): string {
       return `v${ version }`
     },
-    tagPrefix(pkg: string): string {
-      return ''
+    changelog: {
+      tagPrefix(pkg: string): string {
+        return ''
+      },
+      releaseCount: 1,
     },
     ignoreGit: false,
     ignoreNpm: false,

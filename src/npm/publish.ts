@@ -5,11 +5,29 @@ import {
   hasWriteAccess,
   pingRegistry,
   publishPackage,
+  registryArg,
   resolvePublishTag,
+  runNpm,
 } from '@peiyanlu/cli-utils'
 import { blue, cyan, green, magenta, red, underline, yellow } from 'ansis'
 import { MSG } from '../messages.js'
 import { ReleaseContext, ResolvedConfig } from '../types.js'
+
+
+const canPublish = async (registry?: string): Promise<boolean> => {
+  const res = await runNpm(
+    [ 'publish', '--dry-run', '--no-git-checks', '--access', 'public', ...registryArg(registry) ],
+    { error: 'throw' },
+  ).catch((err: Error) => err)
+  
+  if (!(res instanceof Error)) {
+    return true
+  }
+  
+  const matches = [ /previously published versions/i, /cannot publish over/i ]
+  
+  return matches.some(reg => reg.test(res.message))
+}
 
 
 export const npmCheck = async (ctx: ReleaseContext, config: ResolvedConfig) => {
@@ -21,13 +39,20 @@ export const npmCheck = async (ctx: ReleaseContext, config: ResolvedConfig) => {
   
   if (skipChecks) return ''
   
-  const [ pinged, username ] = await Promise.all([ pingRegistry(registry), getAuthenticatedUser(registry) ])
+  const [ pinged, username, canPublished ] = await Promise.all([
+    pingRegistry(registry),
+    getAuthenticatedUser(registry),
+    canPublish(registry),
+  ])
   
   if (!pinged) {
     throw new Error(MSG.ERROR.NPM_REGISTRY(registry))
   }
   if (!username) {
     throw new Error(MSG.ERROR.NPM_AUTH)
+  }
+  if (!canPublished) {
+    throw new Error(MSG.ERROR.NPM_PERMISSION)
   }
   
   Object.assign(ctx.npm, { username })

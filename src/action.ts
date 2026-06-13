@@ -17,6 +17,7 @@ import {
   readJsonFile,
   resolveChangelogRange,
 } from '@peiyanlu/cli-utils'
+import { isZero } from '@peiyanlu/ts-utils'
 import { join } from 'node:path'
 import { publint } from 'publint'
 import { formatMessage } from 'publint/utils'
@@ -216,7 +217,7 @@ export class Action {
   
   async bumpTask(ctx: ReleaseContext, config: ResolvedConfig) {
     const { pkg: { current }, dryRun, isCI, showRelease, showChangelog, selectedPkg, noGit } = ctx
-    const { isMonorepo, hooks, getPkgDir, tagPrefix } = config
+    const { isMonorepo, hooks, getPkgDir, changelog: { tagPrefix, releaseCount } } = config
     
     const need = (ctx: ReleaseContext) => {
       const { pkg: { next }, isIncrement } = ctx
@@ -258,11 +259,14 @@ export class Action {
     
     // 打印 Changelog
     const match = isMonorepo ? `${ tagPrefix?.(selectedPkg) }*` : '*'
-    const { from, to } = await resolveChangelogRange(isIncrement, match)
+    const { from, to } = isZero(releaseCount)
+      ? { from: '', to: 'HEAD' }
+      : await resolveChangelogRange(isIncrement, match)
     const commits = await getLog(from, to, getPkgDir(selectedPkg))
     const changelog = await getChangelog({
       getPkgDir: () => getPkgDir(selectedPkg),
       tagPrefix: tagPrefix?.(selectedPkg),
+      releaseCount,
     })
     Object.assign(ctx.github, { changelog })
     
@@ -277,7 +281,7 @@ export class Action {
   
   async changelogTask(ctx: ReleaseContext, config: ResolvedConfig) {
     const { isIncrement, dryRun, selectedPkg, noGit } = ctx
-    const { getPkgDir, tagPrefix } = config
+    const { getPkgDir, changelog: { tagPrefix, releaseCount } } = config
     
     if (noGit) return
     
@@ -288,6 +292,7 @@ export class Action {
           await generateChangelog({
             getPkgDir: () => getPkgDir(selectedPkg),
             tagPrefix: tagPrefix?.(selectedPkg),
+            releaseCount,
           })
           await gitAddAll()
           

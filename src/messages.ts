@@ -89,14 +89,15 @@ export const MSG = {
     GIT_REGISTRY: (name: string) => `[git] Repository not found for ${ dim(name) }`,
     GIT_REMOTE: (name: string) => `[git] Remote "${ dim(name) }" not found`,
     
-    GITHUB_TAG_EXIT: (tag: string) => `[github] Release or tag "${ tag }" already exists`,
+    GITHUB_TAG_EXIT: (tag: string) => `[github] Release for tag "${ tag }" already exists and is not a draft`,
     GITHUB_TOKEN: (tokenRef: string) => `[github] Missing GitHub token. Please set ${ yellow(tokenRef ?? 'GITHUB_TOKEN') }`,
     GITHUB_AUTH: '[github] Invalid GitHub token or insufficient permissions',
     GITHUB_USER: '[github] User does not have permission to create releases',
     
     NPM_REGISTRY: (registry: string) => `[npm] Unable to reach npm registry ${ underline(dim(registry)) }`,
-    NPM_AUTH: `[npm] Not authenticated with npm. Please run ${ yellow('npm login') } and try again.`,
-    NPM_USER: (user: string, name: string) => `[npm] User ${ dim(user) } is not a collaborator of ${ dim(name) }.`,
+    NPM_AUTH: `[npm] Not authenticated with npm. Please run ${ yellow('npm login') } and try again`,
+    NPM_PERMISSION: `[npm] Missing publish permission. Please use a token with publish access and try again`,
+    NPM_USER: (user: string, name: string) => `[npm] User ${ dim(user) } is not a collaborator of ${ dim(name) }`,
   },
   
   ABORT: {

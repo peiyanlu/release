@@ -44,43 +44,43 @@ export const defaultTypes: CommitType[] = [
   },
   {
     type: 'chore',
-    section: '🎫 其他更新',
+    section: '🧹 其他更新',
     description: '非功能性更改',
   },
   {
     type: 'refactor',
-    section: '♻ 代码重构',
+    section: '♻️ 代码重构',
     description: '重构代码',
   },
   {
     type: 'test',
-    section: '✅ 测试',
+    section: '🧪 测试',
     description: '测试更新',
   },
   {
     type: 'build',
-    section: '👷‍ 构建系统',
+    section: '🏗️ 构建系统',
     description: '构建工具和系统修改',
   },
   {
     type: 'ci',
-    section: '🔧 CI 配置',
+    section: '🤖 CI',
     description: '持续集成配置',
   },
   // custom
   {
     type: 'config',
-    section: '🔨 配置',
+    section: '⚙️ 配置',
     description: '配置文件更新',
   },
   {
     type: 'deps',
-    section: '🔗 依赖更新',
+    section: '📦 依赖更新',
     description: '依赖版本变更',
   },
   {
     type: 'security',
-    section: '🔒 安全修复',
+    section: '🛡️ 安全修复',
     description: '安全性更新',
   },
   {
@@ -90,12 +90,17 @@ export const defaultTypes: CommitType[] = [
   },
   {
     type: 'ux',
-    section: '🖥️ 用户体验',
+    section: '🎨 用户体验',
     description: '用户体验改进',
   },
   {
     type: 'hotfix',
-    section: '🔥 热修复',
+    section: '🚑 热修复',
     description: '紧急修复',
+  },
+  {
+    type: 'tool',
+    section: '🛠️ 工具链',
+    description: '工具链变更',
   },
 ]
