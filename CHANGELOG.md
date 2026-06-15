@@ -1,3 +1,9 @@
+## <small>[0.0.15](https://github.com/peiyanlu/release/compare/v0.0.14...v0.0.15) (2026-06-15)</small>
+
+### ✨ 新功能
+
+* 支持生成指定数量的变更日志 ([4dc736d](https://github.com/peiyanlu/release/commit/4dc736d399512e3779cf48e0f06f35b38efe964d))
+
 ## <small>[0.0.14](https://github.com/peiyanlu/release/compare/v0.0.13...v0.0.14) (2026-06-12)</small>
 
 ### 🖥️ 用户体验
