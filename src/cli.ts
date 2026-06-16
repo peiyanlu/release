@@ -47,9 +47,9 @@ program
     const isTS = existsSync(join(cwd, 'tsconfig.json'))
     
     const infile = `release.config.${ isESM ? '' : 'm' }${ isTS ? 'ts' : 'js' }`
-    const configPath = join(cwd, infile)
+    const configFile = join(cwd, infile)
     
-    if (existsSync(configPath) && !force) {
+    if (existsSync(configFile) && !force) {
       console.error(
         `${ red`Error:` } ${ yellow(infile) } already exists.\n` +
         `Use ${ green`--force` } to overwrite.`,
@@ -71,7 +71,7 @@ program
       `import { defineConfig } from '@peiyanlu/release'`,
       `export default defineConfig(${ monorepo ? monoConfigToString() : '{}' })`,
     ].join(eol(2))
-    writeFileSync(configPath, content, 'utf-8')
+    writeFileSync(configFile, content, 'utf-8')
     
     console.log(`${ green`✔` } ${ infile } created successfully`)
   })

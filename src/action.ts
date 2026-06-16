@@ -2,14 +2,14 @@ import { intro, select, tasks } from '@clack/prompts'
 import {
   bumpPackageVersion,
   type CliOptions,
-  coloredChangeset,
+  coloredStatus,
   eol,
   getGithubReleaseUrl,
   getGithubUrl,
-  getLog,
+  getLogSince,
   getPackageInfo,
   getPackageUrl,
-  getStatus,
+  getShortStatus,
   gitAddAll,
   isOtpError,
   isPrerelease,
@@ -32,9 +32,20 @@ import { createRelease, githubCheck } from './github/release.js'
 import { MSG } from './messages.js'
 import { runNpmOptPrompts, runNpmPublishPrompts } from './npm/prompts.js'
 import { npmCheck, publishNpm } from './npm/publish.js'
-import { abortOnError, abortSinglePrompt, abortTask, taskEnd } from './prompts.js'
 import { ReleaseConfig, ReleaseContext, ResolvedConfig } from './types.js'
-import { diff, formatTemplate, info, msg, question, runLifeCycleHook, success } from './utils.js'
+import {
+  abortOnError,
+  abortSinglePrompt,
+  abortTask,
+  diff,
+  formatTemplate,
+  info,
+  msg,
+  question,
+  runLifeCycleHook,
+  success,
+  taskEnd,
+} from './utils.js'
 import { runVersionPrompts } from './version/prompts.js'
 
 
@@ -96,13 +107,13 @@ export class Action {
     process.env['dryRun'] = String(dryRun)
     
     
-    const { configPath, config: local } = await resolveConfig<ReleaseConfig>(process.cwd())
+    const { configFile, config: local } = await resolveConfig<ReleaseConfig>(process.cwd())
     const defaultConfig = createDefaultConfig(ci ? true : undefined)
     const config: ResolvedConfig = mergeConfig<ResolvedConfig>(defaultConfig, local)
     
     
     info(MSG.INFO.TOOL(cName, cVersion))
-    info(MSG.INFO.CONFIG(configPath))
+    info(MSG.INFO.CONFIG(configFile))
     
     console.log()
     intro(prepare ? MSG.INTRO_PREPARE(dryRun) : MSG.INTRO(dryRun))
@@ -262,7 +273,7 @@ export class Action {
     const { from, to } = isZero(releaseCount)
       ? { from: '', to: 'HEAD' }
       : await resolveChangelogRange(isIncrement, match)
-    const commits = await getLog(from, to, getPkgDir(selectedPkg))
+    const commits = await getLogSince(from, to, getPkgDir(selectedPkg))
     const changelog = await getChangelog({
       getPkgDir: () => getPkgDir(selectedPkg),
       tagPrefix: tagPrefix?.(selectedPkg),
@@ -271,7 +282,7 @@ export class Action {
     Object.assign(ctx.github, { changelog })
     
     if (commits) {
-      msg('GIT', `Changelog(${ from }...${ to }):${ eol(2) }` + changelog.trimEnd())
+      msg('GIT', `Changelog(${ from }...${ to }):${ eol(2) }` + changelog)
       msg('GIT', `Commits(${ from }...${ to }):${ eol(2) }` + commits)
       if (showChangelog) taskEnd(MSG.LOG.SHOW_CHANGELOG)
     } else {
@@ -303,9 +314,9 @@ export class Action {
     ]).catch((err) => abortOnError(err, ctx))
     
     // 打印 Changes
-    const changeset = await getStatus()
+    const changeset = await getShortStatus()
     if (changeset) {
-      msg('GIT', `Changes:${ eol(2) }` + coloredChangeset(changeset))
+      msg('GIT', `Changes:${ eol(2) }` + coloredStatus(changeset))
     } else {
       msg('GIT', MSG.LOG.CHANGES_EMPTY)
     }

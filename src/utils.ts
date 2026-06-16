@@ -1,8 +1,10 @@
-import { log } from '@clack/prompts'
+import { cancel, isCancel, log, outro } from '@clack/prompts'
 import { execAsync, getLatestTag } from '@peiyanlu/cli-utils'
 import { castArray } from '@peiyanlu/ts-utils'
-import { dim, green, rgb, yellow } from 'ansis'
+import { dim, green, red, rgb, yellow } from 'ansis'
 import { inspect } from 'node:util'
+import { gitRollback } from './git/commit.js'
+import { MSG } from './messages.js'
 import { HookConfig, ReleaseContext, ReleaseHookKey, ResolvedConfig } from './types.js'
 
 
@@ -71,4 +73,33 @@ export const formatTemplate = async (ctx: ReleaseContext, config: ResolvedConfig
   
   Object.assign(ctx.git, { latestTag, currentTag, commitMessage, tagMessage })
   Object.assign(ctx.github, { releaseName })
+}
+
+
+export const abortTask = (msg?: string) => {
+  cancel(`${ red('✕') } ${ msg }`)
+  process.exit(0)
+}
+
+export const abortSinglePrompt = (value: unknown) => {
+  if (isCancel(value)) {
+    abortTask(MSG.ABORT.CANCEL)
+  }
+}
+
+export const abortGroupPrompt = (ctx?: ReleaseContext) => {
+  ctx && gitRollback(ctx)
+  abortTask(MSG.ABORT.CANCEL)
+}
+
+export const abortOnError = (err: Error, ctx?: ReleaseContext, exit = true) => {
+  ctx && gitRollback(ctx)
+  const msg = err.message.replace(/^\[(github|npm|git)]/, a => red(a))
+  log.message(`\n${ msg }\n`)
+  exit && process.exit(1)
+}
+
+export const taskEnd = (msg?: string) => {
+  outro(msg)
+  process.exit(0)
 }

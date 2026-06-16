@@ -2,8 +2,7 @@ import { DeepPartial, DeepRequired, isFunction, isPlainObject, isUndefined } fro
 import { existsSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { pathToFileURL } from 'node:url'
-import { createDefaultConfig } from './defaults.js'
-import { ReleaseConfig, ResolvedConfig } from './types.js'
+import { ReleaseConfig } from './types.js'
 
 
 export type UserConfig = DeepPartial<ReleaseConfig>
@@ -46,21 +45,18 @@ const loadConfig = async <T = unknown>(file: string): Promise<T> => {
   return (typeof temp === 'function') ? temp() : temp
 }
 
-export const resolveConfig = async <T = unknown>(cwd?: string): Promise<{ configPath: string, config: T }> => {
+export const resolveConfig = async <T = unknown>(cwd?: string): Promise<{ configFile: string, config: T }> => {
   const configFile = findConfigFile(cwd)
   
   if (!configFile) {
     return {
-      configPath: '',
+      configFile: '',
       config: {} as T,
     }
   }
   
   const config = await loadConfig<T>(configFile)
-  return {
-    configPath: configFile,
-    config: config,
-  }
+  return { configFile, config }
 }
 
 export const mergeConfig = <T extends object>(

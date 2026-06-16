@@ -1,20 +1,21 @@
 import {
-  getAllRemotes,
-  getCurrentBranch,
-  getRemote,
+  getRemoteList,
+  getRemoteNames,
   gitAddAll,
   gitAddTracked,
-  gitCommit,
+  gitBranchCurrent,
+  gitCommitMessage,
+  gitPushBranch,
+  gitPushTag,
+  gitResetHardSync,
   gitTagAnnotated,
+  gitTagDeleteSync,
   isGitRepo,
-  isWorkingDirClean,
+  isWorkingTreeClean,
   parseGitHubRepo,
-  pushBranch,
-  pushTag,
 } from '@peiyanlu/cli-utils'
-import { spawnSync } from 'node:child_process'
 import { MSG } from '../messages.js'
-import { ReleaseContext, ResolvedConfig } from '../types.js'
+import type { ReleaseContext, ResolvedConfig } from '../types.js'
 
 
 export const gitCheck = async (ctx: ReleaseContext, config: ResolvedConfig) => {
@@ -38,7 +39,7 @@ export const gitCheck = async (ctx: ReleaseContext, config: ResolvedConfig) => {
     }
   }
   
-  if (requireWorkDirClean && !await isWorkingDirClean()) {
+  if (requireWorkDirClean && !await isWorkingTreeClean()) {
     throw new Error(MSG.ERROR.GIT_WORKDIR)
   }
   
@@ -47,7 +48,7 @@ export const gitCheck = async (ctx: ReleaseContext, config: ResolvedConfig) => {
     return
   }
   
-  const { remoteName, remoteUrl } = await getRemote()
+  const { name: remoteName, url: remoteUrl } = (await getRemoteList())[0]
   if (!remoteUrl) {
     if (requireRemote) {
       throw new Error(MSG.ERROR.GIT_REMOTE(name))
@@ -79,8 +80,8 @@ export const commitAndTag = async (ctx: ReleaseContext, config: ResolvedConfig) 
   
   const args = dryRun ? [ '--dry-run' ] : []
   
-  addUntrackedFiles ? await gitAddAll() : await gitAddTracked(args)
-  await gitCommit(commitMessage, [ ...commitArgs, ...args ])
+  addUntrackedFiles ? await gitAddAll(args) : await gitAddTracked(args)
+  await gitCommitMessage(commitMessage, [ ...commitArgs, ...args ])
   
   if (!dryRun) {
     Object.assign(ctx.git, { isCommitted: true })
@@ -95,10 +96,10 @@ export const commitAndTag = async (ctx: ReleaseContext, config: ResolvedConfig) 
   }
   
   if (push) {
-    const remotes = await getAllRemotes()
+    const remotes = await getRemoteNames()
     for (const remoteName of remotes) {
-      await pushTag(remoteName, currentTag, args)
-      await pushBranch(remoteName, await getCurrentBranch(), [ ...pushArgs, ...args ])
+      await gitPushTag(remoteName, currentTag, args)
+      await gitPushBranch(remoteName, await gitBranchCurrent(), [ ...pushArgs, ...args ])
     }
     
     if (!dryRun) {
@@ -112,11 +113,9 @@ export const gitRollback = (ctx: ReleaseContext) => {
   
   if (isPushed) return
   
-  spawnSync('git', [ 'restore', '.' ])
-  
   if (isTagged) {
-    spawnSync('git', [ 'tag', '--delete', currentTag ])
+    gitTagDeleteSync(currentTag)
   }
   
-  spawnSync('git', [ 'reset', '--hard', isCommitted ? 'HEAD~1' : 'HEAD' ])
+  gitResetHardSync(isCommitted ? 1 : 0)
 }

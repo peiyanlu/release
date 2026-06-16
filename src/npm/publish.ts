@@ -1,33 +1,16 @@
 import {
+  canPublish,
   getAuthenticatedUser,
   getPackageInfo,
   getPublishedVersion,
   hasWriteAccess,
   pingRegistry,
   publishPackage,
-  registryArg,
   resolvePublishTag,
-  runNpm,
 } from '@peiyanlu/cli-utils'
 import { blue, cyan, green, magenta, red, underline, yellow } from 'ansis'
 import { MSG } from '../messages.js'
 import { ReleaseContext, ResolvedConfig } from '../types.js'
-
-
-const canPublish = async (registry?: string): Promise<boolean> => {
-  const res = await runNpm(
-    [ 'publish', '--dry-run', '--no-git-checks', '--access', 'public', ...registryArg(registry) ],
-    { error: 'throw' },
-  ).catch((err: Error) => err)
-  
-  if (!(res instanceof Error)) {
-    return true
-  }
-  
-  const matches = [ /previously published versions/i, /cannot publish over/i ]
-  
-  return matches.some(reg => reg.test(res.message))
-}
 
 
 export const npmCheck = async (ctx: ReleaseContext, config: ResolvedConfig) => {

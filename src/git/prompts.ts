@@ -2,9 +2,8 @@ import { confirm, group } from '@clack/prompts'
 import { isUndefined } from '@peiyanlu/ts-utils'
 import { yellow } from 'ansis'
 import { MSG } from '../messages.js'
-import { abortGroupPrompt } from '../prompts.js'
 import { ReleaseContext, ResolvedConfig } from '../types.js'
-import { msg, question } from '../utils.js'
+import { abortGroupPrompt, msg, question } from '../utils.js'
 
 
 export const runGitPrompts = async (ctx: ReleaseContext, config: ResolvedConfig) => {

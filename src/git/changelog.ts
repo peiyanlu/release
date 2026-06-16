@@ -24,8 +24,8 @@ export const parsePreset = async () => {
   })
   preset.writer ??= {}
   
-  preset.writer.headerPartial = `
-## {{#if isPatch~}} <small> {{~/if~}}
+  preset.writer.headerPartial =
+`## {{#if isPatch~}} <small> {{~/if~}}
 {{#if @root.linkCompare~}}
 [{{version}}](
 {{~#if @root.repository~}}
@@ -50,8 +50,8 @@ export const parsePreset = async () => {
 {{~#if isPatch~}} </small> {{~/if}}
 `.trim() + eol()
   
-  preset.writer.mainTemplate = `
-{{> header}}
+  preset.writer.mainTemplate =
+`{{> header}}
 {{#if noteGroups}}
 {{#each noteGroups}}
 
@@ -97,7 +97,7 @@ export const getChangelog = async ({ getPkgDir, tagPrefix, releaseCount = 1 }: G
     changelog += chunk
   }
   
-  return changelog
+  return changelog.trimEnd()
 }
 
 export const generateChangelog = async ({ getPkgDir, tagPrefix, releaseCount = 1 }: GenerateOptions) => {
