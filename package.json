@@ -1,6 +1,6 @@
 {
   "name": "@peiyanlu/release",
-  "version": "0.0.15",
+  "version": "0.0.16",
   "description": "Release project tool.",
   "license": "MIT",
   "type": "module",
