@@ -20,9 +20,9 @@ import type { ReleaseContext, ResolvedConfig } from '../types.js'
 
 export const gitCheck = async (ctx: ReleaseContext, config: ResolvedConfig) => {
   const { pkg: { name } } = ctx
-  const { git: { requireRepository, requireRemote, requireWorkDirClean }, ignoreGit, ignoreGithub } = config
+  const { git: { requireRepository, requireRemote, requireCleanWorkingTree }, skipGit, skipGithub } = config
   
-  if (ignoreGit) {
+  if (skipGit) {
     ctx.noGit = true
     ctx.noGitHub = true
     return
@@ -39,11 +39,11 @@ export const gitCheck = async (ctx: ReleaseContext, config: ResolvedConfig) => {
     }
   }
   
-  if (requireWorkDirClean && !await isWorkingTreeClean()) {
+  if (requireCleanWorkingTree && !await isWorkingTreeClean()) {
     throw new Error(MSG.ERROR.GIT_WORKDIR)
   }
   
-  if (ignoreGithub) {
+  if (skipGithub) {
     ctx.noGitHub = true
     return
   }

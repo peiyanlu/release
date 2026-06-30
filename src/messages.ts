@@ -85,7 +85,7 @@ export const MSG = {
   },
   
   ERROR: {
-    GIT_WORKDIR: `[git] Working dir must be clean`,
+    GIT_WORKDIR: `[git] Working tree must be clean`,
     GIT_REGISTRY: (name: string) => `[git] Repository not found for ${ dim(name) }`,
     GIT_REMOTE: (name: string) => `[git] Remote "${ dim(name) }" not found`,
     

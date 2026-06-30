@@ -17,7 +17,7 @@ import {
   readJsonFile,
   resolveChangelogRange,
 } from '@peiyanlu/cli-utils'
-import { isZero } from '@peiyanlu/ts-utils'
+import { isZero, mapObjectValues } from '@peiyanlu/ts-utils'
 import { join } from 'node:path'
 import { publint } from 'publint'
 import { formatMessage } from 'publint/utils'
@@ -97,12 +97,8 @@ export class Action {
   async createContext(cmdArgs: string, options: CliOptions, prepare: boolean = false) {
     const { version: cVersion, name: cName } = readJsonFile(join(__dirname, '../package.json'))
     
-    const { otp, package: defPkg, ...others } = options
-    const { showChangelog, showRelease, ci, dryRun } = Object.fromEntries(
-      Object
-        .entries(others)
-        .map(([ k, v ]) => [ k, Boolean(v) ]),
-    )
+    const { otp, package: defPkg, releaseCount, ...others } = options
+    const { showChangelog, showRelease, ci, dryRun } = mapObjectValues(others, (v) => Boolean(v))
     
     process.env['dryRun'] = String(dryRun)
     
@@ -115,10 +111,29 @@ export class Action {
     info(MSG.INFO.TOOL(cName, cVersion))
     info(MSG.INFO.CONFIG(configFile))
     
+    {
+      const {
+        requireCleanWorkingTree,
+        skipGit,
+        skipNpm,
+        skipGithub,
+        isMonorepo,
+      } = mapObjectValues(others, (v) => Boolean(v))
+      
+      const count = Number(releaseCount)
+      config.changelog.releaseCount = isNaN(count) ? 0 : count
+      
+      config.git.requireCleanWorkingTree = requireCleanWorkingTree
+      config.skipGit = skipGit
+      config.skipNpm = skipNpm
+      config.skipGithub = skipGithub
+      config.isMonorepo = isMonorepo
+    }
+    
     console.log()
     intro(prepare ? MSG.INTRO_PREPARE(dryRun) : MSG.INTRO(dryRun))
     
-    const { isMonorepo, packages, getPkgDir, ignoreNpm } = config
+    const { isMonorepo, packages, getPkgDir, skipNpm } = config
     
     if (isMonorepo) {
       if (ci) {
@@ -177,7 +192,7 @@ export class Action {
           toPreRelease: false,
           publishConfig: { ...publishConfig },
         },
-        noNpm: pkgPrivate || ignoreNpm,
+        noNpm: pkgPrivate || skipNpm,
       },
     )
     

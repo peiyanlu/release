@@ -1,5 +1,5 @@
-import { type CliOptions, eol, readJsonFile } from '@peiyanlu/cli-utils'
-import { green, red, yellow } from 'ansis'
+import { type CliOptions, eol, gitAddSync, readJsonFile } from '@peiyanlu/cli-utils'
+import { dim, green, red, underline, yellow } from 'ansis'
 import { program } from 'commander'
 import { existsSync, writeFileSync } from 'node:fs'
 import { join } from 'path'
@@ -16,12 +16,23 @@ program
   .usage('[release-type] [options]')
   .argument('[release-type]', 'Version bump type: patch | minor | major')
   .option('-n, --dry-run', 'Run in dry mode', false)
-  .option('-p, --package <pkg>', 'Specify package name (CI only).', '')
+  .option('-p, --package <pkg>', 'Specify package name (Mono-repo CI only).', '')
   .option('--otp <code>', 'One-time password for npm publish.', '')
   .option('--prepare', 'Prepare a release.', false)
   .option('--ci', 'Enable CI mode.', false)
   .option('--show-changelog', 'Print changelog and exit.', false)
   .option('--show-release', 'Print release version and exit.', false)
+  .option(
+    '-r, --release-count <count>',
+    'Release count for release.',
+    value => Number(value),
+    1,
+  )
+  .option('-C, --no-require-clean-working-tree', 'Allow releasing with uncommitted changes.', true)
+  .option('-m, --is-monorepo', 'Mono-repo project', false)
+  .option('--skip-git', 'Skip all Git-related checks and operations.', false)
+  .option('--skip-npm', 'Skip all npm-related checks and operations.', false)
+  .option('--skip-github', 'Skip all GitHub-related checks and operations.', false)
   .helpOption('-h, --help', 'Display help information.')
   .action(async (releaseType: string, options: CliOptions) => {
     const { prepare } = options
@@ -36,8 +47,9 @@ program
   .description('Create a release configuration file')
   .option('-f, --force', 'Overwrite existing config file', false)
   .option('-m, --monorepo', 'Mono-repo project', false)
+  .option('-a, --add', 'Automatically stage the config file.', false)
   .action((options: CliOptions<boolean>) => {
-    const { force = false, monorepo = false } = options
+    const { force = false, monorepo = false, add = false } = options
     
     const cwd = process.cwd()
     
@@ -72,10 +84,14 @@ program
       `export default defineConfig(${ monorepo ? monoConfigToString() : '{}' })`,
     ].join(eol(2))
     writeFileSync(configFile, content, 'utf-8')
+    console.log(`Wrote to ${ underline(dim(configFile)) }`)
     
-    console.log(`${ green`✔` } ${ infile } created successfully`)
+    if (add) gitAddSync([ infile ])
+    
+    console.log(`\n${ content }`)
   })
 
+program.addHelpText('afterAll', '\nThanks for using!')
 
 program.parse(process.argv)
 

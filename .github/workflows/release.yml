@@ -20,19 +20,19 @@ jobs:
           fetch-tags: true
           ref: ${{ github.ref }}
       
-      - name: Install pnpm
+      - name: Setup pnpm
         uses: pnpm/action-setup@v6
         with:
-          version: 10.24.0
+          version: 11
       
-      - name: Install Node
+      - name: Setup Node.js
         uses: actions/setup-node@v6
         with:
-          node-version: 24.11.1
+          node-version: 24
           registry-url: https://registry.npmjs.org/
           package-manager-cache: false
       
-      - name: Set Git Identity
+      - name: Configure Git
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"

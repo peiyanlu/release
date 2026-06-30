@@ -103,21 +103,25 @@ export interface ReleaseConfig {
    * 影响生成的日志数量、日志标题（monorepo）。
    */
   changelog: {
-    /** 作为 CHANGELOG 标题的 Tag 前缀，多包场景下需要 `${pkg}@` */
+    /**
+     * 作为 CHANGELOG 标题的 Tag 前缀，多包场景下需要 `${pkg}@`
+     */
     tagPrefix: ((pkg: string) => string)
     
-    /** 生成多少个版本的变更日志，详见 {@link Options} */
+    /**
+     * 生成多少个版本的变更日志，详见 {@link Options}
+     */
     releaseCount: number
   }
   
-  /** 忽略 git、github 环境检查以及后续操作  */
-  ignoreGit: boolean
+  /** 跳过 git、github 环境检查以及后续操作  */
+  skipGit: boolean
   
-  /** 忽略 npm 环境检查以及后续操作 */
-  ignoreNpm: boolean
+  /** 跳过 npm 环境检查以及后续操作 */
+  skipNpm: boolean
   
-  /** 忽略 github 环境检查以及后续操作 */
-  ignoreGithub: boolean
+  /** 跳过 github 环境检查以及后续操作 */
+  skipGithub: boolean
   
   /**
    * Git 相关配置
@@ -183,7 +187,7 @@ export interface ReleaseConfig {
     /**
      * 是否要求工作目录保持干净（无未提交的更改）
      */
-    requireWorkDirClean: boolean
+    requireCleanWorkingTree: boolean
   }
   
   /**

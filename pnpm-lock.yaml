@@ -24,8 +24,8 @@ importers:
         specifier: ^0.0.12
         version: 0.0.12
       '@peiyanlu/ts-utils':
-        specifier: ^0.0.7
-        version: 0.0.7
+        specifier: ^0.0.8
+        version: 0.0.8
       ansis:
         specifier: ^4.3.1
         version: 4.3.1
@@ -406,6 +406,10 @@ packages:
 
   '@peiyanlu/ts-utils@0.0.7':
     resolution: {integrity: sha512-+Mk3+otwr2Dl2Ux1HdtJcU8KeE7sbztU/dYUtdhbKzE1jfyHWQkx5mKTu0cj1geh5DnTYSMjFaXW17520HNh5w==}
+    engines: {node: '>=20.0.0'}
+
+  '@peiyanlu/ts-utils@0.0.8':
+    resolution: {integrity: sha512-Pk19z1Ihcvvu5VP8dAK+QgrZGnFdxVP8To27asAHq54OijzhdouEUHufxuCy9aCAMdfdZlTvqqY8ovWsIyP6Hg==}
     engines: {node: '>=20.0.0'}
 
   '@publint/pack@0.1.4':
@@ -1574,6 +1578,8 @@ snapshots:
       semver: 7.8.5
 
   '@peiyanlu/ts-utils@0.0.7': {}
+
+  '@peiyanlu/ts-utils@0.0.8': {}
 
   '@publint/pack@0.1.4': {}
 

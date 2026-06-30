@@ -90,9 +90,9 @@ export const createDefaultConfig = (isCI?: boolean): DefaultConfig => {
       },
       releaseCount: 1,
     },
-    ignoreGit: false,
-    ignoreNpm: false,
-    ignoreGithub: false,
+    skipGit: false,
+    skipNpm: false,
+    skipGithub: false,
     git: {
       commit: isCI,
       tag: isCI,
@@ -105,7 +105,7 @@ export const createDefaultConfig = (isCI?: boolean): DefaultConfig => {
       addUntrackedFiles: false,
       requireRemote: true,
       requireRepository: true,
-      requireWorkDirClean: true,
+      requireCleanWorkingTree: true,
     },
     npm: {
       publish: isCI,
