@@ -1,3 +1,13 @@
+## [1.0.0](https://github.com/peiyanlu/release/compare/v0.0.16...v1.0.0) (2026-07-01)
+
+### ⚠ BREAKING CHANGES
+
+* 重构 CLI 参数 ([2ea0ff1](https://github.com/peiyanlu/release/commit/2ea0ff17e41cf1bed15dd93d3f54b6d95dea9f71))
+
+### ✨ 新功能
+
+* 重构 CLI 参数 ([2ea0ff1](https://github.com/peiyanlu/release/commit/2ea0ff17e41cf1bed15dd93d3f54b6d95dea9f71))
+
 ## <small>[0.0.16](https://github.com/peiyanlu/release/compare/v0.0.15...v0.0.16) (2026-06-29)</small>
 
 ### 🧹 其他更新
