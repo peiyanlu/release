@@ -1,3 +1,13 @@
+## [1.1.0](https://github.com/peiyanlu/release/compare/v1.0.0...v1.1.0) (2026-07-03)
+
+### ✨ 新功能
+
+* 增强 changelog 生成 ([7875d44](https://github.com/peiyanlu/release/commit/7875d4473600acc022d2faf24f5551ecd5a9c23c))
+
+### 🐛 Bug 修复
+
+* 修复新版 conventional-changelog 模板兼容性 ([9cd1ea6](https://github.com/peiyanlu/release/commit/9cd1ea68edec5d98a410685a6f016cfe5023eb94))
+
 ## [1.0.0](https://github.com/peiyanlu/release/compare/v0.0.16...v1.0.0) (2026-07-01)
 
 ### ⚠ BREAKING CHANGES
