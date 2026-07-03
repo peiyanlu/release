@@ -2,11 +2,13 @@ import { eol } from '@peiyanlu/cli-utils'
 import { isZero } from '@peiyanlu/ts-utils'
 import { ConventionalChangelog, type Options, type Preset } from 'conventional-changelog'
 import createPreset from 'conventional-changelog-conventionalcommits'
+import { Bumper, type Preset as BumpPreset } from 'conventional-recommended-bump'
 import { createWriteStream, existsSync, readFileSync } from 'node:fs'
 import { writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { finished } from 'node:stream/promises'
 import { defaultTypes } from './changetype.js'
+import { headerPartial, template } from './templates.js'
 
 
 interface GenerateOptions {
@@ -18,72 +20,31 @@ interface GenerateOptions {
   releaseCount?: number;
 }
 
-export const parsePreset = async () => {
-  const preset: Preset = await createPreset({
-    types: defaultTypes.map((t) => ({ ...t, hidden: false })),
+
+export const parsePreset = () => {
+  const preset: Preset = createPreset({
+    types: defaultTypes,
   })
+  
   preset.writer ??= {}
-  
-  preset.writer.headerPartial =
-`## {{#if isPatch~}} <small> {{~/if~}}
-{{#if @root.linkCompare~}}
-[{{version}}](
-{{~#if @root.repository~}}
-  {{~#if @root.host}}
-    {{~@root.host}}/
-  {{~/if}}
-  {{~#if @root.owner}}
-    {{~@root.owner}}/
-  {{~/if}}
-  {{~@root.repository}}
-{{~else}}
-  {{~@root.repoUrl}}
-{{~/if~}}
-/compare/{{previousTag}}...{{currentTag}})
-{{~else}}
-{{~version}}
-{{~/if}}
-{{~#if title}} "{{title}}"
-{{~/if}}
-{{~#if date}} ({{date}})
-{{~/if}}
-{{~#if isPatch~}} </small> {{~/if}}
-`.trim() + eol()
-  
-  preset.writer.mainTemplate =
-`{{> header}}
-{{#if noteGroups}}
-{{#each noteGroups}}
-
-### ⚠ {{title}}
-
-{{#each notes}}
-* {{#if commit.scope}}**{{commit.scope}}:** {{/if}}{{commit.subject}} {{#if commit.hash}}([{{commit.shortHash}}](https://github.com/{{@root.owner}}/{{@root.repository}}/commit/{{commit.hash}})){{/if}}
-{{/each}}
-{{/each}}
-{{/if}}
-{{#each commitGroups}}
-
-{{#if title}}
-### {{title}}
-
-{{/if}}
-{{#each commits}}
-{{> commit root=@root}}
-{{/each}}
-{{/each}}`.trim()
+  preset.writer.headerPartial = headerPartial
+  preset.writer.template = template
   
   return preset
+}
+
+export const inferReleaseType = async () => {
+  const preset = parsePreset() as BumpPreset
+  const res = await new Bumper().bump(preset.whatBump)
+  return 'releaseType' in res ? res.releaseType : undefined
 }
 
 export const createGenerator = async ({ getPkgDir, tagPrefix, releaseCount = 1 }: GenerateOptions) => {
   const pkgDir = getPkgDir()
   
-  const preset: Preset = await parsePreset()
-  
   return new ConventionalChangelog()
     .readPackage(`${ pkgDir }/package.json`)
-    .config(preset)
+    .config(parsePreset())
     .options({ releaseCount })
     .commits({ path: pkgDir })
     .tags({ prefix: tagPrefix })
