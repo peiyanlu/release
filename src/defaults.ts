@@ -8,6 +8,7 @@ export const createDefaultContext = (): ReleaseContext => {
     release: false,
     showRelease: false,
     showChangelog: false,
+    onlyChangelog: false,
     dryRun: false,
     noGit: false,
     noNpm: false,
@@ -89,6 +90,8 @@ export const createDefaultConfig = (isCI?: boolean): DefaultConfig => {
         return ''
       },
       releaseCount: 1,
+      includeHidden: false,
+      transformTypes: (t) => t,
     },
     skipGit: false,
     skipNpm: false,

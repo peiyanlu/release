@@ -16,6 +16,7 @@ program
   .usage('[release-type] [options]')
   .argument('[release-type]', 'Version bump type: patch | minor | major')
   .option('-n, --dry-run', 'Run in dry mode', false)
+  .option('-m, --is-monorepo', 'Mono-repo project', false)
   .option('-p, --package <pkg>', 'Specify package name (Mono-repo CI only).', '')
   .option('--otp <code>', 'One-time password for npm publish.', '')
   .option('--prepare', 'Prepare a release.', false)
@@ -28,8 +29,9 @@ program
     value => Number(value),
     1,
   )
+  .option('--include-hidden', 'Include hidden commit types in the changelog.', false)
+  .option('--only-changelog', 'Only update the changelog.', false)
   .option('-C, --no-require-clean-working-tree', 'Allow releasing with uncommitted changes.', true)
-  .option('-m, --is-monorepo', 'Mono-repo project', false)
   .option('--skip-git', 'Skip all Git-related checks and operations.', false)
   .option('--skip-npm', 'Skip all npm-related checks and operations.', false)
   .option('--skip-github', 'Skip all GitHub-related checks and operations.', false)

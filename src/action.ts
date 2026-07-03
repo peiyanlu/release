@@ -24,7 +24,7 @@ import { formatMessage } from 'publint/utils'
 import { inc, neq, ReleaseType } from 'semver'
 import { mergeConfig, resolveConfig } from './config.js'
 import { createDefaultConfig, createDefaultContext } from './defaults.js'
-import { generateChangelog, getChangelog } from './git/changelog.js'
+import { generateChangelog, getChangelog, inferReleaseType } from './git/changelog.js'
 import { commitAndTag, gitCheck, gitRollback } from './git/commit.js'
 import { runGitPrompts } from './git/prompts.js'
 import { runGithubPrompts } from './github/prompts.js'
@@ -98,7 +98,7 @@ export class Action {
     const { version: cVersion, name: cName } = readJsonFile(join(__dirname, '../package.json'))
     
     const { otp, package: defPkg, releaseCount, ...others } = options
-    const { showChangelog, showRelease, ci, dryRun } = mapObjectValues(others, (v) => Boolean(v))
+    const { showChangelog, showRelease, ci, dryRun, onlyChangelog } = mapObjectValues(others, (v) => Boolean(v))
     
     process.env['dryRun'] = String(dryRun)
     
@@ -118,10 +118,12 @@ export class Action {
         skipNpm,
         skipGithub,
         isMonorepo,
+        includeHidden,
       } = mapObjectValues(others, (v) => Boolean(v))
       
       const count = Number(releaseCount)
       config.changelog.releaseCount = isNaN(count) ? 0 : count
+      config.changelog.includeHidden = includeHidden
       
       config.git.requireCleanWorkingTree = requireCleanWorkingTree
       config.skipGit = skipGit
@@ -179,6 +181,7 @@ export class Action {
         dryRun,
         showRelease,
         showChangelog,
+        onlyChangelog,
         npm: { otp: String(otp) },
         increment: cmdArgs,
         isIncrement: true,
@@ -205,8 +208,38 @@ export class Action {
     return { ctx, config }
   }
   
+  async printChangelog(ctx: ReleaseContext, config: ResolvedConfig) {
+    const { showChangelog, selectedPkg, noGit, isIncrement } = ctx
+    const { isMonorepo, getPkgDir, changelog: { tagPrefix, releaseCount, includeHidden, transformTypes } } = config
+    
+    if (noGit) return
+    
+    // 打印 Changelog
+    const match = isMonorepo ? `${ tagPrefix?.(selectedPkg) }*` : '*'
+    const { from, to } = isZero(releaseCount)
+      ? { from: '', to: 'HEAD' }
+      : await resolveChangelogRange(isIncrement, match)
+    const commits = await getLogSince(from, to, getPkgDir(selectedPkg))
+    const changelog = await getChangelog({
+      getPkgDir: () => getPkgDir(selectedPkg),
+      tagPrefix: tagPrefix?.(selectedPkg),
+      releaseCount,
+      includeHidden,
+      transformTypes,
+    })
+    Object.assign(ctx.github, { changelog })
+    
+    if (commits) {
+      msg('GIT', `Changelog(${ from }...${ to }):${ eol(2) }` + changelog)
+      msg('GIT', `Commits(${ from }...${ to }):${ eol(2) }` + commits)
+      if (showChangelog) taskEnd(MSG.LOG.SHOW_CHANGELOG)
+    } else {
+      msg('GIT', MSG.LOG.CHANGELOG_EMPTY)
+    }
+  }
+  
   async checkTask(ctx: ReleaseContext, config: ResolvedConfig) {
-    const { dryRun } = ctx
+    const { dryRun, onlyChangelog } = ctx
     await tasks([
       {
         title: MSG.CHECK.GIT.CHECKING,
@@ -225,7 +258,7 @@ export class Action {
           
           return success(MSG.CHECK.NPM.CHECKED(registry, msg), dryRun)
         },
-        enabled: !ctx.noNpm,
+        enabled: !(ctx.noNpm || onlyChangelog),
       },
       {
         title: MSG.CHECK.GITHUB.CHECKING,
@@ -236,14 +269,16 @@ export class Action {
           
           return success(MSG.CHECK.GITHUB.CHECKED(repository, msg), dryRun)
         },
-        enabled: !ctx.noGitHub,
+        enabled: !(ctx.noGitHub || onlyChangelog),
       },
     ]).catch(abortOnError)
   }
   
   async bumpTask(ctx: ReleaseContext, config: ResolvedConfig) {
-    const { pkg: { current }, dryRun, isCI, showRelease, showChangelog, selectedPkg, noGit } = ctx
-    const { isMonorepo, hooks, getPkgDir, changelog: { tagPrefix, releaseCount } } = config
+    const { pkg: { current }, dryRun, isCI, showRelease, selectedPkg, onlyChangelog } = ctx
+    const { hooks, getPkgDir, changelog: { includeHidden, transformTypes } } = config
+    
+    if (onlyChangelog) return
     
     const need = (ctx: ReleaseContext) => {
       const { pkg: { next }, isIncrement } = ctx
@@ -251,8 +286,9 @@ export class Action {
     }
     
     if (need(ctx)) {
-      const ciVersion = isCI ? inc(current, 'patch')! : undefined
-      const nextVersion = ciVersion || await runVersionPrompts(ctx, config)
+      const inferred = await inferReleaseType({ includeHidden, transformTypes })
+      const ciVersion = isCI ? (inferred ?? inc(current, 'patch')!) : undefined
+      const nextVersion = ciVersion || await runVersionPrompts(ctx, config, inferred)
       
       ctx.isIncrement = neq(current, nextVersion)
       
@@ -260,7 +296,7 @@ export class Action {
       Object.assign(ctx.pkg, { next, toPreRelease, preId, preBase })
     }
     
-    const { pkg: { next }, isIncrement } = ctx
+    const { pkg: { next } } = ctx
     
     if (showRelease) {
       taskEnd(MSG.LOG.SHOW_VERSION(next))
@@ -277,37 +313,17 @@ export class Action {
           const to = `(${ current }...${ diff(current, next) })`
           return success(MSG.TASK.VERSION.END(to), dryRun)
         },
+        enabled: true,
       },
     ]).catch((err) => abortOnError(err, ctx))
     await runLifeCycleHook(hooks, 'after:bump', dryRun)
     
-    if (noGit) return
-    
-    // 打印 Changelog
-    const match = isMonorepo ? `${ tagPrefix?.(selectedPkg) }*` : '*'
-    const { from, to } = isZero(releaseCount)
-      ? { from: '', to: 'HEAD' }
-      : await resolveChangelogRange(isIncrement, match)
-    const commits = await getLogSince(from, to, getPkgDir(selectedPkg))
-    const changelog = await getChangelog({
-      getPkgDir: () => getPkgDir(selectedPkg),
-      tagPrefix: tagPrefix?.(selectedPkg),
-      releaseCount,
-    })
-    Object.assign(ctx.github, { changelog })
-    
-    if (commits) {
-      msg('GIT', `Changelog(${ from }...${ to }):${ eol(2) }` + changelog)
-      msg('GIT', `Commits(${ from }...${ to }):${ eol(2) }` + commits)
-      if (showChangelog) taskEnd(MSG.LOG.SHOW_CHANGELOG)
-    } else {
-      msg('GIT', MSG.LOG.CHANGELOG_EMPTY)
-    }
+    await this.printChangelog(ctx, config)
   }
   
   async changelogTask(ctx: ReleaseContext, config: ResolvedConfig) {
-    const { isIncrement, dryRun, selectedPkg, noGit } = ctx
-    const { getPkgDir, changelog: { tagPrefix, releaseCount } } = config
+    const { isIncrement, dryRun, selectedPkg, noGit, onlyChangelog } = ctx
+    const { getPkgDir, changelog: { tagPrefix, releaseCount, includeHidden, transformTypes } } = config
     
     if (noGit) return
     
@@ -319,6 +335,8 @@ export class Action {
             getPkgDir: () => getPkgDir(selectedPkg),
             tagPrefix: tagPrefix?.(selectedPkg),
             releaseCount,
+            includeHidden,
+            transformTypes,
           })
           await gitAddAll()
           
@@ -335,6 +353,8 @@ export class Action {
     } else {
       msg('GIT', MSG.LOG.CHANGES_EMPTY)
     }
+    
+    if (onlyChangelog) taskEnd(MSG.LOG.ONLY_CHANGELOG)
   }
   
   async gitTask(ctx: ReleaseContext, config: ResolvedConfig) {

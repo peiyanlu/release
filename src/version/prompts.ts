@@ -2,7 +2,6 @@ import { select, text } from '@clack/prompts'
 import { isValidVersion } from '@peiyanlu/cli-utils'
 import { isUndefined } from '@peiyanlu/ts-utils'
 import { inc } from 'semver'
-import { inferReleaseType } from '../git/changelog.js'
 import { MSG } from '../messages.js'
 import { ReleaseContext, ResolvedConfig } from '../types.js'
 import { abortSinglePrompt, question } from '../utils.js'
@@ -52,7 +51,11 @@ const option = (label: string, value: string, hint?: string) => ({
 })
 
 
-export const runVersionPrompts = async (ctx: ReleaseContext, config: ResolvedConfig) => {
+export const runVersionPrompts = async (
+  ctx: ReleaseContext,
+  config: ResolvedConfig,
+  inferred?: 'major' | 'minor' | 'patch',
+) => {
   const { pkg: { current, fromPreRelease } } = ctx
   
   const selectVersion = async () => {
@@ -82,7 +85,7 @@ export const runVersionPrompts = async (ctx: ReleaseContext, config: ResolvedCon
     const type = await select({
       message: question(MSG.PROMPT.SELECT_VERSION, 'version'),
       options,
-      initialValue: fromPreRelease ? 'prerelease' : 'patch',
+      initialValue: inferred ?? (fromPreRelease ? 'prerelease' : 'patch'),
     }) as string
     
     abortSinglePrompt(type)
@@ -111,7 +114,6 @@ export const runVersionPrompts = async (ctx: ReleaseContext, config: ResolvedCon
     return versions[type as keyof typeof versions]
   }
   
-  const inferred = await inferReleaseType()
-  const type = inferred ?? await selectVersion()
+  const type = await selectVersion()
   return await resolveNextVersion(type, current)
 }

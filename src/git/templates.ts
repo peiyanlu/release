@@ -13,10 +13,14 @@ import {
 } from '@conventional-changelog/template'
 
 
+const isLikelyHash = (value: string) => /^[0-9a-f]{7,40}$/i.test(value)
+
 export function headerPartial(context: FinalTemplateContext) {
-  const { isPatch, linkCompare, version, title, date } = context
+  const { isPatch, linkCompare, version, title, date, previousTag } = context
   
-  const versionText = linkCompare ? link(version!, compareUrl(context)) : version
+  const versionText = (linkCompare && !isLikelyHash(previousTag!))
+    ? link(version!, compareUrl(context))
+    : version
   const fullTitle = words(versionText, title && `"${ title }"`, date && `(${ date })`)
   
   return heading(2, isPatch ? small(fullTitle) : fullTitle)

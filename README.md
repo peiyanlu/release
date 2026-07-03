@@ -56,14 +56,21 @@ pnpm release minor --ci
 
 ### 通用参数
 
-| 参数                 | 说明                                                         |
-|--------------------|------------------------------------------------------------|
-| `-v, --version`    | 输出当前 CLI 版本并退出                                             |
-| `-h, --help`       | 显示帮助信息                                                     |
-| `-n, --dry-run`    | 空跑模式，展示将要执行的发布流程但不做任何修改                                    |
-| `--show-release`   | 打印即将发布的版本号并退出                                              |
-| `--show-changelog` | 打印生成的 Changelog 并退出                                        |
-| `--ci`             | 启用 CI 模式：禁用交互提示，缺少必要参数时直接失败；GitHub Actions 等 CI/CD 环境中默认启用 |
+| 参数                                    | 说明                                                         |
+|---------------------------------------|------------------------------------------------------------|
+| `-v, --version`                       | 输出当前 CLI 版本并退出                                             |
+| `-h, --help`                          | 显示帮助信息                                                     |
+| `-n, --dry-run`                       | 空跑模式，展示将要执行的发布流程但不做任何修改                                    |
+| `--show-release`                      | 打印即将发布的版本号并退出                                              |
+| `--show-changelog`                    | 打印生成的 Changelog 并退出                                        |
+| `--ci`                                | 启用 CI 模式：禁用交互提示，缺少必要参数时直接失败；GitHub Actions 等 CI/CD 环境中默认启用 |
+| `-r, --release-count <count>`         | 生成多少个版本的变更日志                                               |
+| `--include-hidden`                    | 生成 CHANGELOG 时包含默认隐藏的 commit 类型                            |
+| `--only-changelog`                    | 仅更新 CHANGELOG                                              |
+| `-C, --no-require-clean-working-tree` | 是否要求工作目录保持干净（无未提交的更改）                                      |
+| `--skip-git`                          | 跳过 git、github 环境检查以及后续操作                                   |
+| `--skip-npm`                          | 跳过 npm 环境检查以及后续操作                                          |
+| `--skip-github`                       | 跳过 github 环境检查以及后续操作                                       |
 
 ### Prepare 相关参数
 
@@ -81,6 +88,7 @@ pnpm release minor --prepare --ci --package pkg-a
 
 | 参数                    | 说明                               |
 |-----------------------|----------------------------------|
+| `-m, --is-monorepo`   | Monorepo 项目                      |
 | `-p, --package <pkg>` | 指定要发布的子包名称（仅用于 Monorepo 的 CI 场景） |
 
 ```bash
@@ -194,6 +202,7 @@ release init
 |------------------|---------------------|
 | `-f, --force`    | 覆盖已存在的配置文件          |
 | `-m, --monorepo` | 生成 Monorepo 项目的配置模板 |
+| `-a, --add`      | 自动暂存配置文件            |
 
 #### 行为说明
 
@@ -231,6 +240,12 @@ COMMIT_TYPES：
 
 - 默认：`feat | feature | fix | perf | revert | docs | style | chore | refactor | test | build | ci`
 - 自定义：`config | deps | security | i18n | ux | hotfix`
+
+| Effect          | Types                                                          | 说明                                |
+|-----------------|----------------------------------------------------------------|-----------------------------------|
+| **`bump`**      | `feat`, `feature`, `fix`, `perf`, `revert`                     | 影响版本号（Minor/Patch），同时写入 CHANGELOG |
+| **`changelog`** | `docs`, `refactor`, `deps`, `security`, `hotfix`, `i18n`, `ux` | 不影响版本号，仅写入 CHANGELOG              |
+| **`hidden`**    | `style`, `chore`, `test`, `build`, `ci`, `config`, `tool`      | 不影响版本号，也不会写入 CHANGELOG            |
 
 支持 **--show-changelog** 预览模式：
 

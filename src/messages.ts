@@ -17,6 +17,7 @@ export const MSG = {
     SHOW_CHANGELOG: '🎉  Changelog collected',
     CHANGELOG_EMPTY: 'No commits found since last release',
     CHANGES_EMPTY: 'Working tree clean. No files changed',
+    ONLY_CHANGELOG: '🎉  Changelog generation completed',
   },
   
   CHECK: {

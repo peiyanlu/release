@@ -1,6 +1,7 @@
 import { log } from '@clack/prompts'
 import { type DeepRequired } from '@peiyanlu/ts-utils'
 import { type Options } from 'conventional-changelog'
+import type { CommitType } from 'conventional-changelog-conventionalcommits'
 
 
 export interface ReleaseContext {
@@ -9,6 +10,7 @@ export interface ReleaseContext {
   release: boolean
   showChangelog: boolean
   showRelease: boolean
+  onlyChangelog: boolean
   noGit: boolean
   noNpm: boolean
   noGitHub: boolean
@@ -112,6 +114,16 @@ export interface ReleaseConfig {
      * 生成多少个版本的变更日志，详见 {@link Options}
      */
     releaseCount: number
+    
+    /**
+     * 生成 CHANGELOG 时包含默认隐藏的 commit 类型
+     */
+    includeHidden: boolean
+    
+    /**
+     * 对默认 commit types 进行转换
+     */
+    transformTypes: (types: CommitType[]) => CommitType[]
   }
   
   /** 跳过 git、github 环境检查以及后续操作  */
