@@ -1,3 +1,9 @@
+## <small>[1.1.1](https://github.com/peiyanlu/release/compare/v1.1.0...v1.1.1) (2026-07-04)</small>
+
+### 🐛 Bug 修复
+
+* 修复版本推断失败 ([e3aac6d](https://github.com/peiyanlu/release/commit/e3aac6dca8b0ff56c1b5d43a854484d95da77610))
+
 ## [1.1.0](https://github.com/peiyanlu/release/compare/v1.0.0...v1.1.0) (2026-07-03)
 
 ### ✨ 新功能
