@@ -286,7 +286,10 @@ export class Action {
     }
     
     if (need(ctx)) {
-      const inferred = await inferReleaseType({ includeHidden, transformTypes })
+      const res = await inferReleaseType({ includeHidden, transformTypes, json: true })
+      if (res) msg('BUMP', res.reason)
+      const inferred = res?.releaseType
+      
       const ciVersion = isCI ? (inferred ?? inc(current, 'patch')!) : undefined
       const nextVersion = ciVersion || await runVersionPrompts(ctx, config, inferred)
       

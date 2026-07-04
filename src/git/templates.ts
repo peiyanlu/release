@@ -50,7 +50,8 @@ export function template(context: FinalTemplateContext) {
               note.commit.scope && bold(`${ note.commit.scope }:`),
               commitPartial(context, note.commit),
             )
-            const line2 = list([ note.text ], t => t)
+            const hasBody = note.commit.subject.trim() !== note.text.trim()
+            const line2 = hasBody ? list([ note.text ], t => t) : ''
             
             return each([ line1, line2 ], t => t, newline())
           },

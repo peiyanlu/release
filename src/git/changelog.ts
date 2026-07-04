@@ -28,6 +28,13 @@ export interface ParsePresetOptions {
   transformTypes?: (types: CommitType[]) => CommitType[]
 }
 
+type ReleaseType = 'major' | 'minor' | 'patch'
+
+type InferReleaseTypeResult<T extends boolean | undefined> =
+  T extends true
+    ? { releaseType: ReleaseType; reason: string } | undefined
+    : ReleaseType | undefined
+
 
 export const parsePreset = (options: ParsePresetOptions = {}) => {
   const { includeHidden, transformTypes } = options
@@ -53,10 +60,15 @@ export const parsePreset = (options: ParsePresetOptions = {}) => {
   return preset
 }
 
-export const inferReleaseType = async (options?: ParsePresetOptions) => {
+export const inferReleaseType = async <T extends boolean = false>(options?: ParsePresetOptions & { json?: T }) => {
   const preset = parsePreset(options) as BumpPreset
-  const res = await new Bumper().bump(preset.whatBump)
-  return 'releaseType' in res ? res.releaseType : undefined
+  const res = await new Bumper().config(preset).bump(preset.whatBump)
+  
+  if (!('releaseType' in res)) return undefined as InferReleaseTypeResult<T>
+  
+  const { releaseType, reason } = res
+  
+  return (options?.json ? { releaseType, reason } : releaseType) as InferReleaseTypeResult<T>
 }
 
 export const createGenerator = async (options: GenerateOptions & ParsePresetOptions) => {
