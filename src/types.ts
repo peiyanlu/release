@@ -1,7 +1,15 @@
 import { log } from '@clack/prompts'
 import { type DeepRequired } from '@peiyanlu/ts-utils'
 import { type Options } from 'conventional-changelog'
-import type { CommitType } from 'conventional-changelog-conventionalcommits'
+
+
+export interface CommitType {
+  type: string
+  section?: string
+  effect?: 'bump' | 'changelog' | 'hidden'
+  scope?: string
+  description?: string
+}
 
 
 export interface ReleaseContext {

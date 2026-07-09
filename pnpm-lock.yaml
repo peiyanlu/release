@@ -24,11 +24,11 @@ importers:
         specifier: ^22.0.1
         version: 22.0.1
       '@peiyanlu/cli-utils':
-        specifier: ^0.0.12
-        version: 0.0.12
+        specifier: ^0.0.13
+        version: 0.0.13
       '@peiyanlu/ts-utils':
-        specifier: ^0.0.8
-        version: 0.0.8
+        specifier: ^0.0.9
+        version: 0.0.9
       ansis:
         specifier: ^4.3.1
         version: 4.3.1
@@ -407,16 +407,16 @@ packages:
   '@oxc-project/types@0.137.0':
     resolution: {integrity: sha512-WT+Gb24i8hmvo85AIv2oEYouEXkRlKAlT9WaCa3TfLgNCN+GhrJOGZuIlMouAh38Qe4QOx26eUOVsq70qXrywA==}
 
-  '@peiyanlu/cli-utils@0.0.12':
-    resolution: {integrity: sha512-mtRQy8pE6X96Nzx7sfVrHirFQ4uEEb2dDEdxYs+8Tp9WM0yKC1OXPVr/484F9Te7WtdCIm0iWXSE0roDXD+18w==}
+  '@peiyanlu/cli-utils@0.0.13':
+    resolution: {integrity: sha512-YcKCAJUIOcPRPcywIDirCTwwTUQ4zOBzYGFNlNFR+ziWto5yTTT3S3sPgTY9HT262irzlwzOuy5gKYCdfuYNBA==}
     engines: {node: '>=20'}
-
-  '@peiyanlu/ts-utils@0.0.7':
-    resolution: {integrity: sha512-+Mk3+otwr2Dl2Ux1HdtJcU8KeE7sbztU/dYUtdhbKzE1jfyHWQkx5mKTu0cj1geh5DnTYSMjFaXW17520HNh5w==}
-    engines: {node: '>=20.0.0'}
 
   '@peiyanlu/ts-utils@0.0.8':
     resolution: {integrity: sha512-Pk19z1Ihcvvu5VP8dAK+QgrZGnFdxVP8To27asAHq54OijzhdouEUHufxuCy9aCAMdfdZlTvqqY8ovWsIyP6Hg==}
+    engines: {node: '>=20.0.0'}
+
+  '@peiyanlu/ts-utils@0.0.9':
+    resolution: {integrity: sha512-05Ea15l/YYF99OkbnL8efac3u3UiQGeZc1Tf0AvCufRueIqwU8Y/JW7bL7hYa2MBHQrvOPxrhNUsEMj0rjXlbw==}
     engines: {node: '>=20.0.0'}
 
   '@publint/pack@0.1.4':
@@ -1517,15 +1517,15 @@ snapshots:
 
   '@oxc-project/types@0.137.0': {}
 
-  '@peiyanlu/cli-utils@0.0.12':
+  '@peiyanlu/cli-utils@0.0.13':
     dependencies:
-      '@peiyanlu/ts-utils': 0.0.7
+      '@peiyanlu/ts-utils': 0.0.8
       ansis: 4.3.1
       semver: 7.8.5
 
-  '@peiyanlu/ts-utils@0.0.7': {}
-
   '@peiyanlu/ts-utils@0.0.8': {}
+
+  '@peiyanlu/ts-utils@0.0.9': {}
 
   '@publint/pack@0.1.4': {}
 

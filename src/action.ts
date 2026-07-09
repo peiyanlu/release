@@ -17,7 +17,7 @@ import {
   readJsonFile,
   resolveChangelogRange,
 } from '@peiyanlu/cli-utils'
-import { isZero, mapObjectValues } from '@peiyanlu/ts-utils'
+import { isZero, mapObject } from '@peiyanlu/ts-utils'
 import { join } from 'node:path'
 import { publint } from 'publint'
 import { formatMessage } from 'publint/utils'
@@ -98,7 +98,7 @@ export class Action {
     const { version: cVersion, name: cName } = readJsonFile(join(__dirname, '../package.json'))
     
     const { otp, package: defPkg, releaseCount, ...others } = options
-    const { showChangelog, showRelease, ci, dryRun, onlyChangelog } = mapObjectValues(others, (v) => Boolean(v))
+    const { showChangelog, showRelease, ci, dryRun, onlyChangelog } = mapObject(others, (k, v) => [ k, Boolean(v) ])
     
     process.env['dryRun'] = String(dryRun)
     
@@ -119,7 +119,7 @@ export class Action {
         skipGithub,
         isMonorepo,
         includeHidden,
-      } = mapObjectValues(others, (v) => Boolean(v))
+      } = mapObject(others, (k, v) => [ k, Boolean(v) ])
       
       const count = Number(releaseCount)
       config.changelog.releaseCount = isNaN(count) ? 0 : count

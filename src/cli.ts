@@ -93,7 +93,7 @@ program
     console.log(`\n${ content }`)
   })
 
-program.addHelpText('afterAll', '\nThanks for using!')
+program.addHelpText('afterAll', '\nCASE: release -C -r0 --include-hidden --only-changelog\n\nThanks for using!')
 
 program.parse(process.argv)
 

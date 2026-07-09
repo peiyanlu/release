@@ -1,7 +1,7 @@
-import { CommitType } from 'conventional-changelog-conventionalcommits'
+import { CommitType } from '../types.js'
 
 
-export const defaultTypes: (CommitType & { description?: string })[] = [
+export const defaultTypes: CommitType[] = [
   {
     type: 'feat',
     section: '✨ 新功能',
@@ -32,7 +32,6 @@ export const defaultTypes: (CommitType & { description?: string })[] = [
     effect: 'bump',
     description: '回退到之前版本',
   },
-  // ---
   {
     type: 'docs',
     section: '📝 文档',
@@ -77,12 +76,6 @@ export const defaultTypes: (CommitType & { description?: string })[] = [
   },
   // custom
   {
-    type: 'deps',
-    section: '📦 依赖更新',
-    effect: 'changelog',
-    description: '依赖版本变更',
-  },
-  {
     type: 'security',
     section: '🛡️ 安全修复',
     effect: 'changelog',
@@ -107,15 +100,21 @@ export const defaultTypes: (CommitType & { description?: string })[] = [
     description: '用户体验改进',
   },
   {
-    type: 'config',
-    section: '⚙️ 配置',
-    effect: 'hidden',
-    description: '配置文件更新',
+    type: 'deps',
+    section: '📦 依赖更新',
+    effect: 'changelog',
+    description: '依赖版本变更',
   },
   {
     type: 'tool',
     section: '🛠️ 工具链',
     effect: 'hidden',
     description: '工具链变更',
+  },
+  {
+    type: 'config',
+    section: '⚙️ 配置',
+    effect: 'hidden',
+    description: '配置文件更新',
   },
 ]
