@@ -1,3 +1,9 @@
+## <small>[1.1.2](https://github.com/peiyanlu/release/compare/v1.1.1...v1.1.2) (2026-07-09)</small>
+
+### 🐛 Bug 修复
+
+* 修复公共类型引用外部依赖问题 ([5834774](https://github.com/peiyanlu/release/commit/5834774c72f7972ebc8b4ec3c5d215245f3d2db6))
+
 ## <small>[1.1.1](https://github.com/peiyanlu/release/compare/v1.1.0...v1.1.1) (2026-07-04)</small>
 
 ### 🐛 Bug 修复
