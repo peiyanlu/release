@@ -14,14 +14,14 @@ import {
   isOtpError,
   isPrerelease,
   parseVersion,
-  readJsonFile,
   resolveChangelogRange,
 } from '@peiyanlu/cli-utils'
+import { readJsonFileSync } from '@peiyanlu/node-utils'
 import { isZero, mapObject } from '@peiyanlu/ts-utils'
 import { join } from 'node:path'
 import { publint } from 'publint'
 import { formatMessage } from 'publint/utils'
-import { inc, neq, ReleaseType } from 'semver'
+import { inc, neq, type ReleaseType } from 'semver'
 import { mergeConfig, resolveConfig } from './config.js'
 import { createDefaultConfig, createDefaultContext } from './defaults.js'
 import { generateChangelog, getChangelog, inferReleaseType } from './git/changelog.js'
@@ -32,7 +32,7 @@ import { createRelease, githubCheck } from './github/release.js'
 import { MSG } from './messages.js'
 import { runNpmOptPrompts, runNpmPublishPrompts } from './npm/prompts.js'
 import { npmCheck, publishNpm } from './npm/publish.js'
-import { ReleaseConfig, ReleaseContext, ResolvedConfig } from './types.js'
+import type { ReleaseConfig, ReleaseContext, ResolvedConfig } from './types.js'
 import {
   abortOnError,
   abortSinglePrompt,
@@ -95,7 +95,7 @@ export class Action {
   }
   
   async createContext(cmdArgs: string, options: CliOptions, prepare: boolean = false) {
-    const { version: cVersion, name: cName } = readJsonFile(join(__dirname, '../package.json'))
+    const { version: cVersion, name: cName } = readJsonFileSync<Record<string, any>>(join(__dirname, '../package.json'))
     
     const { otp, package: defPkg, releaseCount, ...others } = options
     const { showChangelog, showRelease, ci, dryRun, onlyChangelog } = mapObject(others, (k, v) => [ k, Boolean(v) ])

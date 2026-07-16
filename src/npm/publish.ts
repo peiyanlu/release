@@ -10,10 +10,10 @@ import {
 } from '@peiyanlu/cli-utils'
 import { blue, cyan, green, magenta, red, underline, yellow } from 'ansis'
 import { MSG } from '../messages.js'
-import { ReleaseContext, ResolvedConfig } from '../types.js'
+import type { ReleaseContext, ResolvedConfig } from '../types.js'
 
 
-export const npmCheck = async (ctx: ReleaseContext, config: ResolvedConfig) => {
+export const npmCheck = async (ctx: ReleaseContext, config: ResolvedConfig): Promise<string> => {
   const { pkg: { name, current, publishConfig: { registry } } } = ctx
   const { npm: { skipChecks } } = config
   const tag = await resolvePublishTag(name, current)
@@ -50,7 +50,7 @@ export const npmCheck = async (ctx: ReleaseContext, config: ResolvedConfig) => {
   return latest ? `(${ tag } → ${ latest })` : `(${ tag } → no published version)`
 }
 
-export const publishNpm = async (ctx: ReleaseContext, config: ResolvedConfig) => {
+export const publishNpm = async (ctx: ReleaseContext, config: ResolvedConfig): Promise<void> => {
   const { dryRun, selectedPkg, npm: { otp, tag } } = ctx
   const { npm: { publish, publishArgs }, getPkgDir } = config
   
@@ -59,7 +59,7 @@ export const publishNpm = async (ctx: ReleaseContext, config: ResolvedConfig) =>
   const otpArgs = otp ? [ '--otp', otp ] : []
   const dryRunArg = dryRun ? [ '--dry-run' ] : []
   
-  return publishPackage({
+  await publishPackage({
     tag,
     args: [ ...otpArgs, ...publishArgs, ...dryRunArg ],
     cwd: getPkgDir(selectedPkg),
@@ -89,7 +89,7 @@ interface PublishTagOptions {
   provenance?: boolean
 }
 
-export const publishTagToNpm = async (options: PublishTagOptions) => {
+export const publishTagToNpm = async (options: PublishTagOptions): Promise<void> => {
   const { gitTag, defaultPackage, tagSeparator = '@', getPkgDir = () => '.', provenance } = options
   
   const tag = process.argv.slice(2)[0] || gitTag

@@ -48,10 +48,11 @@ export const gitCheck = async (ctx: ReleaseContext, config: ResolvedConfig) => {
     return
   }
   
-  const { name: remoteName, url: remoteUrl } = (await getRemoteList())[0]
-  if (!remoteUrl) {
+  const remote = (await getRemoteList())[0]
+  const { name: remoteName = 'origin', url: remoteUrl } = remote ?? {}
+  if (!remote || !remoteUrl) {
     if (requireRemote) {
-      throw new Error(MSG.ERROR.GIT_REMOTE(name))
+      throw new Error(MSG.ERROR.GIT_REMOTE(remoteName))
     } else {
       ctx.noGitHub = true
       return

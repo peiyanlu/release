@@ -1,4 +1,4 @@
-import { DefaultConfig, ReleaseContext } from './types.js'
+import type { DefaultConfig, ReleaseContext } from './types.js'
 import { PreId } from './version/prompts.js'
 
 

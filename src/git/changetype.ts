@@ -1,4 +1,4 @@
-import { CommitType } from '../types.js'
+import type { CommitType } from '../types.js'
 
 
 export const defaultTypes: CommitType[] = [

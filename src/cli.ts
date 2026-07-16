@@ -1,4 +1,5 @@
-import { type CliOptions, eol, gitAddSync, readJsonFile } from '@peiyanlu/cli-utils'
+import { type CliOptions, eol, gitAddSync } from '@peiyanlu/cli-utils'
+import { readJsonFileSync } from '@peiyanlu/node-utils'
 import { dim, green, red, underline, yellow } from 'ansis'
 import { program } from 'commander'
 import { existsSync, writeFileSync } from 'node:fs'
@@ -6,7 +7,7 @@ import { join } from 'path'
 import { Action } from './action.js'
 
 
-const pkg = readJsonFile(join(__dirname, '..', 'package.json'))
+const pkg: Record<string, any> = readJsonFileSync(join(__dirname, '..', 'package.json'))
 
 
 program
@@ -55,7 +56,7 @@ program
     
     const cwd = process.cwd()
     
-    const { type } = readJsonFile(join(cwd, 'package.json'))
+    const { type } = readJsonFileSync(join(cwd, 'package.json'))
     
     const isESM = type === 'module'
     const isTS = existsSync(join(cwd, 'tsconfig.json'))

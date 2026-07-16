@@ -1,10 +1,14 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "extends": ["config:recommended"],
+  "extends": [
+    "config:recommended"
+  ],
   "automergeStrategy": "squash",
   "rangeStrategy": "bump",
   "timezone": "Asia/Shanghai",
-  "labels": ["deps"],
+  "labels": [
+    "deps"
+  ],
   "minimumReleaseAge": "3 days",
   "schedule": [
     "* 0-3 1 * *",
@@ -16,31 +20,53 @@
   "groupSingleUpdates": false,
   "packageRules": [
     {
-      "matchManagers": ["npm"],
-      "matchDepTypes": ["dependencies", "devDependencies"],
-      "matchUpdateTypes": ["minor", "patch"],
+      "matchManagers": [
+        "npm"
+      ],
+      "matchDepTypes": [
+        "dependencies",
+        "devDependencies"
+      ],
+      "matchUpdateTypes": [
+        "minor",
+        "patch"
+      ],
       "groupName": "npm 依赖",
       "groupSlug": "npm",
       "automerge": true
     },
     {
-      "matchManagers": ["github-actions"],
+      "matchManagers": [
+        "github-actions"
+      ],
       "groupName": "ci 依赖",
       "groupSlug": "ci",
       "automerge": true
     },
     {
-      "matchManagers": ["github-actions"],
-      "matchUpdateTypes": ["minor", "patch"],
+      "matchManagers": [
+        "github-actions"
+      ],
+      "matchUpdateTypes": [
+        "minor",
+        "patch"
+      ],
       "enabled": false
     },
     {
-      "matchDepTypes": ["engines"],
-      "matchDepNames": ["node"],
+      "matchDepTypes": [
+        "engines"
+      ],
+      "matchDepNames": [
+        "node"
+      ],
       "enabled": false
     },
     {
-      "matchPackageNames": ["@types/node", "typescript"],
+      "matchPackageNames": [
+        "@types/node",
+        "typescript"
+      ],
       "enabled": false
     }
   ],
@@ -51,7 +77,7 @@
         "src/.*\\.ts$"
       ],
       "matchStrings": [
-        "//\\s*renovate:\\s+datasource=(?<datasource>\\S+)\\s+depName=(?<depName>\\S+)\\s+(?:var|let|const)\\s+\\S+\\s*=\\s*[\"'](?<currentValue>[^\"']+)[\"']"
+        "//\\s*renovate:\\s+datasource=(?<datasource>\\S+)\\s+depName=(?<depName>\\S+)\\s+(?:export\\s+)?(?:var|let|const)\\s+\\S+\\s*=\\s*[\"'](?<currentValue>[^\"']+)[\"']"
       ]
     }
   ]

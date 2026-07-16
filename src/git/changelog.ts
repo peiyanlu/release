@@ -36,7 +36,7 @@ type InferReleaseTypeResult<T extends boolean | undefined> =
     : ReleaseType | undefined
 
 
-export const parsePreset = (options: ParsePresetOptions = {}) => {
+export const parsePreset = (options: ParsePresetOptions = {}): Preset => {
   const { includeHidden, transformTypes } = options
   
   let types = [ ...defaultTypes ]
@@ -60,7 +60,9 @@ export const parsePreset = (options: ParsePresetOptions = {}) => {
   return preset
 }
 
-export const inferReleaseType = async <T extends boolean = false>(options?: ParsePresetOptions & { json?: T }) => {
+export const inferReleaseType = async <T extends boolean = false>(
+  options?: ParsePresetOptions & { json?: T },
+): Promise<InferReleaseTypeResult<T>> => {
   const preset = parsePreset(options) as BumpPreset
   const res = await new Bumper().config(preset).bump(preset.whatBump)
   
@@ -71,7 +73,8 @@ export const inferReleaseType = async <T extends boolean = false>(options?: Pars
   return (options?.json ? { releaseType, reason } : releaseType) as InferReleaseTypeResult<T>
 }
 
-export const createGenerator = async (options: GenerateOptions & ParsePresetOptions) => {
+
+export const createGenerator = async (options: GenerateOptions & ParsePresetOptions): Promise<ConventionalChangelog> => {
   const { getPkgDir, tagPrefix, releaseCount = 1, includeHidden, transformTypes } = options
   
   const pkgDir = getPkgDir()
@@ -83,8 +86,7 @@ export const createGenerator = async (options: GenerateOptions & ParsePresetOpti
     .tags({ prefix: tagPrefix })
 }
 
-
-export const getChangelog = async (options: GenerateOptions & ParsePresetOptions) => {
+export const getChangelog = async (options: GenerateOptions & ParsePresetOptions): Promise<string> => {
   const generator = await createGenerator(options)
   
   let changelog: string = ''
@@ -95,7 +97,7 @@ export const getChangelog = async (options: GenerateOptions & ParsePresetOptions
   return changelog.trimEnd()
 }
 
-export const generateChangelog = async (options: GenerateOptions & ParsePresetOptions) => {
+export const generateChangelog = async (options: GenerateOptions & ParsePresetOptions): Promise<void> => {
   const { getPkgDir, releaseCount = 1 } = options
   
   const pkgDir = getPkgDir()

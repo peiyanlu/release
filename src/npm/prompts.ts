@@ -2,7 +2,7 @@ import { confirm, group, text } from '@clack/prompts'
 import { isUndefined } from '@peiyanlu/ts-utils'
 import { yellow } from 'ansis'
 import { MSG } from '../messages.js'
-import { ReleaseContext, ResolvedConfig } from '../types.js'
+import type { ReleaseContext, ResolvedConfig } from '../types.js'
 import { abortGroupPrompt, msg, question } from '../utils.js'
 
 

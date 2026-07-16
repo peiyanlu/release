@@ -3,7 +3,7 @@ import { isValidVersion } from '@peiyanlu/cli-utils'
 import { isUndefined } from '@peiyanlu/ts-utils'
 import { inc } from 'semver'
 import { MSG } from '../messages.js'
-import { ReleaseContext, ResolvedConfig } from '../types.js'
+import type { ReleaseContext, ResolvedConfig } from '../types.js'
 import { abortSinglePrompt, question } from '../utils.js'
 
 

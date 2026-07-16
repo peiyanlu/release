@@ -5,7 +5,7 @@ import { createReadStream, statSync } from 'node:fs'
 import open from 'open'
 import { glob } from 'tinyglobby'
 import { MSG } from '../messages.js'
-import { ReleaseContext, ResolvedConfig } from '../types.js'
+import type { ReleaseContext, ResolvedConfig } from '../types.js'
 
 
 interface UploadAssets {

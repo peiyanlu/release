@@ -5,7 +5,7 @@ import { dim, green, red, rgb, yellow } from 'ansis'
 import { inspect } from 'node:util'
 import { gitRollback } from './git/commit.js'
 import { MSG } from './messages.js'
-import { HookConfig, ReleaseContext, ReleaseHookKey, ResolvedConfig } from './types.js'
+import type { HookConfig, ReleaseContext, ReleaseHookKey, ResolvedConfig } from './types.js'
 
 
 export const info = (msg: string) => {

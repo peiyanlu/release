@@ -33,6 +33,7 @@ const config: UserConfig[] = defineConfig([
     nodeProtocol: true,
     shims: true,
     dts: true,
+    publint: true,
   },
 ] satisfies UserConfig[])
 

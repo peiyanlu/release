@@ -87,7 +87,7 @@ export const MSG = {
   
   ERROR: {
     GIT_WORKDIR: `[git] Working tree must be clean`,
-    GIT_REGISTRY: (name: string) => `[git] Repository not found for ${ dim(name) }`,
+    GIT_REGISTRY: (name: string) => `[git] Repository not found for package "${ dim(name) }"`,
     GIT_REMOTE: (name: string) => `[git] Remote "${ dim(name) }" not found`,
     
     GITHUB_TAG_EXIT: (tag: string) => `[github] Release for tag "${ tag }" already exists and is not a draft`,

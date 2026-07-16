@@ -1,19 +1,15 @@
 # Release Project
 
-<p>
-  <a href="https://www.npmjs.com/package/@peiyanlu/release" target="_blank">
-    <img src="https://img.shields.io/badge/npm-@peiyanlu/release-blue.svg?logo=npm" alt="NPM Package" />
-  </a>
-  <a href="https://www.npmjs.com/package/@peiyanlu/release" target="_blank">
-    <img src="https://img.shields.io/npm/v/@peiyanlu/release.svg" alt="NPM Version" />
-  </a>
-  <a href="https://www.npmjs.com/package/@peiyanlu/release" target="_blank">
-    <img src="https://img.shields.io/npm/l/@peiyanlu/release.svg" alt="Package License" />
-  </a>
-  <a href="https://www.npmjs.com/package/@peiyanlu/release" target="_blank">
-    <img src="https://img.shields.io/npm/dm/@peiyanlu/release.svg" alt="NPM Downloads" />
-  </a>
-</p>
+
+[![module](https://img.shields.io/badge/package-ESM--only-FFE536.svg?logo=npm)](https://nodejs.org/api/esm.html)
+[![npm](https://img.shields.io/npm/v/@peiyanlu/release.svg)](https://npmjs.com/package/@peiyanlu/release)
+[![license](https://img.shields.io/npm/l/@peiyanlu/release.svg)](https://npmjs.com/package/@peiyanlu/release)
+[![downloads](https://img.shields.io/npm/dm/@peiyanlu/release.svg)](https://npmjs.com/package/@peiyanlu/release)
+[![node](https://img.shields.io/node/v/@peiyanlu/release.svg)](https://nodejs.org)
+[![size](https://packagephobia.com/badge?p=@peiyanlu/release)](https://packagephobia.com/result?p=@peiyanlu/release)
+[![deps](https://img.shields.io/librariesio/release/npm/@peiyanlu/release)](https://libraries.io/npm/%40peiyanlu%2Frelease)
+[![build](https://img.shields.io/github/actions/workflow/status/peiyanlu/release/test.yaml?branch=master&logo=github)](https://github.com/peiyanlu/release/actions)
+[![coverage](https://coveralls.io/repos/github/peiyanlu/release/badge.svg?branch=master)](https://coveralls.io/github/peiyanlu/release?branch=master)
 
 🚀 **一个用于自动化版本管理与包发布的通用 CLI 工具**
 

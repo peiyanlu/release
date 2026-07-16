@@ -1,8 +1,8 @@
-import { DeepPartial, DeepRequired, isFunction, isPlainObject, isUndefined } from '@peiyanlu/ts-utils'
+import { type DeepPartial, type DeepRequired, isFunction, isPlainObject, isUndefined } from '@peiyanlu/ts-utils'
 import { existsSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { pathToFileURL } from 'node:url'
-import { ReleaseConfig } from './types.js'
+import type { ReleaseConfig } from './types.js'
 
 
 export type UserConfig = DeepPartial<ReleaseConfig>
