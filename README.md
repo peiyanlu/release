@@ -278,6 +278,23 @@ COMMIT_TYPES：
 
 适用于 CI/CD 场景下的**安全、无 Token** 自动化发布。
 
+支持配置发布前清理：
+
+- 移除 `package.json` 中对发布无意义的字段
+- `README.md` 只保留主要内容
+
+```ts
+// 默认配置
+export default defineConfig({
+  npm: {
+    cleanup: {
+      packageJson: true,
+      readme: false,
+      removeTempDir: true,
+    }
+  },
+})
+```
 
 ## GitHub Releases
 
@@ -316,10 +333,13 @@ GitHub Release 可基于 Git Tag 自动创建，并支持附带：
 ### 示例用法
 
 - 发布到 npm
+
 ```ts
 // publishCI.ts
 
 import { publishTagToNpm } from '@peiyanlu/release'
+
+
 await publishTagToNpm({})
 ```
 
@@ -349,6 +369,7 @@ jobs:
 ```
 
 - 创建 GitHub Release
+
 ```yaml
 # .github/workflows/release.yml
 

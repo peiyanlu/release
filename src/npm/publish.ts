@@ -8,9 +8,12 @@ import {
   publishPackage,
   resolvePublishTag,
 } from '@peiyanlu/cli-utils'
+import { copyDir, createMatcher, createTempDir } from '@peiyanlu/node-utils'
 import { blue, cyan, green, magenta, red, underline, yellow } from 'ansis'
+import { resolve } from 'node:path'
 import { MSG } from '../messages.js'
 import type { ReleaseContext, ResolvedConfig } from '../types.js'
+import { cleanReadme, clearPackageJSON, IGNORE_FILES } from './cleanup.js'
 
 
 export const npmCheck = async (ctx: ReleaseContext, config: ResolvedConfig): Promise<string> => {
@@ -22,7 +25,7 @@ export const npmCheck = async (ctx: ReleaseContext, config: ResolvedConfig): Pro
   
   if (skipChecks) return ''
   
-  const [ pinged, username, canPublished ] = await Promise.all([
+  const [ pinged, username ] = await Promise.all([
     pingRegistry(registry),
     getAuthenticatedUser(registry),
     canPublish(registry),
@@ -33,9 +36,6 @@ export const npmCheck = async (ctx: ReleaseContext, config: ResolvedConfig): Pro
   }
   if (!username) {
     throw new Error(MSG.ERROR.NPM_AUTH)
-  }
-  if (!canPublished) {
-    throw new Error(MSG.ERROR.NPM_PERMISSION)
   }
   
   Object.assign(ctx.npm, { username })
@@ -51,19 +51,49 @@ export const npmCheck = async (ctx: ReleaseContext, config: ResolvedConfig): Pro
 }
 
 export const publishNpm = async (ctx: ReleaseContext, config: ResolvedConfig): Promise<void> => {
-  const { dryRun, selectedPkg, npm: { otp, tag } } = ctx
-  const { npm: { publish, publishArgs }, getPkgDir } = config
+  const { dryRun, selectedPkg, npm: { otp, tag }, github: { url } } = ctx
+  const { npm: { publish, publishArgs, cleanup: { packageJson, readme, removeTempDir } }, getPkgDir } = config
   
   if (!publish) return
   
   const otpArgs = otp ? [ '--otp', otp ] : []
   const dryRunArg = dryRun ? [ '--dry-run' ] : []
+  const args = [ ...otpArgs, ...publishArgs, ...dryRunArg ]
   
-  await publishPackage({
-    tag,
-    args: [ ...otpArgs, ...publishArgs, ...dryRunArg ],
-    cwd: getPkgDir(selectedPkg),
-  })
+  const useClean = packageJson || readme
+  if (useClean) {
+    const parent = resolve(getPkgDir(selectedPkg))
+    const temp = await createTempDir(parent)
+    await copyDir(parent, temp.path, {
+      ignore: [
+        (name) => {
+          const patterns = [ temp.name, ...IGNORE_FILES ]
+          const matchers = patterns.map(pattern => createMatcher(pattern))
+          return matchers.some(matcher => matcher(name))
+        },
+      ],
+    })
+    
+    const isBoolean = typeof packageJson === 'boolean'
+    const options = isBoolean ? undefined : packageJson
+    packageJson && await clearPackageJSON(temp.path, options)
+    
+    readme && await cleanReadme(temp.path, `${ url }#readme`)
+    
+    await publishPackage({
+      tag,
+      args,
+      cwd: temp.path,
+    })
+    
+    removeTempDir && await temp.remove()
+  } else {
+    await publishPackage({
+      tag,
+      args,
+      cwd: getPkgDir(selectedPkg),
+    })
+  }
 }
 
 
@@ -107,7 +137,6 @@ export const publishTagToNpm = async (options: PublishTagOptions): Promise<void>
     [ pkgName, version ] = tag.split(tagSeparator)
     console.log(`🔍 Parsed tag → package: "${ yellow(pkgName) }", version: "${ green(version) }"`)
   } else {
-    pkgName = '.'
     version = tag
     console.log(`🔍 Parsed tag → version only: "${ green(version) }"`)
   }

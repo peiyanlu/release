@@ -1,4 +1,5 @@
 import {
+  getGithubUrl,
   getRemoteList,
   getRemoteNames,
   gitAddAll,
@@ -61,7 +62,9 @@ export const gitCheck = async (ctx: ReleaseContext, config: ResolvedConfig) => {
   Object.assign(ctx.git, { remoteName, remoteUrl })
   
   const [ owner, repo ] = parseGitHubRepo(remoteUrl)
-  Object.assign(ctx.github, { owner, repo })
+  const url = getGithubUrl(owner, repo)
+  
+  Object.assign(ctx.github, { owner, repo, url })
 }
 
 export const commitAndTag = async (ctx: ReleaseContext, config: ResolvedConfig) => {

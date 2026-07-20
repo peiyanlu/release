@@ -1,5 +1,5 @@
 import { getInput, setFailed } from '@actions/core'
-import { getOctokit, context } from '@actions/github'
+import { context, getOctokit } from '@actions/github'
 
 
 async function run() {

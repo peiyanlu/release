@@ -49,6 +49,7 @@ export const createDefaultContext = (): ReleaseContext => {
       tagMessage: '',
     },
     github: {
+      url: '',
       username: '',
       repo: '',
       changelog: '',
@@ -114,6 +115,11 @@ export const createDefaultConfig = (isCI?: boolean): DefaultConfig => {
       publish: isCI,
       publishArgs: [],
       skipChecks: false,
+      cleanup: {
+        packageJson: true,
+        readme: false,
+        removeTempDir: true,
+      },
     },
     github: {
       release: isCI,

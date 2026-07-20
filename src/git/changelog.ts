@@ -1,5 +1,5 @@
 import { eol } from '@peiyanlu/cli-utils'
-import { isZero } from '@peiyanlu/ts-utils'
+import { isZero, type Simplify } from '@peiyanlu/ts-utils'
 import { ConventionalChangelog, type Options, type Preset } from 'conventional-changelog'
 import type { CommitType } from 'conventional-changelog-conventionalcommits'
 import createPreset from 'conventional-changelog-conventionalcommits'
@@ -21,12 +21,15 @@ interface GenerateOptions {
   releaseCount?: number;
 }
 
-export interface ParsePresetOptions {
+interface ParsePresetOptions {
   /** 生成 CHANGELOG 时包含默认隐藏的 commit 类型 */
   includeHidden?: boolean
   /** 对默认 commit types 进行转换 */
   transformTypes?: (types: CommitType[]) => CommitType[]
 }
+
+type GOptions = Simplify<GenerateOptions & ParsePresetOptions>
+
 
 type ReleaseType = 'major' | 'minor' | 'patch'
 
@@ -74,7 +77,7 @@ export const inferReleaseType = async <T extends boolean = false>(
 }
 
 
-export const createGenerator = async (options: GenerateOptions & ParsePresetOptions): Promise<ConventionalChangelog> => {
+export const createGenerator = async (options: GOptions): Promise<ConventionalChangelog> => {
   const { getPkgDir, tagPrefix, releaseCount = 1, includeHidden, transformTypes } = options
   
   const pkgDir = getPkgDir()
@@ -86,7 +89,7 @@ export const createGenerator = async (options: GenerateOptions & ParsePresetOpti
     .tags({ prefix: tagPrefix })
 }
 
-export const getChangelog = async (options: GenerateOptions & ParsePresetOptions): Promise<string> => {
+export const getChangelog = async (options: GOptions): Promise<string> => {
   const generator = await createGenerator(options)
   
   let changelog: string = ''
@@ -97,7 +100,7 @@ export const getChangelog = async (options: GenerateOptions & ParsePresetOptions
   return changelog.trimEnd()
 }
 
-export const generateChangelog = async (options: GenerateOptions & ParsePresetOptions): Promise<void> => {
+export const generateChangelog = async (options: GOptions): Promise<void> => {
   const { getPkgDir, releaseCount = 1 } = options
   
   const pkgDir = getPkgDir()

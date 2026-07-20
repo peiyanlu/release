@@ -185,7 +185,7 @@ export class Action {
         npm: { otp: String(otp) },
         increment: cmdArgs,
         isIncrement: true,
-        isCI: [ ci, showChangelog, showRelease, process.env.GITHUB_ACTIONS, process.env.CI ].some(k => Boolean(k)),
+        isCI: [ ci, showChangelog, showRelease, process.env.GITHUB_ACTIONS, process.env.CI ].some(Boolean),
         pkg: {
           name: pkgName,
           isPrivate: pkgPrivate,
@@ -193,7 +193,7 @@ export class Action {
           current: pkgVersion,
           next: nextVersion,
           toPreRelease: false,
-          publishConfig: { ...publishConfig },
+          publishConfig: { ...publishConfig } as any,
         },
         noNpm: pkgPrivate || skipNpm,
       },

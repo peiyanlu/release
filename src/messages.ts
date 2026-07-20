@@ -97,7 +97,6 @@ export const MSG = {
     
     NPM_REGISTRY: (registry: string) => `[npm] Unable to reach npm registry ${ underline(dim(registry)) }`,
     NPM_AUTH: `[npm] Not authenticated with npm. Please run ${ yellow('npm login') } and try again`,
-    NPM_PERMISSION: `[npm] Missing publish permission. Please use a token with publish access and try again`,
     NPM_USER: (user: string, name: string) => `[npm] User ${ dim(user) } is not a collaborator of ${ dim(name) }`,
   },
   

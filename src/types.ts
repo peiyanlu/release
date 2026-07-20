@@ -59,6 +59,7 @@ export interface ReleaseContext {
     tagMessage: string
   },
   github: {
+    url: string
     username: string
     owner: string
     repo: string
@@ -227,12 +228,47 @@ export interface ReleaseConfig {
     
     /**
      * 是否跳过发布前检查（如 ping、whoami 等校验）
+     *
+     * 启用后可减少发布前的网络请求，但可能无法提前发现登录状态异常或 Registry 不可用等问题。
      */
     skipChecks: boolean
+    
+    /**
+     * 发布前的文件清理配置
+     *
+     * 用于控制复制到临时发布目录后的清理行为，不会修改源项目文件。
+     */
+    cleanup: {
+      /**
+       * 是否清理 package.json
+       *
+       * 包括移除开发相关字段、应用 publishConfig，并保留发布所需内容。
+       */
+      packageJson: boolean | {
+        /** 需要忽略的字段，支持 `a.b.c` */
+        ignoreFields: string[]
+        
+        /** 需要保留的脚本，默认：`preinstall | install | postinstall` */
+        keepScripts: string[]
+      }
+      
+      /**
+       * 是否清理 README.md
+       *
+       * 仅保留主要内容，并移除或精简不需要随包发布的文档内容。
+       */
+      readme: boolean
+      
+      /**
+       * 是否在发布之后删除临时目录
+       */
+      removeTempDir: boolean
+    }
   }
   
   /**
    * GitHub Release 相关配置
+   *
    * 控制是否创建 Release、发布方式以及上传资源。
    */
   github: {
