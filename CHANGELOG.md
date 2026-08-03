@@ -1,3 +1,9 @@
+## [1.2.0](https://github.com/peiyanlu/release/compare/v1.1.2...v1.2.0) (2026-08-03)
+
+### ✨ 新功能
+
+* 添加发布清理配置 ([f1d14d9](https://github.com/peiyanlu/release/commit/f1d14d99f8ae13e7181cdb9a60e58da17fd62cee))
+
 ## <small>[1.1.2](https://github.com/peiyanlu/release/compare/v1.1.1...v1.1.2) (2026-07-09)</small>
 
 ### 🐛 Bug 修复
