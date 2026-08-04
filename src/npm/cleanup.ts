@@ -1,9 +1,9 @@
 import { editFile, readJsonFile, writeJsonFile } from '@peiyanlu/node-utils'
-import { isEmptyObject, omit, partition, unset } from '@peiyanlu/ts-utils'
+import { type Dict, isEmptyObject, omit, partition, unset } from '@peiyanlu/ts-utils'
 import { join } from 'node:path'
 
 
-type PackageJson = Record<string, any>
+type PackageJson = Dict<any>
 
 
 // https://pnpm.io/package_json#publishconfig
@@ -100,7 +100,6 @@ export const clearPackageJSON = async (
     
     return omit(json, unmatched)
   }
-  
   
   const cleanScripts = (json: PackageJson) => {
     if (!json.scripts) return json

@@ -17,7 +17,7 @@ import {
   resolveChangelogRange,
 } from '@peiyanlu/cli-utils'
 import { readJsonFileSync } from '@peiyanlu/node-utils'
-import { isZero, mapObject } from '@peiyanlu/ts-utils'
+import { isNotEmpty, isZero, mapObject } from '@peiyanlu/ts-utils'
 import { join } from 'node:path'
 import { publint } from 'publint'
 import { formatMessage } from 'publint/utils'
@@ -95,7 +95,7 @@ export class Action {
   }
   
   async createContext(cmdArgs: string, options: CliOptions, prepare: boolean = false) {
-    const { version: cVersion, name: cName } = readJsonFileSync<Record<string, any>>(join(__dirname, '../package.json'))
+    const { version: cVersion, name: cName } = readJsonFileSync(join(__dirname, '../package.json'))
     
     const { otp, package: defPkg, releaseCount, ...others } = options
     const { showChangelog, showRelease, ci, dryRun, onlyChangelog } = mapObject(others, (k, v) => [ k, Boolean(v) ])
@@ -177,7 +177,7 @@ export class Action {
       defaultContext,
       {
         selectedPkg,
-        configFileExists: Object.keys(local).length > 0,
+        configFileExists: isNotEmpty(local),
         dryRun,
         showRelease,
         showChangelog,
@@ -193,7 +193,7 @@ export class Action {
           current: pkgVersion,
           next: nextVersion,
           toPreRelease: false,
-          publishConfig: { ...publishConfig } as any,
+          publishConfig: { ...publishConfig },
         },
         noNpm: pkgPrivate || skipNpm,
       },

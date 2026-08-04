@@ -7,7 +7,7 @@ import { join } from 'path'
 import { Action } from './action.js'
 
 
-const pkg: Record<string, any> = readJsonFileSync(join(__dirname, '..', 'package.json'))
+const pkg = readJsonFileSync(join(__dirname, '..', 'package.json'))
 
 
 program
