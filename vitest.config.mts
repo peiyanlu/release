@@ -11,12 +11,13 @@ export default defineConfig({
     },
     projects: [
       {
+        extends: true,
         test: {
           name: {
             label: 'scenario',
             color: 'green',
           },
-          setupFiles: [ './tests/setup.ts' ],
+          setupFiles: [],
           include: [ '**/tests/**/*.{test,spec}.{ts,mts}' ],
         },
       },

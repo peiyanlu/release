@@ -48,6 +48,7 @@
     "tinyglobby": "^0.2.17"
   },
   "devDependencies": {
+    "@peiyanlu/test-tools": "^0.0.7",
     "@types/mime-types": "^3.0.1",
     "@types/node": "^24.13.3",
     "@types/semver": "^7.7.1",

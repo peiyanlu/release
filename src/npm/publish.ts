@@ -1,12 +1,13 @@
 import {
-  canPublish,
   getAuthenticatedUser,
   getPackageInfo,
   getPublishedVersion,
   hasWriteAccess,
   pingRegistry,
   publishPackage,
+  registryArg,
   resolvePublishTag,
+  runNpm,
 } from '@peiyanlu/cli-utils'
 import { copyDir, createMatcher, createTempDir } from '@peiyanlu/node-utils'
 import { blue, cyan, green, magenta, red, underline, yellow } from 'ansis'
@@ -16,9 +17,27 @@ import type { ReleaseContext, ResolvedConfig } from '../types.js'
 import { cleanReadme, clearPackageJSON, IGNORE_FILES } from './cleanup.js'
 
 
+const canPublish = async (registry?: string, cwd?: string): Promise<boolean> => {
+  const res = await runNpm(
+    [ 'publish', '--dry-run', '--access', 'public', ...registryArg(registry) ],
+    { error: 'throw', cwd },
+  ).catch((err: Error) => err)
+  
+  const allowedErr = (err: Error) => {
+    const matches = [ /previously published versions/i, /cannot publish over/i ]
+    return matches.some(reg => reg.test(err.message))
+  }
+  
+  if (!(res instanceof Error) || allowedErr(res)) {
+    return true
+  }
+  
+  throw res
+}
+
 export const npmCheck = async (ctx: ReleaseContext, config: ResolvedConfig): Promise<string> => {
-  const { pkg: { name, current, publishConfig: { registry } } } = ctx
-  const { npm: { skipChecks } } = config
+  const { pkg: { name, current, publishConfig: { registry } }, selectedPkg } = ctx
+  const { npm: { skipChecks }, getPkgDir } = config
   const tag = await resolvePublishTag(name, current)
   
   Object.assign(ctx.npm, { tag })
@@ -28,7 +47,7 @@ export const npmCheck = async (ctx: ReleaseContext, config: ResolvedConfig): Pro
   const [ pinged, username ] = await Promise.all([
     pingRegistry(registry),
     getAuthenticatedUser(registry),
-    canPublish(registry),
+    canPublish(registry, getPkgDir(selectedPkg)),
   ])
   
   if (!pinged) {

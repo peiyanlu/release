@@ -10,8 +10,6 @@
     "verbatimModuleSyntax": true,
     "isolatedModules": true,
     "isolatedDeclarations": true,
-    "rootDir": "src",
-    "types": ["node"]
-  },
-  "include": ["src"]
+    "resolveJsonModule": true
+  }
 }

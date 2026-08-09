@@ -16,13 +16,12 @@ import {
   parseVersion,
   resolveChangelogRange,
 } from '@peiyanlu/cli-utils'
-import { readJsonFileSync } from '@peiyanlu/node-utils'
-import { isNotEmpty, isZero, mapObject } from '@peiyanlu/ts-utils'
-import { join } from 'node:path'
+import { isBoolean, isNotEmpty, isNumber, isZero, mapObject } from '@peiyanlu/ts-utils'
 import { publint } from 'publint'
 import { formatMessage } from 'publint/utils'
 import { inc, neq, type ReleaseType } from 'semver'
-import { mergeConfig, resolveConfig } from './config.js'
+import pkgJson from '../package.json' with { type: 'json' }
+import { mergeConfig, resolveConfig, type UserConfig } from './config.js'
 import { createDefaultConfig, createDefaultContext } from './defaults.js'
 import { generateChangelog, getChangelog, inferReleaseType } from './git/changelog.js'
 import { commitAndTag, gitCheck, gitRollback } from './git/commit.js'
@@ -49,8 +48,29 @@ import {
 import { runVersionPrompts } from './version/prompts.js'
 
 
+export interface ReleaseCliOptions extends CliOptions<string | number | boolean | undefined> {
+  prepare: boolean
+  dryRun: boolean
+  package: string
+  otp: string
+  ci: boolean
+  showChangelog: boolean
+  showRelease: boolean
+  onlyChangelog: boolean
+  // config start
+  requireCleanWorkingTree: boolean
+  releaseCount: number
+  skipGit: boolean
+  skipNpm: boolean
+  skipGithub: boolean
+  isMonorepo: boolean
+  includeHidden: boolean
+  // config end
+}
+
+
 export class Action {
-  async handleRelease(cmdArgs: string, options: CliOptions) {
+  async handleRelease(cmdArgs: string, options: ReleaseCliOptions) {
     const { ctx, config } = await this.createContext(cmdArgs, options)
     
     // 1️⃣ 预检查阶段
@@ -75,8 +95,8 @@ export class Action {
     taskEnd(MSG.OUTRO(ctx.dryRun))
   }
   
-  async handlePrepareRelease(cmdArgs: string, options: CliOptions) {
-    const { ctx, config } = await this.createContext(cmdArgs, options, true)
+  async handlePrepareRelease(cmdArgs: string, options: ReleaseCliOptions) {
+    const { ctx, config } = await this.createContext(cmdArgs, options)
     
     // 1️⃣ 预检查阶段
     await this.checkTask(ctx, config)
@@ -94,45 +114,15 @@ export class Action {
     taskEnd(MSG.OUTRO_PREPARE(ctx.dryRun))
   }
   
-  async createContext(cmdArgs: string, options: CliOptions, prepare: boolean = false) {
-    const { version: cVersion, name: cName } = readJsonFileSync(join(__dirname, '../package.json'))
+  async createContext(cmdArgs: string, options: ReleaseCliOptions) {
+    const { configFile, config } = await this.createConfig(options)
     
-    const { otp, package: defPkg, releaseCount, ...others } = options
-    const { showChangelog, showRelease, ci, dryRun, onlyChangelog } = mapObject(others, (k, v) => [ k, Boolean(v) ])
-    
-    process.env['dryRun'] = String(dryRun)
-    
-    
-    const { configFile, config: local } = await resolveConfig<ReleaseConfig>(process.cwd())
-    const defaultConfig = createDefaultConfig(ci ? true : undefined)
-    const config: ResolvedConfig = mergeConfig<ResolvedConfig>(defaultConfig, local)
-    
-    
-    info(MSG.INFO.TOOL(cName, cVersion))
+    info(MSG.INFO.TOOL(pkgJson.name, pkgJson.version))
     info(MSG.INFO.CONFIG(configFile))
     
-    {
-      const {
-        requireCleanWorkingTree,
-        skipGit,
-        skipNpm,
-        skipGithub,
-        isMonorepo,
-        includeHidden,
-      } = mapObject(others, (k, v) => [ k, Boolean(v) ])
-      
-      const count = Number(releaseCount)
-      config.changelog.releaseCount = isNaN(count) ? 0 : count
-      config.changelog.includeHidden = includeHidden
-      
-      config.git.requireCleanWorkingTree = requireCleanWorkingTree
-      config.skipGit = skipGit
-      config.skipNpm = skipNpm
-      config.skipGithub = skipGithub
-      config.isMonorepo = isMonorepo
-    }
-    
     console.log()
+    
+    const { otp, package: defPkg, prepare, showChangelog, showRelease, ci, dryRun, onlyChangelog } = options
     intro(prepare ? MSG.INTRO_PREPARE(dryRun) : MSG.INTRO(dryRun))
     
     const { isMonorepo, packages, getPkgDir, skipNpm } = config
@@ -177,7 +167,7 @@ export class Action {
       defaultContext,
       {
         selectedPkg,
-        configFileExists: isNotEmpty(local),
+        configFileExists: isNotEmpty(configFile),
         dryRun,
         showRelease,
         showChangelog,
@@ -206,6 +196,52 @@ export class Action {
     }
     
     return { ctx, config }
+  }
+  
+  async createConfig(options: ReleaseCliOptions) {
+    const {
+      ci,
+      requireCleanWorkingTree,
+      skipGit,
+      skipNpm,
+      skipGithub,
+      isMonorepo,
+      includeHidden,
+      releaseCount,
+    } = options
+    
+    const toFalse = (value: unknown): boolean | undefined => {
+      return isBoolean(value) && !value ? value : undefined
+    }
+    const toNumber = (value: unknown): number | undefined => {
+      return isNumber(value) ? value : undefined
+    }
+    
+    const defaultConfig = createDefaultConfig(ci ? true : undefined)
+    
+    const { configFile, config: local } = await this.resolveUserConfig<ReleaseConfig>(process.cwd())
+    const config: ResolvedConfig = mergeConfig<ResolvedConfig>(
+      mergeConfig<ResolvedConfig>(defaultConfig, local),
+      {
+        changelog: {
+          releaseCount: toNumber(releaseCount),
+          includeHidden,
+        },
+        git: {
+          requireCleanWorkingTree: toFalse(requireCleanWorkingTree),
+        },
+        skipGit,
+        skipNpm,
+        skipGithub,
+        isMonorepo,
+      } satisfies UserConfig,
+    )
+    
+    return { configFile, config }
+  }
+  
+  async resolveUserConfig<T>(cwd = process.cwd()) {
+    return resolveConfig<T>(cwd)
   }
   
   async printChangelog(ctx: ReleaseContext, config: ResolvedConfig) {
