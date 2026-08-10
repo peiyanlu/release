@@ -7,11 +7,11 @@ import { abortGroupPrompt, msg, question } from '../utils.js'
 
 
 export const runGitPrompts = async (ctx: ReleaseContext, config: ResolvedConfig) => {
-  const { git: { currentTag, commitMessage }, configFileExists: cfe, dryRun } = ctx
+  const { git: { currentTag, commitMessage }, configFileExists: cfe, dryRun, isCI } = ctx
   const { git: { commit, tag, push } } = config
   const logs: string[] = []
   
-  const shouldPrompt = (val: unknown) => isUndefined(val) || dryRun
+  const shouldPrompt = (val: unknown) => isUndefined(val) || (dryRun && !isCI)
   
   const res = await group(
     {

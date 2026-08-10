@@ -16,7 +16,7 @@ import {
   parseVersion,
   resolveChangelogRange,
 } from '@peiyanlu/cli-utils'
-import { isBoolean, isNotEmpty, isNumber, isZero, mapObject } from '@peiyanlu/ts-utils'
+import { isBoolean, isNotEmpty, isNumber, isZero } from '@peiyanlu/ts-utils'
 import { publint } from 'publint'
 import { formatMessage } from 'publint/utils'
 import { inc, neq, type ReleaseType } from 'semver'
@@ -125,7 +125,7 @@ export class Action {
     const { otp, package: defPkg, prepare, showChangelog, showRelease, ci, dryRun, onlyChangelog } = options
     intro(prepare ? MSG.INTRO_PREPARE(dryRun) : MSG.INTRO(dryRun))
     
-    const { isMonorepo, packages, getPkgDir, skipNpm } = config
+    const { isMonorepo, packages, getPkgDir, skipGit, skipNpm, skipGithub } = config
     
     if (isMonorepo) {
       if (ci) {
@@ -185,7 +185,9 @@ export class Action {
           toPreRelease: false,
           publishConfig: { ...publishConfig },
         },
+        noGit: skipGit,
         noNpm: pkgPrivate || skipNpm,
+        noGitHub: skipGit || skipGithub,
       },
     )
     
@@ -285,6 +287,7 @@ export class Action {
           
           return success(MSG.CHECK.GIT.CHECKED(remoteName, remoteUrl), dryRun)
         },
+        enabled: !ctx.noGit,
       },
       {
         title: MSG.CHECK.NPM.CHECKING,
@@ -299,11 +302,11 @@ export class Action {
       {
         title: MSG.CHECK.GITHUB.CHECKING,
         task: async () => {
-          const msg = await githubCheck(ctx, config)
+          await githubCheck(ctx, config)
           const { github: { owner, repo } } = ctx
           const repository = getGithubUrl(owner, repo)
           
-          return success(MSG.CHECK.GITHUB.CHECKED(repository, msg), dryRun)
+          return success(MSG.CHECK.GITHUB.CHECKED(repository), dryRun)
         },
         enabled: !(ctx.noGitHub || onlyChangelog),
       },
@@ -326,7 +329,7 @@ export class Action {
       if (res) msg('BUMP', res.reason)
       const inferred = res?.releaseType
       
-      const ciVersion = isCI ? (inferred ?? inc(current, 'patch')!) : undefined
+      const ciVersion = isCI ? inc(current, inferred ?? 'patch') : undefined
       const nextVersion = ciVersion || await runVersionPrompts(ctx, config, inferred)
       
       ctx.isIncrement = neq(current, nextVersion)

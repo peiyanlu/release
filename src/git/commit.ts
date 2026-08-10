@@ -1,5 +1,4 @@
 import {
-  getGithubUrl,
   getRemoteList,
   getRemoteNames,
   gitAddAll,
@@ -13,7 +12,6 @@ import {
   gitTagDeleteSync,
   isGitRepo,
   isWorkingTreeClean,
-  parseGitHubRepo,
 } from '@peiyanlu/cli-utils'
 import { MSG } from '../messages.js'
 import type { ReleaseContext, ResolvedConfig } from '../types.js'
@@ -21,13 +19,7 @@ import type { ReleaseContext, ResolvedConfig } from '../types.js'
 
 export const gitCheck = async (ctx: ReleaseContext, config: ResolvedConfig) => {
   const { pkg: { name } } = ctx
-  const { git: { requireRepository, requireRemote, requireCleanWorkingTree }, skipGit, skipGithub } = config
-  
-  if (skipGit) {
-    ctx.noGit = true
-    ctx.noGitHub = true
-    return
-  }
+  const { git: { requireRepository, requireRemote, requireCleanWorkingTree } } = config
   
   const isRepo = await isGitRepo()
   if (!isRepo) {
@@ -35,7 +27,6 @@ export const gitCheck = async (ctx: ReleaseContext, config: ResolvedConfig) => {
       throw new Error(MSG.ERROR.GIT_REGISTRY(name))
     } else {
       ctx.noGit = true
-      ctx.noGitHub = true
       return
     }
   }
@@ -44,31 +35,18 @@ export const gitCheck = async (ctx: ReleaseContext, config: ResolvedConfig) => {
     throw new Error(MSG.ERROR.GIT_WORKDIR)
   }
   
-  if (skipGithub) {
-    ctx.noGitHub = true
-    return
-  }
-  
   const remote = (await getRemoteList())[0]
   const { name: remoteName = 'origin', url: remoteUrl } = remote ?? {}
   if (!remote || !remoteUrl) {
     if (requireRemote) {
       throw new Error(MSG.ERROR.GIT_REMOTE(remoteName))
-    } else {
-      ctx.noGitHub = true
-      return
     }
   }
   Object.assign(ctx.git, { remoteName, remoteUrl })
-  
-  const [ owner, repo ] = parseGitHubRepo(remoteUrl)
-  const url = getGithubUrl(owner, repo)
-  
-  Object.assign(ctx.github, { owner, repo, url })
 }
 
 export const commitAndTag = async (ctx: ReleaseContext, config: ResolvedConfig) => {
-  const { git: { remoteName, currentTag, commitMessage, tagMessage }, dryRun } = ctx
+  const { git: { currentTag, commitMessage, tagMessage }, dryRun } = ctx
   const {
     git: {
       commit,

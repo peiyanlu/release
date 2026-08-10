@@ -30,13 +30,13 @@ export const MSG = {
     NPM: {
       CHECKING: 'Checking npm registry',
       CHECKED: (registry: string, msg: string) =>
-        `NPM registry: ${ underline(dim(registry)) } ${ underline(dim(msg)) }`,
+        `NPM registry: ${ underline(dim(registry)) } ${ dim(msg) }`,
     },
     
     GITHUB: {
       CHECKING: 'Checking github repository',
-      CHECKED: (repository: string, msg: string) =>
-        `GitHub repository: ${ underline(dim(repository)) } ${ underline(dim(msg)) }`,
+      CHECKED: (repository: string) =>
+        `GitHub repository: ${ underline(dim(repository)) }`,
     },
   },
   

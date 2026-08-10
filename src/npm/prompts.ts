@@ -7,13 +7,13 @@ import { abortGroupPrompt, msg, question } from '../utils.js'
 
 
 export const runNpmPublishPrompts = async (ctx: ReleaseContext, config: ResolvedConfig) => {
-  const { pkg: { name, next }, configFileExists: cfe, dryRun } = ctx
+  const { pkg: { name, next }, configFileExists: cfe, dryRun, isCI } = ctx
   const { npm: { publish } } = config
   const logs: string[] = []
   
   const target = `${ name }@${ next }`
   
-  const shouldPrompt = (val: unknown) => isUndefined(val) || dryRun
+  const shouldPrompt = (val: unknown) => isUndefined(val) || (dryRun && !isCI)
   
   const res = await group(
     {

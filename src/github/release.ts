@@ -1,5 +1,6 @@
 import { Octokit } from '@octokit/rest'
-import { getGithubUrl } from '@peiyanlu/cli-utils'
+import { getGithubUrl, parseGitHubRepo } from '@peiyanlu/cli-utils'
+import { isEmpty } from '@peiyanlu/ts-utils'
 import { contentType } from 'mime-types'
 import { createReadStream, statSync } from 'node:fs'
 import open from 'open'
@@ -177,31 +178,37 @@ const createWebRelease = async (options: WebRelease) => {
   await open(url.toString(), { wait: isWindows })
 }
 
+const isGitHubActions = Boolean(process.env.GITHUB_ACTIONS)
+
 
 export const githubCheck = async (ctx: ReleaseContext, config: ResolvedConfig) => {
-  const { github: { owner, repo }, isCI } = ctx
+  const { git: { remoteUrl } } = ctx
   const { github: { tokenRef, skipChecks } } = config
+  
+  if (!remoteUrl || isEmpty(parseGitHubRepo(remoteUrl))) {
+    ctx.noGitHub = true
+    return
+  }
+  
+  const [ owner, repo ] = parseGitHubRepo(remoteUrl)
+  const url = getGithubUrl(owner, repo)
+  Object.assign(ctx.github, { owner, repo, url })
   
   const token = tokenRef ? process.env[tokenRef] : process.env.GITHUB_TOKEN
   if (!token) {
     Object.assign(ctx.github, { isWeb: true })
     
-    if (isCI && process.env.GITHUB_ACTIONS) {
+    if (isGitHubActions) {
       throw new Error(MSG.ERROR.GITHUB_TOKEN(tokenRef))
     }
     
-    return ''
+    return
   }
   Object.assign(ctx.github, { token })
   
-  if (skipChecks) return ''
-  
-  let username = ''
-  if (process.env.GITHUB_ACTIONS) {
-    username = process.env.GITHUB_ACTOR!
-  } else {
-    
+  if (!isGitHubActions && !skipChecks) {
     const octokit = new Octokit({ auth: token })
+    let username = ''
     try {
       const { data: { login } } = await octokit.users.getAuthenticated()
       username = login
@@ -215,8 +222,6 @@ export const githubCheck = async (ctx: ReleaseContext, config: ResolvedConfig) =
       throw new Error(MSG.ERROR.GITHUB_USER)
     }
   }
-  
-  return username
 }
 
 export const createRelease = async (ctx: ReleaseContext, config: ResolvedConfig) => {
