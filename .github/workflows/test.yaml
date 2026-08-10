@@ -26,10 +26,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v7
-        with:
-          fetch-depth: 0
-          fetch-tags: true
-          ref: ${{ github.ref }}
       
       - name: Setup pnpm
         uses: pnpm/action-setup@v6
@@ -40,7 +36,6 @@ jobs:
         uses: actions/setup-node@v7
         with:
           node-version: 24
-          registry-url: https://registry.npmjs.org/
           package-manager-cache: false
       
       - name: Configure Git
@@ -55,7 +50,15 @@ jobs:
         run: pnpm build
       
       - name: Test
-        run: pnpm test:cov
+        run: |
+          pnpm test:cov
+          ls coverage
+      
+      - name: Trust taps
+        if: runner.os == 'macOS'
+        run: |
+          brew trust coverallsapp/coveralls
+          brew trust aws/tap
       
       - name: Coverage (Report - ${{ matrix.os }})
         uses: coverallsapp/github-action@v2
@@ -72,8 +75,12 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        
       - name: Finish Coveralls
         uses: coverallsapp/github-action@v2
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           parallel-finished: true
+          debug: true
