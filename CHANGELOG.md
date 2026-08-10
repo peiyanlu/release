@@ -1,3 +1,9 @@
+## <small>[1.2.1](https://github.com/peiyanlu/release/compare/v1.2.0...v1.2.1) (2026-08-10)</small>
+
+### 🐛 Bug 修复
+
+* 修复命令行参数默认值问题 ([5559b7c](https://github.com/peiyanlu/release/commit/5559b7c5fb74b2a0513085c6a3462994b6e4b5af))
+
 ## [1.2.0](https://github.com/peiyanlu/release/compare/v1.1.2...v1.2.0) (2026-08-03)
 
 ### ✨ 新功能
