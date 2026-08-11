@@ -93,17 +93,17 @@ export type HookConfig = {
 export interface ReleaseConfig {
   /**
    * 生命周期钩子配置
-   * 用于在 Release 关键阶段注入自定义逻辑（如 before/after hooks）。
+   * 用于在 Release 关键阶段注入自定义逻辑（如 before/after hooks）
    */
   hooks: HookConfig
   
   /** 是否是 monorepo */
   isMonorepo: boolean
   
-  /** 使用 monorepo 时发布的包列表，后续回调的 `pkg`。默认为 `[]` 作为单仓库 */
+  /** 使用 monorepo 时发布的包列表，后续回调的 `pkg`，默认为 `[]` 作为单仓库 */
   packages: string[]
   
-  /** 使用 monorepo 时使用 getPkgDir，例如 `packages/${pkg}`。 默认为 `.` 作为单仓库 */
+  /** 使用 monorepo 时使用 getPkgDir，例如 `packages/${pkg}`，默认为 `.` 作为单仓库 */
   getPkgDir: (pkg: string) => string
   
   /** 使用 monorepo 时使用 toTag，例如 `${pkg}@${version}`，默认为 `v${version}` 作为单仓库 */
@@ -111,7 +111,7 @@ export interface ReleaseConfig {
   
   /**
    * CHANGELOG 相关配置
-   * 影响生成的日志数量、日志标题（monorepo）。
+   * 影响生成的日志数量、日志标题（monorepo）
    */
   changelog: {
     /**
@@ -146,7 +146,7 @@ export interface ReleaseConfig {
   
   /**
    * Git 相关配置
-   * 影响提交、打 tag、推送等本地/远程 Git 行为。
+   * 影响提交、打 tag、推送等本地/远程 Git 行为
    */
   git: {
     /**
@@ -213,7 +213,7 @@ export interface ReleaseConfig {
   
   /**
    * NPM 发布相关配置
-   * 影响 npm publish 的目标路径、参数与前置校验。
+   * 影响 npm publish 的目标路径、参数与前置校验
    */
   npm: {
     /**
@@ -229,20 +229,20 @@ export interface ReleaseConfig {
     /**
      * 是否跳过发布前检查（如 ping、whoami 等校验）
      *
-     * 启用后可减少发布前的网络请求，但可能无法提前发现登录状态异常或 Registry 不可用等问题。
+     * 启用后可减少发布前的网络请求，但可能无法提前发现登录状态异常或 Registry 不可用等问题
      */
     skipChecks: boolean
     
     /**
      * 发布前的文件清理配置
      *
-     * 用于控制复制到临时发布目录后的清理行为，不会修改源项目文件。
+     * 用于控制复制到临时发布目录后的清理行为，不会修改源项目文件
      */
     cleanup: {
       /**
        * 是否清理 package.json
        *
-       * 包括移除开发相关字段、应用 publishConfig，并保留发布所需内容。
+       * 包括移除开发相关字段、应用 publishConfig，并保留发布所需内容
        */
       packageJson: boolean | {
         /** 需要忽略的字段，支持 `a.b.c` */
@@ -255,7 +255,7 @@ export interface ReleaseConfig {
       /**
        * 是否清理 README.md
        *
-       * 仅保留主要内容，并移除或精简不需要随包发布的文档内容。
+       * 仅保留主要内容，并移除或精简不需要随包发布的文档内容
        */
       readme: boolean
       
@@ -269,7 +269,7 @@ export interface ReleaseConfig {
   /**
    * GitHub Release 相关配置
    *
-   * 控制是否创建 Release、发布方式以及上传资源。
+   * 控制是否创建 Release、发布方式以及上传资源
    */
   github: {
     /**
@@ -308,9 +308,14 @@ export interface ReleaseConfig {
     assets: string[]
     
     /**
-     * 是否跳过 GitHub 发布前检查
+     * 是否跳过本地 GitHub 发布前检查
      */
     skipChecks: boolean
+    
+    /**
+     * 是否使用简短的 Release Notes，内容为指向 CHANGELOG.md 的链接
+     */
+    shortNotes: boolean
   }
 }
 

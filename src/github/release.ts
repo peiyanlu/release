@@ -174,8 +174,7 @@ const createWebRelease = async (options: WebRelease) => {
       url.searchParams.set(key, value)
     })
   
-  const isWindows = process.platform === 'win32'
-  await open(url.toString(), { wait: isWindows })
+  await open(url.toString())
 }
 
 const isGitHubActions = Boolean(process.env.GITHUB_ACTIONS)

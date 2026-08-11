@@ -249,6 +249,7 @@ export class Action {
   async printChangelog(ctx: ReleaseContext, config: ResolvedConfig) {
     const { showChangelog, selectedPkg, noGit, isIncrement } = ctx
     const { isMonorepo, getPkgDir, changelog: { tagPrefix, releaseCount, includeHidden, transformTypes } } = config
+    const { github: { shortNotes } } = config
     
     if (noGit) return
     
@@ -265,7 +266,9 @@ export class Action {
       includeHidden,
       transformTypes,
     })
-    Object.assign(ctx.github, { changelog })
+    
+    const short = `Please refer to [CHANGELOG.md](${ getPkgDir(selectedPkg) }/CHANGELOG.md) for details.`
+    Object.assign(ctx.github, { changelog: shortNotes ? short : changelog })
     
     if (commits) {
       msg('GIT', `Changelog(${ from }...${ to }):${ eol(2) }` + changelog)

@@ -130,6 +130,7 @@ export const createDefaultConfig = (isCI?: boolean): DefaultConfig => {
       tokenRef: 'GITHUB_TOKEN',
       assets: [],
       skipChecks: false,
+      shortNotes: false,
     },
   } satisfies DefaultConfig
 }
