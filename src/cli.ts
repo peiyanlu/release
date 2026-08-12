@@ -1,12 +1,14 @@
 import { newline } from '@conventional-changelog/template'
-import { type CliOptions, eol, gitAddSync } from '@peiyanlu/cli-utils'
+import { type CliOptions, gitAddSync } from '@peiyanlu/cli-utils'
 import { readJsonFileSync } from '@peiyanlu/node-utils'
+import { dedent } from '@peiyanlu/ts-utils'
 import { dim, green, red, underline, yellow } from 'ansis'
 import { program } from 'commander'
 import { existsSync, writeFileSync } from 'node:fs'
 import { join } from 'path'
 import pkgJson from '../package.json' with { type: 'json' }
 import { Action, type ReleaseCliOptions } from './action.js'
+import { generateMonoConfig } from './monorepo/packages.js'
 
 
 program
@@ -69,20 +71,13 @@ program
       process.exit(1)
     }
     
-    const monoConfigToString = (): string => `{
-  isMonorepo: true,
-  packages: [],
-  getPkgDir: (pkg) => \`packages/\${ pkg }\`,
-  toTag: (pkg, version) => \`\${ pkg }@\${ version }\`,
-  changelog: {
-    tagPrefix: (pkg) => \`\${ pkg }@\`,
-  },
-}`
+    const config = () => dedent(`
+      import { defineConfig } from '@peiyanlu/release'
+      ${ newline(1) }
+      export default defineConfig({})
+    `)
     
-    const content = [
-      `import { defineConfig } from '@peiyanlu/release'`,
-      `export default defineConfig(${ monorepo ? monoConfigToString() : '{}' })`,
-    ].join(eol(3))
+    const content = monorepo ? generateMonoConfig(process.cwd()) : config()
     writeFileSync(configFile, content + newline(), 'utf-8')
     
     console.log(`Wrote to ${ underline(dim(configFile)) }`)

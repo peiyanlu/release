@@ -33,7 +33,7 @@
     "@conventional-changelog/template": "^1.2.1",
     "@octokit/rest": "^22.0.1",
     "@peiyanlu/cli-utils": "^0.0.15",
-    "@peiyanlu/node-utils": "^0.0.3",
+    "@peiyanlu/node-utils": "^0.0.4",
     "@peiyanlu/ts-utils": "^0.0.12",
     "ansis": "^4.3.1",
     "commander": "^15.0.0",
@@ -45,7 +45,8 @@
     "open": "^11.0.0",
     "publint": "^0.3.22",
     "semver": "^7.8.5",
-    "tinyglobby": "^0.2.17"
+    "tinyglobby": "^0.2.17",
+    "yaml": "^2.9.0"
   },
   "devDependencies": {
     "@peiyanlu/test-tools": "^0.0.7",
