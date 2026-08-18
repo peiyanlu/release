@@ -11,9 +11,11 @@ import {
   small,
   words,
 } from '@conventional-changelog/template'
+import { isEmpty } from '@peiyanlu/ts-utils'
 
 
 const isLikelyHash = (value: string) => /^[0-9a-f]{7,40}$/i.test(value)
+
 
 export function headerPartial(context: FinalTemplateContext) {
   const { isPatch, linkCompare, version, title, date, previousTag } = context
@@ -24,6 +26,14 @@ export function headerPartial(context: FinalTemplateContext) {
   const fullTitle = words(versionText, title && `"${ title }"`, date && `(${ date })`)
   
   return heading(2, isPatch ? small(fullTitle) : fullTitle)
+}
+
+export function preamblePartial(contest: FinalTemplateContext) {
+  const { preamble, commitGroups, noteGroups } = contest
+  return segments(
+    preamble,
+    isEmpty(preamble) && isEmpty(commitGroups) && isEmpty(noteGroups) && 'Version bump without any changes.',
+  )
 }
 
 export function template(context: FinalTemplateContext) {

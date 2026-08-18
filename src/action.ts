@@ -16,7 +16,7 @@ import {
   parseVersion,
   resolveChangelogRange,
 } from '@peiyanlu/cli-utils'
-import { isBoolean, isNotEmpty, isNumber, isZero } from '@peiyanlu/ts-utils'
+import { isBoolean, isEmpty, isNotEmpty, isNumber, isZero, nonNullable } from '@peiyanlu/ts-utils'
 import { publint } from 'publint'
 import { formatMessage } from 'publint/utils'
 import { inc, neq, type ReleaseType } from 'semver'
@@ -184,6 +184,7 @@ export class Action {
           next: nextVersion,
           toPreRelease: false,
           publishConfig: { ...publishConfig },
+          scope: isEmpty(selectedPkg) ? undefined : selectedPkg,
         },
         noGit: skipGit,
         noNpm: pkgPrivate || skipNpm,
@@ -247,7 +248,7 @@ export class Action {
   }
   
   async printChangelog(ctx: ReleaseContext, config: ResolvedConfig) {
-    const { showChangelog, selectedPkg, noGit, isIncrement } = ctx
+    const { showChangelog, selectedPkg, noGit, isIncrement, pkg: { scope } } = ctx
     const { isMonorepo, getPkgDir, changelog: { tagPrefix, releaseCount, includeHidden, transformTypes } } = config
     const { github: { shortNotes } } = config
     
@@ -262,6 +263,7 @@ export class Action {
     const changelog = await getChangelog({
       getPkgDir: () => getPkgDir(selectedPkg),
       tagPrefix: tagPrefix?.(selectedPkg),
+      scope: isEmpty(nonNullable([ scope ])) ? undefined : nonNullable([ scope ]),
       releaseCount,
       includeHidden,
       transformTypes,
@@ -367,7 +369,7 @@ export class Action {
   }
   
   async changelogTask(ctx: ReleaseContext, config: ResolvedConfig) {
-    const { isIncrement, dryRun, selectedPkg, noGit, onlyChangelog } = ctx
+    const { isIncrement, dryRun, selectedPkg, noGit, onlyChangelog, pkg: { scope } } = ctx
     const { getPkgDir, changelog: { tagPrefix, releaseCount, includeHidden, transformTypes } } = config
     
     if (noGit) return
@@ -379,6 +381,7 @@ export class Action {
           await generateChangelog({
             getPkgDir: () => getPkgDir(selectedPkg),
             tagPrefix: tagPrefix?.(selectedPkg),
+            scope: isEmpty(nonNullable([ scope ])) ? undefined : nonNullable([ scope ]),
             releaseCount,
             includeHidden,
             transformTypes,

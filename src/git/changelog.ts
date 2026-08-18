@@ -9,7 +9,7 @@ import { writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { finished } from 'node:stream/promises'
 import { defaultTypes } from './changetype.js'
-import { headerPartial, template } from './templates.js'
+import { headerPartial, preamblePartial, template } from './templates.js'
 
 
 interface GenerateOptions {
@@ -26,6 +26,8 @@ interface ParsePresetOptions {
   includeHidden?: boolean
   /** 对默认 commit types 进行转换 */
   transformTypes?: (types: CommitType[]) => CommitType[]
+  /** commit scope */
+  scope?: string | string[]
 }
 
 type GOptions = Simplify<GenerateOptions & ParsePresetOptions>
@@ -40,7 +42,7 @@ type InferReleaseTypeResult<T extends boolean | undefined> =
 
 
 export const parsePreset = (options: ParsePresetOptions = {}): Preset => {
-  const { includeHidden, transformTypes } = options
+  const { includeHidden, transformTypes, scope } = options
   
   let types = [ ...defaultTypes ]
   
@@ -54,9 +56,10 @@ export const parsePreset = (options: ParsePresetOptions = {}): Preset => {
   
   types = transformTypes?.(types) ?? types
   
-  const preset: Preset = createPreset({ types })
+  const preset: Preset = createPreset({ types, scope })
   
   preset.writer ??= {}
+  preset.writer.preamblePartial = preamblePartial
   preset.writer.headerPartial = headerPartial
   preset.writer.template = template
   
@@ -78,12 +81,12 @@ export const inferReleaseType = async <T extends boolean = false>(
 
 
 export const createGenerator = async (options: GOptions): Promise<ConventionalChangelog> => {
-  const { getPkgDir, tagPrefix, releaseCount = 1, includeHidden, transformTypes } = options
+  const { getPkgDir, tagPrefix, releaseCount = 1, includeHidden, transformTypes, scope } = options
   
   const pkgDir = getPkgDir()
   return new ConventionalChangelog()
     .readPackage(`${ pkgDir }/package.json`)
-    .config(parsePreset({ includeHidden, transformTypes }))
+    .config(parsePreset({ includeHidden, transformTypes, scope }))
     .options({ releaseCount })
     .commits({ path: pkgDir })
     .tags({ prefix: tagPrefix })

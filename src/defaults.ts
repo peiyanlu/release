@@ -30,6 +30,7 @@ export const createDefaultContext = (): ReleaseContext => {
       },
       preId: PreId.BETA,
       preBase: '0',
+      scope: undefined,
     },
     npm: {
       username: '',

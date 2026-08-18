@@ -40,6 +40,7 @@ export interface ReleaseContext {
     toPreRelease: boolean
     preId: string
     preBase: '0' | '1' | false
+    scope: string | undefined
   }
   npm: {
     username: string
