@@ -1,3 +1,15 @@
+## [1.3.0](https://github.com/peiyanlu/release/compare/v1.2.1...v1.3.0) (2026-08-18)
+
+### ✨ 新功能
+
+* 优化配置文件生成 ([4b37b00](https://github.com/peiyanlu/release/commit/4b37b000976b26d96ff28947537520cf10c834d9))
+* 支持配置简短的 Release Notes ([5e3c607](https://github.com/peiyanlu/release/commit/5e3c607613acbe613b2eccb14358ed0b25e90e38))
+* 支持提交 scope 处理 ([96b9e76](https://github.com/peiyanlu/release/commit/96b9e76d1e994adabdc087b54c66ac8d5814fb19))
+
+### 🐛 Bug 修复
+
+* 修复流程跳过逻辑 ([680cfb9](https://github.com/peiyanlu/release/commit/680cfb9cf57eab45023e07fcc569be32c29d161f))
+
 ## <small>[1.2.1](https://github.com/peiyanlu/release/compare/v1.2.0...v1.2.1) (2026-08-10)</small>
 
 ### 🐛 Bug 修复
