@@ -1,6 +1,6 @@
 import { Octokit } from '@octokit/rest'
 import { getGithubUrl, parseGitHubRepo } from '@peiyanlu/cli-utils'
-import { isEmpty } from '@peiyanlu/ts-utils'
+import { isEmpty, sleep } from '@peiyanlu/ts-utils'
 import { contentType } from 'mime-types'
 import { createReadStream, statSync } from 'node:fs'
 import open from 'open'
@@ -175,6 +175,7 @@ const createWebRelease = async (options: WebRelease) => {
     })
   
   await open(url.toString())
+  await sleep(1000 * 1.5)
 }
 
 const isGitHubActions = Boolean(process.env.GITHUB_ACTIONS)
