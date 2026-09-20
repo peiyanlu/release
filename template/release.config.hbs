@@ -1,0 +1,29 @@
+{{#if npmOrPnpm}}
+{{#if npm}}
+import { defineConfig, GithubHosting, {{#if monorepo}}NpmWorkspacesProject{{else}}NpmProject{{/if}} } from '@peiyanlu/release'
+{{else}}
+import { defineConfig, GithubHosting, {{#if monorepo}}PnpmWorkspacesProject{{else}}PnpmProject{{/if}} } from '@peiyanlu/release'
+{{/if}}
+{{else}}
+import { defineConfig } from '@peiyanlu/release'
+{{/if}}
+
+
+export default defineConfig({
+{{#if npmOrPnpm}}
+{{#if monorepo}}
+  project: new {{#if npm}}NpmWorkspacesProject{{else}}PnpmWorkspacesProject{{/if}}({
+    mode: {{#if fixed}}'fixed'{{else}}'independent'{{/if}},
+  }),
+  bump: {
+    extraScopes: [ 'deps' ],
+  },
+{{else}}
+  project: new {{#if npm}}NpmProject{{else}}PnpmProject{{/if}}(),
+{{/if}}
+  hosting: new GithubHosting(),
+{{/if}}
+  releaser: {
+    verbose: true,
+  },
+})

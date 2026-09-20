@@ -1,29 +1,32 @@
 name: Release Project
 
 on:
-  workflow_dispatch:
-
-permissions:
-  contents: write
-  id-token: write
+  issue_comment:
+    types: [ created, deleted ]
+  push:
+    branches:
+      - master
 
 jobs:
-  release:
-    name: Release
+  check:
+    name: Context check
     runs-on: ubuntu-latest
-    
+    permissions:
+      contents: read
+    outputs:
+      continue: ${{ steps.check.outputs.continue }}
+      workflow: ${{ steps.check.outputs.workflow }}
     steps:
       - name: Checkout
         uses: actions/checkout@v7
         with:
           fetch-depth: 0
           fetch-tags: true
-          ref: ${{ github.ref }}
       
       - name: Setup pnpm
         uses: pnpm/action-setup@v6
         with:
-          version: 11
+          version: 12
       
       - name: Setup Node.js
         uses: actions/setup-node@v7
@@ -32,19 +35,84 @@ jobs:
           registry-url: https://registry.npmjs.org/
           package-manager-cache: false
       
-      - name: Configure Git
-        run: |
-          git config --global user.name "github-actions[bot]"
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
-      
-      - name: Install deps
+      - name: Install dependencies
         run: pnpm install --frozen-lockfile
       
-      - name: Build
-        run: pnpm build
+      - name: Context check
+        id: check
+        uses: ./
+        with:
+          workflow: check
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+  
+  pull-request:
+    name: Pull request
+    runs-on: ubuntu-latest
+    needs: check
+    if: needs.check.outputs.workflow == 'pull-request'
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+      
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v6
+        with:
+          version: 12
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          registry-url: https://registry.npmjs.org/
+          package-manager-cache: false
+      
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      
+      - name: Create or update pull request
+        uses: ./
+        with:
+          workflow: pull-request
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+  
+  release:
+    name: Release
+    runs-on: ubuntu-latest
+    needs: check
+    if: needs.check.outputs.workflow == 'release'
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+      
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v6
+        with:
+          version: 12
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          registry-url: https://registry.npmjs.org/
+          package-manager-cache: false
+      
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
       
       - name: Release
-        run: pnpm exec release --ci
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        uses: ./
+        with:
+          workflow: release
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          npm-token: ${{ secrets.NPM_TOKEN }}
