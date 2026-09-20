@@ -13,6 +13,6 @@ logs/
 # Project
 node_modules/
 
-dist/
+!dist/*
 coverage/
 .test-tools/
