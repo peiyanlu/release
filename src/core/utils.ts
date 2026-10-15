@@ -1,7 +1,7 @@
 import { runGit } from '@peiyanlu/cli-utils'
 import { isUndefined } from '@peiyanlu/ts-utils'
 import { existsSync, readFileSync } from 'node:fs'
-import semver, { type ReleaseType, SemVer } from 'semver'
+import semver, { clean as cleanFn, prerelease as prereleaseFn, rcompare, type ReleaseType, SemVer, valid } from 'semver'
 
 
 const nonPreReleaseTypes = [
@@ -48,7 +48,7 @@ export const getPrereleaseIdentifierBase = (snapshot?: string) => snapshot ? fal
 
 export const getReleaseType = (releaseType: ReleaseType, version: string, prerelease?: string): ReleaseType => {
   if (!isUndefined(prerelease)) {
-    if (Array.isArray(semver.prerelease(version))) {
+    if (Array.isArray(prereleaseFn(version))) {
       const currentActiveType = getCurrentActiveType(version)
       
       if (currentActiveType === releaseType
@@ -123,7 +123,7 @@ export async function* getSemverTags(params: GetSemverTagsParams = {}) {
   
   const unstableTagRegex = /\d+\.\d+\.\d+-.+/
   const cleanTag = clean
-    ? (tag: string, unprefixed?: string) => semver.clean(unprefixed || tag)
+    ? (tag: string, unprefixed?: string) => cleanFn(unprefixed || tag)
     : (tag: string) => tag
   let unprefixed: string
   let tag: string | null
@@ -141,7 +141,7 @@ export async function* getSemverTags(params: GetSemverTagsParams = {}) {
       if (isPrefixed) {
         unprefixed = tag.replace(prefix, '')
         
-        if (semver.valid(unprefixed)) {
+        if (valid(unprefixed)) {
           tag = cleanTag(tag, unprefixed)
           
           if (tag) {
@@ -149,7 +149,7 @@ export async function* getSemverTags(params: GetSemverTagsParams = {}) {
           }
         }
       }
-    } else if (semver.valid(tag)) {
+    } else if (valid(tag)) {
       tag = cleanTag(tag)
       
       if (tag) {
@@ -175,7 +175,7 @@ export async function getVersionFromTags(params: GetSemverTagsParams = {}) {
     return undefined
   }
   
-  return semverTags.sort(semver.rcompare)[0]
+  return semverTags.sort(rcompare)[0]
 }
 
 

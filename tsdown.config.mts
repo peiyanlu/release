@@ -9,7 +9,7 @@ const config: UserConfig[] = defineConfig([
     platform: 'node',
     nodeProtocol: true,
     shims: true,
-    dts: true,
+    dts: false,
   },
   {
     entry: [ 'src/action.ts' ],
@@ -18,7 +18,7 @@ const config: UserConfig[] = defineConfig([
     platform: 'node',
     nodeProtocol: true,
     shims: true,
-    dts: true,
+    dts: false,
   },
   {
     entry: [ 'src/index.ts' ],
