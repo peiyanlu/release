@@ -19,80 +19,6 @@ const getFilename = () => fileURLToPath(import.meta.url);
 const getDirname = () => path.dirname(getFilename());
 const __dirname = /* @__PURE__ */ getDirname();
 //#endregion
-//#region package.json
-var package_default = {
-	name: "@peiyanlu/release",
-	version: "1.3.1",
-	description: "Tool to automate version bumps, changelogs, and releases.",
-	license: "MIT",
-	type: "module",
-	"private": false,
-	bin: { "release": "index.js" },
-	exports: {
-		".": {
-			"types": "./dist/index.d.mts",
-			"default": "./dist/index.mjs"
-		},
-		"./package.json": "./package.json"
-	},
-	scripts: {
-		"dev": "tsdown -w",
-		"build": "tsdown",
-		"prepublishOnly": "tsdown",
-		"release": "node index.js",
-		"release:dry": "node index.js -C -n",
-		"test": "vitest run",
-		"test:cov": "vitest run --coverage"
-	},
-	dependencies: {
-		"@actions/core": "^3.0.1",
-		"@actions/github": "^9.1.1",
-		"@clack/prompts": "^1.7.0",
-		"@conventional-changelog/template": "^1.2.1",
-		"@octokit/rest": "^22.0.1",
-		"@peiyanlu/cli-utils": "^0.0.15",
-		"@peiyanlu/node-utils": "^0.0.4",
-		"@peiyanlu/ts-utils": "^0.0.12",
-		"ansis": "^4.3.1",
-		"commander": "^15.0.0",
-		"conventional-changelog": "^8.1.0",
-		"conventional-changelog-conventionalcommits": "^10.2.1",
-		"conventional-recommended-bump": "^12.1.0",
-		"open": "^11.0.0",
-		"publint": "^0.3.22",
-		"semver": "^7.8.5",
-		"tinyglobby": "^0.2.17",
-		"yaml": "^2.9.0",
-		"handlebars": "^4.7.9"
-	},
-	devDependencies: {
-		"@peiyanlu/test-tools": "^0.0.7",
-		"@types/node": "^24.13.3",
-		"@types/semver": "^7.7.1",
-		"@vitest/coverage-v8": "^4.1.10",
-		"tsdown": "^0.23.1",
-		"typescript": "^6.0.3",
-		"vitest": "^4.1.10"
-	},
-	author: {
-		"name": "YanluPei",
-		"email": "peiyanlu@vip.qq.com"
-	},
-	engines: { "node": ">=20" },
-	keywords: ["typescript", "cli"],
-	files: ["dist", "template"],
-	publishConfig: {
-		"access": "public",
-		"registry": "https://registry.npmjs.org"
-	},
-	repository: {
-		"type": "git",
-		"url": "git+https://github.com/peiyanlu/release.git"
-	},
-	bugs: { "url": "https://github.com/peiyanlu/release/issues" },
-	homepage: "https://github.com/peiyanlu/release#readme"
-};
-//#endregion
 //#region src/config/index.ts
 const loadJavaScriptFile = async (file) => {
 	const { href } = pathToFileURL(file);
@@ -787,6 +713,7 @@ const runConfirmPrompts = async (ci = false, dryRun = false) => {
 };
 //#endregion
 //#region src/releaser-cli/releaser.ts
+const pkgJson$1 = readJsonFileSync(join(__dirname, "..", "package.json"));
 var ReleaserCli = class extends Releaser {
 	constructor(options) {
 		const { silent, dryRun, verbose } = options;
@@ -889,7 +816,7 @@ var ReleaserCli = class extends Releaser {
 	}
 	start() {
 		return this.enqueue(async () => {
-			const { name, version } = package_default;
+			const { name, version } = pkgJson$1;
 			console.log(`${blue`i`} ${name} v${version}\n`);
 			intro("🚀 Starting release");
 		});
@@ -905,7 +832,8 @@ var ReleaserCli = class extends Releaser {
 };
 //#endregion
 //#region src/cli.ts
-program.name("release").description(package_default.description).version(package_default.version, "-v, --version", "Print the tool version and exit.").usage("[release-type] [options]").argument("[release-type]", `Release type. One of 'major', 'minor', 'patch', or 'prerelease'.`).enablePositionalOptions().option("-n, --dry-run", "Run in dry mode.").option("--ci", "Enable CI mode.").option("--skip-git", "Skip all Git-related checks and operations.").option("--skip-publish", "Skip the package publishing step.").option("--skip-release", "Skip the repository release step.").helpOption("-h, --help", "Display help information.").action(async (releaseType, options) => {
+const pkgJson = readJsonFileSync(join(__dirname, "..", "package.json"));
+program.name("release").description(pkgJson.description).version(pkgJson.version, "-v, --version", "Print the tool version and exit.").usage("[release-type] [options]").argument("[release-type]", `Release type. One of 'major', 'minor', 'patch', or 'prerelease'.`).enablePositionalOptions().option("-n, --dry-run", "Run in dry mode.").option("--ci", "Enable CI mode.").option("--skip-git", "Skip all Git-related checks and operations.").option("--skip-publish", "Skip the package publishing step.").option("--skip-release", "Skip the repository release step.").helpOption("-h, --help", "Display help information.").action(async (releaseType, options) => {
 	const { config: { project, hosting, releaser } } = await loadConfig(process.cwd());
 	const { dryRun } = options;
 	if (!project) throwError("Project not found");
@@ -920,7 +848,7 @@ program.name("release").description(package_default.description).version(package
 		...options
 	});
 });
-program.command("init").description("Create a release configuration file").option("--npm", "Use npm as the package manager", false).option("--pnpm", "Use pnpm as the package manager", false).option("--monorepo", "Configure a monorepo", false).option("--fixed", "Use fixed versioning for the monorepo", false).option("--github-workflow", "Create a GitHub Actions release workflow", false).option("--force", "Overwrite existing configuration or workflow files", false).option("--add", "Stage generated files with Git", false).action(async (options) => {
+program.command("init").description("Initialize release configuration for your project.").option("--npm", "Use npm as the package manager", false).option("--pnpm", "Use pnpm as the package manager", false).option("--monorepo", "Configure a monorepo", false).option("--fixed", "Use fixed versioning for the monorepo", false).option("--github-workflow", "Create a GitHub Actions release workflow", false).option("--force", "Overwrite existing configuration or workflow files", false).option("--add", "Stage generated files with Git", false).action(async (options) => {
 	const { npm, pnpm, monorepo, fixed, githubWorkflow, force, add } = options;
 	const cwd = process.cwd();
 	const tplDir = resolve(__dirname, "..", "template");

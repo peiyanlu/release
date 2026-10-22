@@ -1,5 +1,6 @@
 import { intro, log, outro } from '@clack/prompts'
 import { gitConfigGet, isGitRepo, isWorkingTreeClean } from '@peiyanlu/cli-utils'
+import { readJsonFileSync } from '@peiyanlu/node-utils'
 import { assert, isString, omit } from '@peiyanlu/ts-utils'
 import {
   blue,
@@ -15,8 +16,8 @@ import {
   redBright,
   yellow,
 } from 'ansis'
+import { join } from 'path'
 import type { ReleaseType } from 'semver'
-import pkgJson from '../../package.json' with { type: 'json' }
 import { loadConfig, type UserConfig } from '../config/index.js'
 import type {
   GitRepositoryHosting,
@@ -43,7 +44,6 @@ export interface ReleaserCliRunOptions {
   releaseType?: ReleaseType
 }
 
-
 export interface CliStepsSkip {
   commit?: boolean
   tag?: boolean
@@ -57,6 +57,8 @@ export type ReleaserCliOptions<
   G extends GitRepositoryHosting = GitRepositoryHosting
 > = ReleaserOptions<P, G>
 
+
+const pkgJson = readJsonFileSync(join(__dirname, '..', 'package.json'))
 
 export class ReleaserCli<
   P extends Project = Project,

@@ -9,10 +9,11 @@ import { mkdir } from 'node:fs/promises'
 import { resolve } from 'node:path'
 import { join } from 'path'
 import type { ReleaseType } from 'semver'
-import pkgJson from '../package.json' with { type: 'json' }
 import { loadConfig, type UserConfig } from './config/index.js'
 import { ReleaserCli } from './releaser-cli/index.js'
 
+
+const pkgJson = readJsonFileSync(join(__dirname, '..', 'package.json'))
 
 program
   .name('release')
@@ -50,7 +51,7 @@ program
 
 program
   .command('init')
-  .description('Create a release configuration file')
+  .description('Initialize release configuration for your project.')
   .option('--npm', 'Use npm as the package manager', false)
   .option('--pnpm', 'Use pnpm as the package manager', false)
   .option('--monorepo', 'Configure a monorepo', false)
