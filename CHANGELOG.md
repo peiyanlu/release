@@ -1,3 +1,13 @@
+## [3.0.0](https://github.com/peiyanlu/release/compare/v1.3.1...v3.0.0) (2026-10-22)
+
+### ⚠ BREAKING CHANGES
+
+* 重构 release 实现 ([99bb5c1](https://github.com/peiyanlu/release/commit/99bb5c100c65599098ca977043ff1ead2aad6219))
+
+### ✨ 新功能
+
+* 重构 release 实现 ([99bb5c1](https://github.com/peiyanlu/release/commit/99bb5c100c65599098ca977043ff1ead2aad6219))
+
 ## [2.0.0](https://github.com/peiyanlu/release/compare/v1.3.1...v2.0.0) (2026-10-22)
 
 ### ⚠ BREAKING CHANGES

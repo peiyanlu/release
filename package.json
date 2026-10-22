@@ -1,6 +1,6 @@
 {
   "name": "@peiyanlu/release",
-  "version": "2.0.0",
+  "version": "3.0.0",
   "description": "Tool to automate version bumps, changelogs, and releases.",
   "license": "MIT",
   "type": "module",
