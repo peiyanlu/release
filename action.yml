@@ -32,12 +32,14 @@ inputs:
     description: Whether this is the first release.
   bump-skip:
     description: Skip version bump.
+    default: 'false'
   bump-by-project:
     description: JSON object with per-project bump options for monorepos.
   maintenance-branch-enabled:
     description: Create maintenance branches for previous major versions.
   publish-skip:
     description: Skip publishing.
+    default: 'false'
   publish-access:
     description: Package access level. One of 'public' or 'restricted'.
   publish-tag:

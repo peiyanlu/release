@@ -3,13 +3,13 @@ import { dirname, isAbsolute, join, parse, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 import { eol, execAsync, getAuthenticatedUser, getGithubUrl, getPublishedVersion, gitAdd, gitBranch, gitBranchCurrent, gitCheckout, gitCheckoutBranch, gitCheckoutBranchForce, gitCommitAmendNoEdit, gitCommitMessage, gitConfigGet, gitConfigSet, gitDiff, gitFetch, gitLog, gitLsRemote, gitPush, gitPushBranch, gitRevParse, gitTag, hasWriteAccess, isGitRepo, isPrerelease, isValidVersion, isWorkingTreeClean, parseGitHubRepo, pingRegistry, runGit } from "@peiyanlu/cli-utils";
 import { copyDir, createMatcher, createTempDir, editFile, normalizePath, readJsonFile, writeJsonFile } from "@peiyanlu/node-utils";
-import { assert, dedent, equals, isBlankString, isBoolean, isEmpty, isEmptyObject, isFunction, isIndex, isNotEmpty, isNull, isString, isUndefined, isZero, omit, onceAsync, partition, sleep, throwError, tryCall, tryCallSync, unset } from "@peiyanlu/ts-utils";
+import { assert, dedent, equals, isBlankString, isBoolean, isEmpty, isEmptyObject, isFunction, isIndex, isNotEmpty, isNull, isString, isUndefined, isZero, newline, omit, onceAsync, partition, sleep, throwError, tryCall, tryCallSync, unset } from "@peiyanlu/ts-utils";
 import { ConventionalChangelog } from "conventional-changelog";
 import createPreset from "conventional-changelog-conventionalcommits";
 import { Bumper } from "conventional-recommended-bump";
 import { readFile, writeFile } from "node:fs/promises";
 import { finished } from "node:stream/promises";
-import { bold, compareUrl, each, heading, link, list, newline, segments, small, words } from "@conventional-changelog/template";
+import { bold, compareUrl, each, heading, link, list, newline as newline$1, segments, small, words } from "@conventional-changelog/template";
 import semver, { SemVer, clean, gt, gte, inc, lt, major, prerelease, rcompare, valid } from "semver";
 import { Octokit } from "@octokit/rest";
 import open from "open";
@@ -166,8 +166,8 @@ function template(context) {
 	return segments(headerPartial(context), preamblePartial(context), each(noteGroups, (group) => segments(heading(3, words("⚠", group.title)), list(group.notes, (note) => {
 		const line1 = words(note.commit.scope && bold(`${note.commit.scope}:`), commitPartial(context, note.commit));
 		const line2 = note.commit.subject.trim() !== note.text.trim() ? list([note.text], (t) => t) : "";
-		return each([line1, line2], (t) => t, newline());
-	})), newline(2)), each(commitGroups, (group) => segments(group.title && heading(3, group.title), list(group.commits, (commit) => commitPartial(context, commit))), newline(2)), footerPartial(context));
+		return each([line1, line2], (t) => t, newline$1());
+	})), newline$1(2)), each(commitGroups, (group) => segments(group.title && heading(3, group.title), list(group.commits, (commit) => commitPartial(context, commit))), newline$1(2)), footerPartial(context));
 }
 //#endregion
 //#region src/core/changelog/changelog.ts
@@ -535,7 +535,11 @@ var Project = class {
 		const version = await manifest.getVersion();
 		const tag = this.toTag(tagPrefix, version);
 		if (verify) {
-			if (await gitRevParse([tag])) return [];
+			const isTagExists = await gitRevParse(["--verify", tag]);
+			if (isTagExists) {
+				console.log("isTagExists:", isTagExists);
+				return [];
+			}
 		}
 		return [tag];
 	}
@@ -1655,13 +1659,9 @@ var GithubHosting = class extends GitRepositoryHosting {
 		return default_branch;
 	}
 	async getPullRequestData(project, from, to) {
-		const title = (await project.getCommitMessage()).split("\n")[0];
-		const updates = project.versionUpdates.map(({ name, notes }) => `# ${name}\n\n${notes.trim()}`).join("\n\n");
 		return {
-			title,
-			body: dedent(`
-      ${updates}
-          
+			title: (await project.getCommitMessage()).split("\n")[0],
+			body: project.versionUpdates.map(({ name, notes }) => `# ${name}${newline(20)}${notes.trim()}`).join(newline(2)) + newline(2) + dedent(`
       <!--
         Please do not edit this comment.
         release-pull-request: true
@@ -2327,9 +2327,15 @@ function parseSetPreambleComment(comment) {
 //#region src/releaser-github-action/conditions.ts
 const ifReleaseCommit = async (releaser) => {
 	const { project, options: { dryRun } } = releaser;
-	if (!(await gitLog(["-1", "--pretty=%B"]))?.startsWith("chore(release):")) return false;
+	const logger = releaser.logger.createChild("if-release-commit");
+	if (!(await gitLog(["-1", "--pretty=%B"]))?.startsWith("chore(release):")) {
+		logger.verbose("Skipping non-release commit.");
+		return false;
+	}
 	if (!dryRun) await gitFetch(["--tags"]);
-	return (await project.getTags()).length > 0;
+	const tags = await project.getTags();
+	for (const tag of tags) logger.verbose(`- ${tag}`);
+	return tags.length > 0;
 };
 /**
 * 检测当前事件是否为针对处于打开状态的发布拉取请求的受支持命令评论：

@@ -97,8 +97,11 @@ export abstract class Project {
     const tag = this.toTag(tagPrefix, version)
     
     if (verify) {
-      const isTagExists = await gitRevParse([ tag ])
-      if (isTagExists) return []
+      const isTagExists = await gitRevParse([ '--verify', tag ])
+      if (isTagExists) {
+        console.log('isTagExists:', isTagExists)
+        return []
+      }
     }
     
     return [ tag ]

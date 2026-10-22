@@ -1,14 +1,17 @@
 import { context } from '@actions/github'
-import { gitFetch, gitLog } from '@peiyanlu/cli-utils'
+import { gitFetch, gitLog, gitTag } from '@peiyanlu/cli-utils'
 import { isCommandComment } from './comment.js'
 import type { ReleaserGithubAction } from './releaser.js'
 
 
 export const ifReleaseCommit = async (releaser: ReleaserGithubAction): Promise<boolean> => {
   const { project, options: { dryRun } } = releaser
+  const logger = releaser.logger.createChild('if-release-commit')
+  
   const message = await gitLog([ '-1', '--pretty=%B' ])
   
   if (!message?.startsWith('chore(release):')) {
+    logger.verbose('Skipping non-release commit.')
     return false
   }
   
@@ -17,6 +20,10 @@ export const ifReleaseCommit = async (releaser: ReleaserGithubAction): Promise<b
   }
   
   const tags = await project.getTags()
+  
+  for (const tag of tags) {
+    logger.verbose(`- ${ tag }`)
+  }
   
   return tags.length > 0
 }

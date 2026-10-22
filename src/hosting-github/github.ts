@@ -1,6 +1,6 @@
 import { Octokit } from '@octokit/rest'
 import { getGithubUrl, gitBranchCurrent, gitConfigGet, parseGitHubRepo } from '@peiyanlu/cli-utils'
-import { assert, dedent, isEmpty, isNotEmpty, sleep, throwError, tryCall } from '@peiyanlu/ts-utils'
+import { assert, dedent, isEmpty, isNotEmpty, newline, sleep, throwError, tryCall } from '@peiyanlu/ts-utils'
 import { readFileSync } from 'node:fs'
 import { parse } from 'node:path'
 import open from 'open'
@@ -232,12 +232,10 @@ export class GithubHosting extends GitRepositoryHosting {
     const title = message.split('\n')[0]
     const updates = project
       .versionUpdates
-      .map(({ name, notes }) => `# ${ name }\n\n${ notes.trim() }`)
-      .join('\n\n')
+      .map(({ name, notes }) => `# ${ name }${ newline(20) }${ notes.trim() }`)
+      .join(newline(2))
     
-    const body = dedent(`
-      ${ updates }
-          
+    const body = updates + newline(2) + dedent(`
       <!--
         Please do not edit this comment.
         release-pull-request: true

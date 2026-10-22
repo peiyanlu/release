@@ -1,6 +1,6 @@
 import { getBooleanInput, getInput, setFailed, setOutput } from "@actions/core";
 import { context, getOctokit } from "@actions/github";
-import { assert, dedent, isBoolean, isEmpty, isIndex, isNotEmpty, isNull, isString, isUndefined, sleep, throwError, tryCall } from "@peiyanlu/ts-utils";
+import { assert, dedent, isBoolean, isEmpty, isIndex, isNotEmpty, isNull, isString, isUndefined, newline, sleep, throwError, tryCall } from "@peiyanlu/ts-utils";
 import { existsSync, readFileSync } from "node:fs";
 import { parse, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
@@ -100,9 +100,15 @@ function parseSetPreambleComment(comment) {
 //#region src/releaser-github-action/conditions.ts
 const ifReleaseCommit = async (releaser) => {
 	const { project, options: { dryRun } } = releaser;
-	if (!(await gitLog(["-1", "--pretty=%B"]))?.startsWith("chore(release):")) return false;
+	const logger = releaser.logger.createChild("if-release-commit");
+	if (!(await gitLog(["-1", "--pretty=%B"]))?.startsWith("chore(release):")) {
+		logger.verbose("Skipping non-release commit.");
+		return false;
+	}
 	if (!dryRun) await gitFetch(["--tags"]);
-	return (await project.getTags()).length > 0;
+	const tags = await project.getTags();
+	for (const tag of tags) logger.verbose(`- ${tag}`);
+	return tags.length > 0;
 };
 /**
 * 检测当前事件是否为针对处于打开状态的发布拉取请求的受支持命令评论：
@@ -789,13 +795,9 @@ var GithubHosting = class extends GitRepositoryHosting {
 		return default_branch;
 	}
 	async getPullRequestData(project, from, to) {
-		const title = (await project.getCommitMessage()).split("\n")[0];
-		const updates = project.versionUpdates.map(({ name, notes }) => `# ${name}\n\n${notes.trim()}`).join("\n\n");
 		return {
-			title,
-			body: dedent(`
-      ${updates}
-          
+			title: (await project.getCommitMessage()).split("\n")[0],
+			body: project.versionUpdates.map(({ name, notes }) => `# ${name}${newline(20)}${notes.trim()}`).join(newline(2)) + newline(2) + dedent(`
       <!--
         Please do not edit this comment.
         release-pull-request: true
