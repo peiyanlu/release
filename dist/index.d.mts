@@ -132,7 +132,10 @@ export declare abstract class ProjectManifest<T = Dict> {
 //#endregion
 //#region src/core/utils.d.ts
 interface HostedGitInfo {
+  origin: string;
   host: string;
+  hostname: string;
+  port: string;
   prefix: string;
   owner: string;
   repo: string;
@@ -217,15 +220,15 @@ export interface ProjectNextVersionOptions extends ProjectTagPrefixOptions {
    */
   forcePrivate?: boolean;
   /**
-   * 强制升级到指定版本。
-   * 未提供时，根据提交记录确定版本。
-   */
-  version?: string;
-  /**
    * 用于计算升级版本的基准版本。
    * 未提供时，从清单文件中读取版本。
    */
   baseVersion?: string;
+  /**
+   * 强制升级到指定版本。
+   * 未提供时，根据提交记录确定版本。
+   */
+  version?: string;
   /**
    * 要升级到的发布类型。
    * 未提供时，根据提交记录确定版本。
@@ -266,9 +269,6 @@ export interface ProjectPublishOptions {
   /** 发布通道标签。由具体项目类型解释，例如 npm dist-tag 或 GitHub Action 分支别名。 */
   tag?: string | ((version: string, prerelease: readonly (string | number)[] | null) => string);
 }
-export interface ProjectPublishCheckOptions {
-  logger?: ChildLogger;
-}
 //#endregion
 //#region src/core/project/monorepo.types.d.ts
 export type MonorepoMode = "fixed" | "independent";
@@ -301,7 +301,7 @@ export interface MonorepoProjectOptions extends ProjectOptions {
    */
   tagPrefix?(scope: string): string | Promise<string>;
 }
-type NextVersionKeys = "skip" | "version" | "as" | "prerelease" | "snapshot" | "firstRelease";
+type NextVersionKeys = "version" | "as" | "prerelease" | "snapshot" | "firstRelease";
 type BumpKeys = "skipChangelog" | "releaseCount" | "preamble" | "transformTypes";
 export type MonorepoProjectBumpByProjectOptions = Pick<ProjectBumpOptions, NextVersionKeys | BumpKeys>;
 export interface MonorepoProjectBumpOptions extends Omit<ProjectBumpOptions, "tagPrefix"> {
@@ -389,7 +389,6 @@ export declare abstract class Project {
   bump(options?: ProjectBumpOptions): Promise<boolean>;
   revert(options?: ProjectRevertOptions, filesSet?: Set<string>): Promise<boolean>;
   abstract publish(options?: ProjectPublishOptions): Promise<void>;
-  abstract publishCheck(options?: ProjectPublishCheckOptions): Promise<void>;
 }
 //#endregion
 //#region src/core/hosting/hosting.types.d.ts
@@ -414,9 +413,6 @@ export interface CreatePullRequestOptions {
   dryRun?: boolean;
   logger?: ChildLogger;
 }
-export interface ReleaseCheckOptions {
-  logger?: ChildLogger;
-}
 //#endregion
 //#region src/core/hosting/hosting.d.ts
 /** Git 仓库托管服务的基类 */
@@ -425,8 +421,6 @@ export declare abstract class GitRepositoryHosting {
   abstract createRelease(options: CreateReleaseOptions): Promise<void>;
   /** 未提供的项目创建 pull request */
   abstract createPullRequest(options: CreatePullRequestOptions): Promise<void>;
-  /** 检查创建 release 需要的条件 */
-  abstract releaseCheck(options?: ReleaseCheckOptions): Promise<void>;
 }
 //#endregion
 //#region src/core/project/packageJson.types.d.ts
@@ -441,7 +435,6 @@ export interface PackageJsonProjectOptions extends Omit<ProjectOptions, "manifes
 export declare class PackageJsonProject extends Project {
   constructor(options?: Simplify<PackageJsonProjectOptions>);
   override publish(_options?: ProjectPublishOptions): Promise<void>;
-  override publishCheck(_options?: ProjectPublishCheckOptions): Promise<void>;
 }
 //#endregion
 //#region src/core/project/packageJsonMonorepo.types.d.ts
@@ -464,7 +457,6 @@ export interface PackageJsonMonorepoProjectOptions extends Omit<MonorepoProjectO
 export declare class PackageJsonMonorepoProject extends MonorepoProject {
   constructor(options: Simplify<PackageJsonMonorepoProjectOptions>);
   override publish(_options?: ProjectPublishOptions): Promise<void>;
-  override publishCheck(_options?: ProjectPublishCheckOptions): Promise<void>;
 }
 //#endregion
 //#region src/core/releaser.type.d.ts
@@ -641,7 +633,6 @@ export declare class GithubHosting extends GitRepositoryHosting {
   constructor(options?: GithubOptions);
   createRelease(options: CreateReleaseOptions): Promise<void>;
   createPullRequest(options: GithubCreatePullRequestOptions): Promise<void>;
-  releaseCheck(options?: ReleaseCheckOptions): Promise<void>;
   getRepositoryId(project: Project): Promise<RepositoryId>;
   private uploadAssets;
   private getRelease;
@@ -687,7 +678,6 @@ export declare class NodeGithubActionProject extends PackageJsonProject {
    */
   override getLastReleaseTag(options?: ProjectReleaseOptions): Promise<string | undefined>;
   override publish(options?: NodeGithubActionProjectPublishOptions): Promise<void>;
-  override publishCheck(options: ProjectPublishCheckOptions): Promise<void>;
   constructor(options?: NodeGithubActionProjectOptions);
   private isReachableFromHead;
 }
@@ -717,7 +707,6 @@ export type NpmProjectPublishOptions = PublishOptions$2;
 /** 一个基于 npm 的项目，使用 package.json 进行配置 */
 export declare class NpmProject extends PackageJsonProject {
   override publish(options?: NpmProjectPublishOptions): Promise<void>;
-  override publishCheck(options?: ProjectPublishCheckOptions): Promise<void>;
 }
 //#endregion
 //#region src/project-npm/workspacesProject.d.ts
@@ -729,7 +718,6 @@ export declare class NpmWorkspacesProject extends PackageJsonMonorepoProject {
   static GlobIgnore: string[];
   constructor(options: NpmWorkspacesProjectOptions);
   override publish(options?: NpmWorkspacesProjectPublishOptions): Promise<void>;
-  override publishCheck(options?: ProjectPublishCheckOptions): Promise<void>;
 }
 //#endregion
 //#region src/project-pnpm/publish.d.ts
@@ -759,7 +747,6 @@ export type PnpmProjectPublishOptions = PublishOptions$1;
 /** 一个基于 pnpm 的项目，使用 package.json 进行配置 */
 export declare class PnpmProject extends PackageJsonProject {
   override publish(options?: PnpmProjectPublishOptions): Promise<void>;
-  override publishCheck(options?: ProjectPublishCheckOptions): Promise<void>;
 }
 //#endregion
 //#region src/project-pnpm/workspacesProject.d.ts
@@ -772,7 +759,6 @@ export declare class PnpmWorkspacesProject extends PackageJsonMonorepoProject {
   static GlobIgnore: string[];
   constructor(options: PnpmWorkspacesProjectOptions);
   override publish(options?: PnpmWorkspacesProjectPublishOptions): Promise<void>;
-  override publishCheck(options?: ProjectPublishCheckOptions): Promise<void>;
 }
 //#endregion
 //#region src/releaser-github-action/releaser.d.ts
@@ -816,7 +802,6 @@ interface InputOptions<T> {
     prerelease: string;
     snapshot: string;
     firstRelease: boolean;
-    skip: boolean;
     /** monorepo bump */
     byProject: T;
   }>;
@@ -824,7 +809,6 @@ interface InputOptions<T> {
     enabled: boolean;
   }>;
   publish: Partial<{
-    skip: boolean;
     /** npm publish */
     access: string;
     tag: string;
@@ -837,6 +821,7 @@ export declare const getInputSkippedSteps: () => ReleaserSkipOptions;
 export interface ReleaserCliRunOptions {
   dryRun?: boolean;
   ci?: boolean;
+  skipBump?: boolean;
   skipGit?: boolean;
   skipPublish?: boolean;
   skipRelease?: boolean;
@@ -857,7 +842,6 @@ export declare class ReleaserCli<P extends Project = Project, G extends GitRepos
   override run(...args: []): Promise<void>;
   setCliOptions(options: ReleaserCliRunOptions): this;
   setLegacyOptions(): this;
-  check(): this;
   start(): this;
   end(): void;
   runAction(options: ReleaserCliRunOptions): Promise<void>;

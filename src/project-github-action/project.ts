@@ -1,11 +1,10 @@
-import { gitConfigGet, parseGitHubRepo, runGit } from '@peiyanlu/cli-utils'
-import { assert, isNotEmpty, tryCall } from '@peiyanlu/ts-utils'
+import { runGit } from '@peiyanlu/cli-utils'
+import { tryCall } from '@peiyanlu/ts-utils'
 import {
   PackageJsonProject,
   type PackageJsonProjectOptions,
   type ProjectBumpOptions,
   type ProjectOptions,
-  type ProjectPublishCheckOptions,
   type ProjectReleaseOptions,
 } from '../core/index.js'
 import { getSemverTags } from '../core/utils.js'
@@ -56,16 +55,6 @@ export class NodeGithubActionProject extends PackageJsonProject {
     const tag = tagsMap.get(name)
     
     await publish(this, { tag, ...options })
-  }
-  
-  override async publishCheck(options: ProjectPublishCheckOptions): Promise<void> {
-    const { logger } = options
-    
-    logger?.verbose('Checking GitHub repository configuration...')
-    
-    const remoteUrl = await gitConfigGet('remote.origin.url')
-    const useGithub = isNotEmpty(parseGitHubRepo(remoteUrl!))
-    assert(useGithub, 'Git remote "origin" is not a GitHub repository')
   }
   
   constructor(options: NodeGithubActionProjectOptions = {}) {

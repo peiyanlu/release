@@ -1,6 +1,4 @@
-import type { PackageJsonProjectOptions, ProjectBumpOptions, ProjectPublishCheckOptions } from '../core/index.js'
-import { PackageJsonProject } from '../core/index.js'
-import { check } from './check.js'
+import { PackageJsonProject, type PackageJsonProjectOptions, type ProjectBumpOptions } from '../core/index.js'
 import { publish, type PublishOptions } from './publish.js'
 
 
@@ -15,9 +13,5 @@ export type PnpmProjectPublishOptions = PublishOptions
 export class PnpmProject extends PackageJsonProject {
   override async publish(options: PnpmProjectPublishOptions = {}): Promise<void> {
     await publish(this, { ...options })
-  }
-  
-  override async publishCheck(options: ProjectPublishCheckOptions = {}): Promise<void> {
-    await check(this, options)
   }
 }

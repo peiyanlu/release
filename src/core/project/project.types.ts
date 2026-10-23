@@ -58,15 +58,15 @@ export interface ProjectNextVersionOptions extends ProjectTagPrefixOptions {
    */
   forcePrivate?: boolean
   /**
-   * 强制升级到指定版本。
-   * 未提供时，根据提交记录确定版本。
-   */
-  version?: string
-  /**
    * 用于计算升级版本的基准版本。
    * 未提供时，从清单文件中读取版本。
    */
   baseVersion?: string
+  /**
+   * 强制升级到指定版本。
+   * 未提供时，根据提交记录确定版本。
+   */
+  version?: string
   /**
    * 要升级到的发布类型。
    * 未提供时，根据提交记录确定版本。
@@ -111,8 +111,4 @@ export interface ProjectPublishOptions {
   logger?: ChildLogger
   /** 发布通道标签。由具体项目类型解释，例如 npm dist-tag 或 GitHub Action 分支别名。 */
   tag?: string | ((version: string, prerelease: readonly (string | number)[] | null) => string)
-}
-
-export interface ProjectPublishCheckOptions {
-  logger?: ChildLogger
 }

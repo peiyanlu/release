@@ -70,8 +70,8 @@ export const publish = async (project: Project, options: PublishOptions = {}): P
       const info = await project.getHostedGitInfo()
       const empty = Object.values(info).every(isEmpty)
       if (!empty) {
-        const { host, prefix, owner, repo } = info
-        await cleanReadme(temp.path, `${ host }/${ prefix }${ owner }/${ repo }#readme`)
+        const { origin, prefix, owner, repo } = info
+        await cleanReadme(temp.path, `${ origin }/${ prefix }${ owner }/${ repo }#readme`)
       }
     }
     

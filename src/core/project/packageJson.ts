@@ -2,7 +2,7 @@ import { type Simplify, throwError } from '@peiyanlu/ts-utils'
 import { PackageJsonManifest } from '../manifest/index.js'
 import type { PackageJsonProjectOptions } from './packageJson.types.js'
 import { Project } from './project.js'
-import type { ProjectPublishCheckOptions, ProjectPublishOptions } from './project.types.js'
+import type { ProjectPublishOptions } from './project.types.js'
 
 
 export class PackageJsonProject extends Project {
@@ -16,10 +16,6 @@ export class PackageJsonProject extends Project {
   }
   
   override publish(_options?: ProjectPublishOptions): Promise<void> {
-    throwError('Publishing a package.json project is not supported')
-  }
-  
-  override publishCheck(_options?: ProjectPublishCheckOptions): Promise<void> {
     throwError('Publishing a package.json project is not supported')
   }
 }

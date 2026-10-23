@@ -35,7 +35,6 @@ interface InputOptions<T> {
     prerelease: string;
     snapshot: string;
     firstRelease: boolean;
-    skip: boolean;
     /** monorepo bump */
     byProject: T;
   }>
@@ -43,7 +42,6 @@ interface InputOptions<T> {
     enabled: boolean;
   }>
   publish: Partial<{
-    skip: boolean;
     /** npm publish */
     access: string;
     tag: string;

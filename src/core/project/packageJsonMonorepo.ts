@@ -5,7 +5,7 @@ import { PackageJsonManifest } from '../manifest/index.js'
 import { MonorepoProject } from './monorepo.js'
 import { PackageJsonProject } from './packageJson.js'
 import type { PackageJsonMonorepoProjectOptions } from './packageJsonMonorepo.types.js'
-import type { ProjectPublishCheckOptions, ProjectPublishOptions } from './project.types.js'
+import type { ProjectPublishOptions } from './project.types.js'
 
 
 /**
@@ -30,10 +30,6 @@ export class PackageJsonMonorepoProject extends MonorepoProject {
   }
   
   override publish(_options?: ProjectPublishOptions): Promise<void> {
-    throwError('Publishing a package.json monorepo project is not supported')
-  }
-  
-  override publishCheck(_options?: ProjectPublishCheckOptions): Promise<void> {
     throwError('Publishing a package.json monorepo project is not supported')
   }
 }

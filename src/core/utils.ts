@@ -182,18 +182,22 @@ export const readTextSync = (path: string): string => {
 
 
 export interface HostedGitInfo {
+  origin: string
   host: string
+  hostname: string
+  port: string
   prefix: string
   owner: string
   repo: string
 }
 
 export const parseHostedGitUrl = (url: string): HostedGitInfo => {
-  const reg = /((?:github|gitlab|bitbucket|gitee|codeberg|sourceforge|git\.sr|\d+\.\d+\.\d+\.\d+:\d+)\.?(?:com|org|net|ht)?)[:\/](~)?([^/]+)\/(.+?)(?:[#/?](?:.+?)?)?(?:\.git)?$/
+  const reg = /(((?:github|gitlab|bitbucket|gitee|codeberg|sourceforge|git\.sr|\d+\.\d+\.\d+\.\d+)\.?(?:com|org|net|ht)?)(?::(\d+))?)[:\/](~)?([^/]+)\/(.+?)(?:[#/?](?:.+?)?)?(?:\.git)?$/
   
   const match = url.trim().match(reg) ?? []
-  const [ domain = '', prefix = '', owner = '', repo = '' ] = [ ...match.slice(1) ]
-  const host = domain ? `http${ url.includes('https://') ? 's' : '' }://${ domain }` : ''
   
-  return { host, prefix, owner, repo }
+  const [ host = '', hostname = '', port = '', prefix = '', owner = '', repo = '' ] = [ ...match.slice(1) ]
+  const origin = hostname ? `http${ url.includes('https://') ? 's' : '' }://${ host }` : ''
+  
+  return { origin, host, hostname, port, prefix, owner, repo }
 }
