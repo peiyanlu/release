@@ -13,6 +13,7 @@ permissions:
 jobs:
   test:
     name: Test (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
@@ -20,9 +21,6 @@ jobs:
           - ubuntu-latest
           - windows-latest
           - macos-latest
-    
-    runs-on: ${{ matrix.os }}
-    
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -69,15 +67,14 @@ jobs:
           fail-on-error: false
   
   finish:
-    name: Finish
-    if: always()
     needs: test
+    if: ${{ always() }}
+    name: Finish
     runs-on: ubuntu-latest
-    
     steps:
       - name: Checkout
         uses: actions/checkout@v7
-        
+      
       - name: Finish Coveralls
         uses: coverallsapp/github-action@v2
         with:
