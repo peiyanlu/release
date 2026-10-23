@@ -1,12 +1,11 @@
 import { Octokit } from '@octokit/rest'
-import { getGithubUrl, gitBranchCurrent, gitConfigGet, parseGitHubRepo } from '@peiyanlu/cli-utils'
-import { assert, dedent, isEmpty, isNotEmpty, newline, sleep, throwError, tryCall } from '@peiyanlu/ts-utils'
+import { getGithubUrl, gitBranchCurrent } from '@peiyanlu/cli-utils'
+import { dedent, isEmpty, newline, sleep, throwError, tryCall } from '@peiyanlu/ts-utils'
 import { readFileSync } from 'node:fs'
 import { parse } from 'node:path'
 import open from 'open'
 import { glob } from 'tinyglobby'
-import type { CreateReleaseOptions, Project, ReleaseCheckOptions } from '../core/index.js'
-import { GitRepositoryHosting } from '../core/index.js'
+import { type CreateReleaseOptions, GitRepositoryHosting, type Project } from '../core/index.js'
 import type {
   GetReleaseOptions,
   GithubCreatePullRequestOptions,
@@ -152,16 +151,6 @@ export class GithubHosting extends GitRepositoryHosting {
         })
       }
     }
-  }
-  
-  async releaseCheck(options: ReleaseCheckOptions = {}): Promise<void> {
-    const { logger } = options
-    
-    logger?.verbose('Checking GitHub repository configuration...')
-    
-    const remoteUrl = await gitConfigGet('remote.origin.url')
-    const useGithub = isNotEmpty(parseGitHubRepo(remoteUrl!))
-    assert(useGithub, 'Git remote "origin" is not a GitHub repository')
   }
   
   async getRepositoryId(project: Project): Promise<RepositoryId> {

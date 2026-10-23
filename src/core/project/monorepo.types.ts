@@ -41,7 +41,7 @@ export interface MonorepoProjectOptions extends ProjectOptions {
   tagPrefix?(scope: string): string | Promise<string>
 }
 
-type NextVersionKeys = 'skip' | 'version' | 'as' | 'prerelease' | 'snapshot' | 'firstRelease'
+type NextVersionKeys = 'version' | 'as' | 'prerelease' | 'snapshot' | 'firstRelease'
 type BumpKeys = 'skipChangelog' | 'releaseCount' | 'preamble' | 'transformTypes'
 
 export type MonorepoProjectBumpByProjectOptions = Pick<ProjectBumpOptions, NextVersionKeys | BumpKeys>

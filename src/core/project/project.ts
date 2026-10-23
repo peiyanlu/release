@@ -22,7 +22,6 @@ import type {
   ProjectMaintenanceBranch,
   ProjectMaintenanceBranchesOptions,
   ProjectOptions,
-  ProjectPublishCheckOptions,
   ProjectPublishOptions,
   ProjectReleaseOptions,
   ProjectRevertOptions,
@@ -99,7 +98,6 @@ export abstract class Project {
     if (verify) {
       const isTagExists = await gitRevParse([ '--verify', tag ])
       if (isTagExists) {
-        console.log('isTagExists:', isTagExists)
         return []
       }
     }
@@ -407,6 +405,4 @@ export abstract class Project {
   }
   
   abstract publish(options?: ProjectPublishOptions): Promise<void>
-  
-  abstract publishCheck(options?: ProjectPublishCheckOptions): Promise<void>
 }

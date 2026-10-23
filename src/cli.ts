@@ -1,7 +1,7 @@
 import { newline } from '@conventional-changelog/template'
-import { type CliOptions, gitAddSync } from '@peiyanlu/cli-utils'
+import { type CliOptions, gitAddSync, gitConfigGet, isGitRepo, isWorkingTreeClean } from '@peiyanlu/cli-utils'
 import { readJsonFileSync } from '@peiyanlu/node-utils'
-import { throwError } from '@peiyanlu/ts-utils'
+import { assert, throwError } from '@peiyanlu/ts-utils'
 import { program } from 'commander'
 import Handlebars from 'handlebars'
 import { existsSync, readFileSync, writeFileSync } from 'node:fs'
@@ -9,8 +9,7 @@ import { mkdir } from 'node:fs/promises'
 import { resolve } from 'node:path'
 import { join } from 'path'
 import type { ReleaseType } from 'semver'
-import { loadConfig, type UserConfig } from './config/index.js'
-import { ReleaserCli } from './releaser-cli/index.js'
+import { loadConfig, ReleaserCli, type UserConfig } from './index.js'
 
 
 const pkgJson = readJsonFileSync(join(__dirname, '..', 'package.json'))
@@ -24,21 +23,21 @@ program
   .enablePositionalOptions()
   .option('-n, --dry-run', 'Run in dry mode.')
   .option('--ci', 'Enable CI mode.')
-  .option('--skip-git', 'Skip all Git-related checks and operations.')
-  .option('--skip-publish', 'Skip the package publishing step.')
-  .option('--skip-release', 'Skip the repository release step.')
+  .option('--skip-bump', 'Skip updating the project version.')
+  .option('--skip-git', 'Skip Git commit, tag, and push operations. Git history is still read.')
+  .option('--skip-publish', 'Skip publishing the project.')
+  .option('--skip-release', 'Skip creating a release on the repository hosting service.')
   .helpOption('-h, --help', 'Display help information.')
   .action(async (releaseType: ReleaseType, options: CliOptions<boolean>) => {
     const { config: { project, hosting, releaser } } = await loadConfig<UserConfig>(process.cwd())
     const { dryRun } = options
     
-    if (!project) {
-      throwError('Project not found')
-    }
+    assert(await isGitRepo(), 'Current directory is not a Git repository')
+    assert(await isWorkingTreeClean(), 'Git working tree is not clean')
+    assert(await gitConfigGet('remote.origin.url'), 'Git remote "origin" is not configured')
     
-    if (!hosting) {
-      throwError('GitRepositoryHosting not found')
-    }
+    assert(project, 'Project not found')
+    assert(hosting, 'GitRepositoryHosting not found')
     
     await new ReleaserCli({
       ...releaser,

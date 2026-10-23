@@ -1,10 +1,10 @@
 import { getBooleanInput, getInput, setFailed, setOutput } from "@actions/core";
 import { context, getOctokit } from "@actions/github";
-import { assert, dedent, isBoolean, isEmpty, isIndex, isNotEmpty, isNull, isString, isUndefined, newline, sleep, throwError, tryCall } from "@peiyanlu/ts-utils";
+import { dedent, isBoolean, isEmpty, isIndex, isNotEmpty, isNull, isString, isUndefined, newline, sleep, throwError, tryCall } from "@peiyanlu/ts-utils";
 import { existsSync, readFileSync } from "node:fs";
 import { parse, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
-import { getGithubUrl, gitAdd, gitBranch, gitBranchCurrent, gitCheckoutBranch, gitCheckoutBranchForce, gitCommitMessage, gitConfigGet, gitConfigSet, gitFetch, gitLog, gitLsRemote, gitPush, gitPushBranch, gitRevParse, gitTag, parseGitHubRepo } from "@peiyanlu/cli-utils";
+import { getGithubUrl, gitAdd, gitBranch, gitBranchCurrent, gitCheckoutBranch, gitCheckoutBranchForce, gitCommitMessage, gitConfigSet, gitFetch, gitLog, gitLsRemote, gitPush, gitPushBranch, gitRevParse, gitTag } from "@peiyanlu/cli-utils";
 import "semver";
 import { Octokit } from "@octokit/rest";
 import open from "open";
@@ -745,13 +745,6 @@ var GithubHosting = class extends GitRepositoryHosting {
 				draft
 			});
 		}
-	}
-	async releaseCheck(options = {}) {
-		const { logger } = options;
-		logger?.verbose("Checking GitHub repository configuration...");
-		const remoteUrl = await gitConfigGet("remote.origin.url");
-		const useGithub = isNotEmpty(parseGitHubRepo(remoteUrl));
-		assert(useGithub, "Git remote \"origin\" is not a GitHub repository");
 	}
 	async getRepositoryId(project) {
 		let { options: { owner, repo } } = this;

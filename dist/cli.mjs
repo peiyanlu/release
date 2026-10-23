@@ -10,10 +10,10 @@ import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { mkdir } from "node:fs/promises";
 import { cancel, confirm, group, intro, isCancel, log, note, outro, select, text } from "@clack/prompts";
 import { blue, blueBright, cyan, cyanBright, dim, green, greenBright, magenta, magentaBright, red, redBright, yellow } from "ansis";
-import { inc, lt } from "semver";
 import "conventional-changelog";
 import "conventional-changelog-conventionalcommits";
 import "conventional-recommended-bump";
+import { inc, lt } from "semver";
 //#region node_modules/.pnpm/tsdown@0.23.1_publint@0.3.22_typescript@6.0.3/node_modules/tsdown/esm-shims.js
 const getFilename = () => fileURLToPath(import.meta.url);
 const getDirname = () => path.dirname(getFilename());
@@ -48,6 +48,9 @@ const loadConfig = async (cwd = process.cwd()) => {
 		config: await loadJavaScriptFile(file)
 	};
 };
+//#endregion
+//#region src/core/utils.ts
+const when = (condition, ...value) => condition ? [...value] : [];
 //#endregion
 //#region src/core/logger.ts
 const defaultPrinter = ({ dryRun, stage, message }) => {
@@ -129,9 +132,6 @@ var Logger = class {
 		return color;
 	}
 };
-//#endregion
-//#region src/core/utils.ts
-const when = (condition, ...value) => condition ? [...value] : [];
 //#endregion
 //#region src/core/releaser.ts
 var Releaser = class {
@@ -535,7 +535,8 @@ const createVersionOptions = async (project, options = {}, current, tagPrefix) =
 		{
 			label: "Custom",
 			value: "custom",
-			hint: "Specify an exact version"
+			hint: "Specify an exact version",
+			bump: { firstRelease }
 		},
 		{
 			label: "As-is",
@@ -666,10 +667,8 @@ const runBumpPrompts = async (project, options = {}) => {
 				if (isUndefined(val) || !isValidVersion(val)) return "Invalid version.";
 			}
 		}));
-		else {
-			const selected = find(type);
-			Object.assign(promptsRes, selected?.bump);
-		}
+		const selected = find(type);
+		Object.assign(promptsRes, selected?.bump);
 		return promptsRes;
 	};
 	if (project.isMonorepoMode() && project.isIndependentMode) for await (const subProject of project.getProjects()) {
@@ -693,10 +692,10 @@ const getCliPromptOptions = async (options = {}) => {
 	const shouldPrompt = (v) => !ci && (isUndefined(v) || dryRun);
 	const res = await group({
 		commit: () => options.skipGit ? Promise.resolve(false) : shouldPrompt(options.skipGit) ? confirm({ message: question("Commit release changes?", dryRun) }) : Promise.resolve(true),
-		tag: () => options.skipGit ? Promise.resolve(false) : shouldPrompt(options.skipGit) ? confirm({ message: question("Create release tags?", dryRun) }) : Promise.resolve(true),
-		push: () => options.skipGit ? Promise.resolve(false) : shouldPrompt(options.skipGit) ? confirm({ message: question("Push release changes?", dryRun) }) : Promise.resolve(true),
+		tag: ({ results: { commit } }) => !commit ? Promise.resolve(false) : shouldPrompt(options.skipGit) ? confirm({ message: question("Create release tags?", dryRun) }) : Promise.resolve(true),
+		push: ({ results: { commit } }) => !commit ? Promise.resolve(false) : shouldPrompt(options.skipGit) ? confirm({ message: question("Push release changes?", dryRun) }) : Promise.resolve(true),
 		publish: () => options.skipPublish ? Promise.resolve(false) : shouldPrompt(options.skipPublish) ? confirm({ message: question("Publish project?", dryRun) }) : Promise.resolve(true),
-		release: () => options.skipRelease || options.skipGit ? Promise.resolve(false) : shouldPrompt(options.skipRelease) ? confirm({ message: question("Create repository release?", dryRun) }) : Promise.resolve(true)
+		release: () => options.skipRelease ? Promise.resolve(false) : shouldPrompt(options.skipRelease) ? confirm({ message: question("Create repository release?", dryRun) }) : Promise.resolve(true)
 	}, { onCancel: () => {
 		abortTask();
 	} });
@@ -760,17 +759,22 @@ var ReleaserCli = class extends Releaser {
 	}
 	setCliOptions(options) {
 		return this.enqueue(async () => {
-			const { ci, dryRun, releaseType: as } = options;
+			const { ci, dryRun, releaseType: as, skipBump } = options;
 			const { project, stepsOptions: { bump: bumpOpts } } = this;
-			const bump = await runBumpPrompts(project, {
+			const version = await project.manifest.getVersion();
+			const bump = skipBump ? { version } : await runBumpPrompts(project, {
 				bump: {
 					...bumpOpts,
 					as
 				},
 				run: options
 			});
-			this.setOptions({ bump }).setSkippedSteps(await getCliPromptOptions(options));
+			const skippedSteps = await getCliPromptOptions(options);
 			await runConfirmPrompts(ci, dryRun);
+			this.setOptions({ bump }).setSkippedSteps({
+				bump: version === bump.version && !bump.firstRelease,
+				...skippedSteps
+			});
 		});
 	}
 	setLegacyOptions() {
@@ -790,30 +794,6 @@ var ReleaserCli = class extends Releaser {
 			this.setOptions(legacySteps);
 		});
 	}
-	check() {
-		return this.enqueue(async () => {
-			const { project, hosting } = this;
-			const logger = this.logger.createChild("check");
-			logger.info("Checking release environment...");
-			if (![
-				"commit",
-				"tag",
-				"push"
-			].every((k) => this.shouldSkip(k))) {
-				logger.verbose("Checking Git repository...");
-				const isRepo = await isGitRepo();
-				assert(isRepo, "Current directory is not a Git repository");
-				logger.verbose("Checking working tree...");
-				const isClean = await isWorkingTreeClean();
-				assert(isClean, "Git working tree is not clean");
-				logger.verbose("Checking remote repository...");
-				const hasRemote = await gitConfigGet("remote.origin.url");
-				assert(hasRemote, "Git remote \"origin\" is not configured");
-			}
-			if (!this.shouldSkip("publish")) await project.publishCheck({ logger });
-			if (!this.shouldSkip("release")) await hosting?.releaseCheck({ logger });
-		});
-	}
 	start() {
 		return this.enqueue(async () => {
 			const { name, version } = pkgJson$1;
@@ -827,17 +807,20 @@ var ReleaserCli = class extends Releaser {
 		process.exit(0);
 	}
 	async runAction(options) {
-		await this.start().setLegacyOptions().setCliOptions(options).check().bump().commit().tag().push().publish().release().run();
+		await this.start().setLegacyOptions().setCliOptions(options).bump().commit().tag().push().publish().release().run();
 	}
 };
 //#endregion
 //#region src/cli.ts
 const pkgJson = readJsonFileSync(join(__dirname, "..", "package.json"));
-program.name("release").description(pkgJson.description).version(pkgJson.version, "-v, --version", "Print the tool version and exit.").usage("[release-type] [options]").argument("[release-type]", `Release type. One of 'major', 'minor', 'patch', or 'prerelease'.`).enablePositionalOptions().option("-n, --dry-run", "Run in dry mode.").option("--ci", "Enable CI mode.").option("--skip-git", "Skip all Git-related checks and operations.").option("--skip-publish", "Skip the package publishing step.").option("--skip-release", "Skip the repository release step.").helpOption("-h, --help", "Display help information.").action(async (releaseType, options) => {
+program.name("release").description(pkgJson.description).version(pkgJson.version, "-v, --version", "Print the tool version and exit.").usage("[release-type] [options]").argument("[release-type]", `Release type. One of 'major', 'minor', 'patch', or 'prerelease'.`).enablePositionalOptions().option("-n, --dry-run", "Run in dry mode.").option("--ci", "Enable CI mode.").option("--skip-bump", "Skip updating the project version.").option("--skip-git", "Skip Git commit, tag, and push operations. Git history is still read.").option("--skip-publish", "Skip publishing the project.").option("--skip-release", "Skip creating a release on the repository hosting service.").helpOption("-h, --help", "Display help information.").action(async (releaseType, options) => {
 	const { config: { project, hosting, releaser } } = await loadConfig(process.cwd());
 	const { dryRun } = options;
-	if (!project) throwError("Project not found");
-	if (!hosting) throwError("GitRepositoryHosting not found");
+	assert(await isGitRepo(), "Current directory is not a Git repository");
+	assert(await isWorkingTreeClean(), "Git working tree is not clean");
+	assert(await gitConfigGet("remote.origin.url"), "Git remote \"origin\" is not configured");
+	assert(project, "Project not found");
+	assert(hosting, "GitRepositoryHosting not found");
 	await new ReleaserCli({
 		...releaser,
 		project,

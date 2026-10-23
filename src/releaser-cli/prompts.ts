@@ -27,7 +27,7 @@ interface VersionPromptOption {
 }
 
 
-const abortTask = (msg?: string) => {
+const abortTask = (msg?: string): never => {
   cancel(`${ red('✕') } ${ msg ?? 'Release cancelled.' }`)
   process.exit(0)
 }
@@ -42,7 +42,7 @@ const singlePrompt = async <T>(fn: () => MaybePromise<T>, abortMsg?: string): Pr
   return value
 }
 
-const question = (msg: string, dryRun?: boolean) => {
+const question = (msg: string, dryRun?: boolean): string => {
   const color = dryRun ? yellow : red
   return `${ color('?') } ${ msg }`
 }
@@ -51,8 +51,7 @@ const question = (msg: string, dryRun?: boolean) => {
 const getVersionHint = async <P extends Project = Project>(
   project: P,
   options: PickOverridableOptions<P['bump']> = {},
-) => await project.getNextVersion(options) ?? 'No version change'
-
+): Promise<string> => await project.getNextVersion(options) ?? 'No version change'
 
 const createVersionOptions = async <P extends Project = Project>(
   project: P,
@@ -74,6 +73,7 @@ const createVersionOptions = async <P extends Project = Project>(
         label: 'Custom',
         value: 'custom',
         hint: 'Specify an exact version',
+        bump: { firstRelease },
       },
       {
         label: 'As-is',
@@ -140,6 +140,7 @@ const createVersionOptions = async <P extends Project = Project>(
   
   return candidates
 }
+
 
 export const runBumpPrompts = async <P extends Project = Project>(
   project: P,
@@ -221,10 +222,10 @@ export const runBumpPrompts = async <P extends Project = Project>(
           },
         }),
       ) as string
-    } else {
-      const selected = find(type)
-      Object.assign(promptsRes, selected?.bump)
     }
+    
+    const selected = find(type)
+    Object.assign(promptsRes, selected?.bump)
     
     return promptsRes
   }
@@ -250,7 +251,6 @@ export const runBumpPrompts = async <P extends Project = Project>(
   return bump
 }
 
-
 export const getCliPromptOptions = async (options: ReleaserCliRunOptions = {}): Promise<CliStepsSkip> => {
   const { dryRun = false, ci = false } = options
   
@@ -263,12 +263,12 @@ export const getCliPromptOptions = async (options: ReleaserCliRunOptions = {}): 
         : shouldPrompt(options.skipGit)
           ? confirm({ message: question('Commit release changes?', dryRun) }) as Promise<boolean>
           : Promise.resolve(true),
-      tag: () => options.skipGit
+      tag: ({ results: { commit } }) => !commit
         ? Promise.resolve(false)
         : shouldPrompt(options.skipGit)
           ? confirm({ message: question('Create release tags?', dryRun) }) as Promise<boolean>
           : Promise.resolve(true),
-      push: () => options.skipGit
+      push: ({ results: { commit } }) => !commit
         ? Promise.resolve(false)
         : shouldPrompt(options.skipGit)
           ? confirm({ message: question('Push release changes?', dryRun) }) as Promise<boolean>
@@ -280,7 +280,7 @@ export const getCliPromptOptions = async (options: ReleaserCliRunOptions = {}): 
           ? confirm({ message: question('Publish project?', dryRun) }) as Promise<boolean>
           : Promise.resolve(true),
       
-      release: () => options.skipRelease || options.skipGit
+      release: () => options.skipRelease
         ? Promise.resolve(false)
         : shouldPrompt(options.skipRelease)
           ? confirm({ message: question('Create repository release?', dryRun) }) as Promise<boolean>
@@ -302,7 +302,7 @@ export const getCliPromptOptions = async (options: ReleaserCliRunOptions = {}): 
   }
 }
 
-export const runConfirmPrompts = async (ci = false, dryRun = false) => {
+export const runConfirmPrompts = async (ci = false, dryRun = false): Promise<void> => {
   const ok = ci
     ? true
     : await singlePrompt(
