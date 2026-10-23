@@ -2,14 +2,13 @@ import { normalizePath } from '@peiyanlu/node-utils'
 import { type Dict, onceAsync } from '@peiyanlu/ts-utils'
 import { join } from 'path'
 import { globSync } from 'tinyglobby'
-import type {
-  GetProjectsOptions,
-  PackageJsonMonorepoProjectOptions,
-  ProjectBumpOptions,
-  ProjectPublishCheckOptions,
+import {
+  type GetProjectsOptions,
+  PackageJsonManifest,
+  PackageJsonMonorepoProject,
+  type PackageJsonMonorepoProjectOptions,
+  type ProjectBumpOptions,
 } from '../core/index.js'
-import { PackageJsonManifest, PackageJsonMonorepoProject } from '../core/index.js'
-import { check } from './check.js'
 import { publish, type PublishOptions } from './publish.js'
 
 
@@ -75,9 +74,5 @@ export class NpmWorkspacesProject extends PackageJsonMonorepoProject {
         await publish(project, { ...opts, ...options })
       }
     }
-  }
-  
-  override async publishCheck(options: ProjectPublishCheckOptions = {}): Promise<void> {
-    await check(this, options)
   }
 }

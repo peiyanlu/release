@@ -25,7 +25,3 @@ export interface CreatePullRequestOptions {
   dryRun?: boolean
   logger?: ChildLogger
 }
-
-export interface ReleaseCheckOptions {
-  logger?: ChildLogger
-}

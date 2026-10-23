@@ -1,7 +1,6 @@
 import { intro, log, outro } from '@clack/prompts'
-import { gitConfigGet, isGitRepo, isWorkingTreeClean } from '@peiyanlu/cli-utils'
 import { readJsonFileSync } from '@peiyanlu/node-utils'
-import { assert, isString, omit } from '@peiyanlu/ts-utils'
+import { isString, omit } from '@peiyanlu/ts-utils'
 import {
   blue,
   blueBright,
@@ -19,14 +18,13 @@ import {
 import { join } from 'path'
 import type { ReleaseType } from 'semver'
 import { loadConfig, type UserConfig } from '../config/index.js'
-import type {
-  GitRepositoryHosting,
-  PickOverridableOptions,
-  Project,
-  ReleaserOptions,
-  ReleaserPushOptions,
-  ReleaserStep,
-  ReleaserTagOptions,
+import {
+  type GitRepositoryHosting,
+  type PickOverridableOptions,
+  type Project,
+  type ReleaserOptions,
+  type ReleaserPushOptions,
+  type ReleaserTagOptions,
 } from '../core/index.js'
 import { Logger } from '../core/logger.js'
 import { Releaser } from '../core/releaser.js'
@@ -37,6 +35,7 @@ export interface ReleaserCliRunOptions {
   dryRun?: boolean
   ci?: boolean
   
+  skipBump?: boolean
   skipGit?: boolean
   skipPublish?: boolean
   skipRelease?: boolean
@@ -113,22 +112,31 @@ export class ReleaserCli<
   
   setCliOptions(options: ReleaserCliRunOptions): this {
     return this.enqueue(async () => {
-      const { ci, dryRun, releaseType: as } = options
+      const { ci, dryRun, releaseType: as, skipBump } = options
       const { project, stepsOptions: { bump: bumpOpts } } = this
       
-      const bump = await runBumpPrompts(project, {
-        bump: {
-          ...bumpOpts,
-          as,
-        } as PickOverridableOptions<P['bump']>,
-        run: options,
-      })
+      const version = await project.manifest.getVersion()
+      
+      const bump = skipBump
+        ? { version } as PickOverridableOptions<P['bump']>
+        : await runBumpPrompts(project, {
+          bump: {
+            ...bumpOpts,
+            as,
+          } as PickOverridableOptions<P['bump']>,
+          run: options,
+        })
+      
+      const skippedSteps = await getCliPromptOptions(options)
+      
+      await runConfirmPrompts(ci, dryRun)
       
       this
         .setOptions({ bump })
-        .setSkippedSteps(await getCliPromptOptions(options))
-      
-      await runConfirmPrompts(ci, dryRun)
+        .setSkippedSteps({
+          bump: version === bump.version && !bump.firstRelease,
+          ...skippedSteps,
+        })
     })
   }
   
@@ -146,41 +154,6 @@ export class ReleaserCli<
       }
       
       this.setOptions(legacySteps)
-    })
-  }
-  
-  check(): this {
-    return this.enqueue(async () => {
-      const { project, hosting } = this
-      const logger = this.logger.createChild('check')
-      
-      logger.info('Checking release environment...')
-      
-      const skipGit = ([ 'commit', 'tag', 'push' ] as ReleaserStep[]).every(k => this.shouldSkip(k))
-      if (!skipGit) {
-        logger.verbose('Checking Git repository...')
-        
-        const isRepo = await isGitRepo()
-        assert(isRepo, 'Current directory is not a Git repository')
-        
-        logger.verbose('Checking working tree...')
-        
-        const isClean = await isWorkingTreeClean()
-        assert(isClean, 'Git working tree is not clean')
-        
-        logger.verbose('Checking remote repository...')
-        
-        const hasRemote = await gitConfigGet('remote.origin.url')
-        assert(hasRemote, 'Git remote "origin" is not configured')
-      }
-      
-      if (!this.shouldSkip('publish')) {
-        await project.publishCheck({ logger })
-      }
-      
-      if (!this.shouldSkip('release')) {
-        await hosting?.releaseCheck({ logger })
-      }
     })
   }
   
@@ -206,7 +179,6 @@ export class ReleaserCli<
       .start()
       .setLegacyOptions()
       .setCliOptions(options)
-      .check()
       .bump()
       .commit()
       .tag()

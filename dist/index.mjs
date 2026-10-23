@@ -1,9 +1,9 @@
 import { createWriteStream, existsSync, readFileSync } from "node:fs";
 import path, { dirname, isAbsolute, join, parse, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
-import { eol, execAsync, getAuthenticatedUser, getGithubUrl, getPublishedVersion, gitAdd, gitBranch, gitBranchCurrent, gitCheckout, gitCheckoutBranch, gitCheckoutBranchForce, gitCommitAmendNoEdit, gitCommitMessage, gitConfigGet, gitConfigSet, gitDiff, gitFetch, gitLog, gitLsRemote, gitPush, gitPushBranch, gitRevParse, gitTag, hasWriteAccess, isGitRepo, isPrerelease, isValidVersion, isWorkingTreeClean, parseGitHubRepo, pingRegistry, runGit } from "@peiyanlu/cli-utils";
+import { eol, execAsync, getGithubUrl, gitAdd, gitBranch, gitBranchCurrent, gitCheckout, gitCheckoutBranch, gitCheckoutBranchForce, gitCommitAmendNoEdit, gitCommitMessage, gitConfigGet, gitConfigSet, gitDiff, gitFetch, gitLog, gitLsRemote, gitPush, gitPushBranch, gitRevParse, gitTag, isPrerelease, isValidVersion, runGit } from "@peiyanlu/cli-utils";
 import { copyDir, createMatcher, createTempDir, editFile, normalizePath, readJsonFile, readJsonFileSync, writeJsonFile } from "@peiyanlu/node-utils";
-import { assert, dedent, equals, isBlankString, isBoolean, isEmpty, isEmptyObject, isFunction, isIndex, isNotEmpty, isNull, isString, isUndefined, isZero, newline, omit, onceAsync, partition, sleep, throwError, tryCall, tryCallSync, unset } from "@peiyanlu/ts-utils";
+import { dedent, equals, isBlankString, isBoolean, isEmpty, isEmptyObject, isFunction, isIndex, isNotEmpty, isNull, isString, isUndefined, isZero, newline, omit, onceAsync, partition, sleep, throwError, tryCall, tryCallSync, unset } from "@peiyanlu/ts-utils";
 import { ConventionalChangelog } from "conventional-changelog";
 import createPreset from "conventional-changelog-conventionalcommits";
 import { Bumper } from "conventional-recommended-bump";
@@ -477,9 +477,12 @@ const readTextSync = (path) => {
 	return readFileSync(path).toString("utf8");
 };
 const parseHostedGitUrl = (url) => {
-	const [domain = "", prefix = "", owner = "", repo = ""] = [...(url.trim().match(/((?:github|gitlab|bitbucket|gitee|codeberg|sourceforge|git\.sr|\d+\.\d+\.\d+\.\d+:\d+)\.?(?:com|org|net|ht)?)[:\/](~)?([^/]+)\/(.+?)(?:[#/?](?:.+?)?)?(?:\.git)?$/) ?? []).slice(1)];
+	const [host = "", hostname = "", port = "", prefix = "", owner = "", repo = ""] = [...(url.trim().match(/(((?:github|gitlab|bitbucket|gitee|codeberg|sourceforge|git\.sr|\d+\.\d+\.\d+\.\d+)\.?(?:com|org|net|ht)?)(?::(\d+))?)[:\/](~)?([^/]+)\/(.+?)(?:[#/?](?:.+?)?)?(?:\.git)?$/) ?? []).slice(1)];
 	return {
-		host: domain ? `http${url.includes("https://") ? "s" : ""}://${domain}` : "",
+		origin: hostname ? `http${url.includes("https://") ? "s" : ""}://${host}` : "",
+		host,
+		hostname,
+		port,
 		prefix,
 		owner,
 		repo
@@ -535,11 +538,7 @@ var Project = class {
 		const version = await manifest.getVersion();
 		const tag = this.toTag(tagPrefix, version);
 		if (verify) {
-			const isTagExists = await gitRevParse(["--verify", tag]);
-			if (isTagExists) {
-				console.log("isTagExists:", isTagExists);
-				return [];
-			}
+			if (await gitRevParse(["--verify", tag])) return [];
 		}
 		return [tag];
 	}
@@ -1005,9 +1004,6 @@ var PackageJsonProject = class extends Project {
 	publish(_options) {
 		throwError("Publishing a package.json project is not supported");
 	}
-	publishCheck(_options) {
-		throwError("Publishing a package.json project is not supported");
-	}
 };
 //#endregion
 //#region src/core/project/packageJsonMonorepo.ts
@@ -1029,9 +1025,6 @@ var PackageJsonMonorepoProject = class extends MonorepoProject {
 		});
 	}
 	publish(_options) {
-		throwError("Publishing a package.json monorepo project is not supported");
-	}
-	publishCheck(_options) {
 		throwError("Publishing a package.json monorepo project is not supported");
 	}
 };
@@ -1607,13 +1600,6 @@ var GithubHosting = class extends GitRepositoryHosting {
 			});
 		}
 	}
-	async releaseCheck(options = {}) {
-		const { logger } = options;
-		logger?.verbose("Checking GitHub repository configuration...");
-		const remoteUrl = await gitConfigGet("remote.origin.url");
-		const useGithub = isNotEmpty(parseGitHubRepo(remoteUrl));
-		assert(useGithub, "Git remote \"origin\" is not a GitHub repository");
-	}
 	async getRepositoryId(project) {
 		let { options: { owner, repo } } = this;
 		const i = project.getHostedGitInfo();
@@ -1798,13 +1784,6 @@ var NodeGithubActionProject = class extends PackageJsonProject {
 			...options
 		});
 	}
-	async publishCheck(options) {
-		const { logger } = options;
-		logger?.verbose("Checking GitHub repository configuration...");
-		const remoteUrl = await gitConfigGet("remote.origin.url");
-		const useGithub = isNotEmpty(parseGitHubRepo(remoteUrl));
-		assert(useGithub, "Git remote \"origin\" is not a GitHub repository");
-	}
 	constructor(options = {}) {
 		super(options);
 	}
@@ -1815,23 +1794,6 @@ var NodeGithubActionProject = class extends PackageJsonProject {
 			ref,
 			"HEAD"
 		]), false);
-	}
-};
-//#endregion
-//#region src/project-npm/check.ts
-const check$1 = async (project, options = {}) => {
-	const { logger } = options;
-	logger?.verbose("Checking npm registry...");
-	const pinged = await pingRegistry();
-	assert(pinged, "Unable to connect to the npm registry");
-	logger?.verbose("Checking npm authentication...");
-	const username = await getAuthenticatedUser();
-	assert(username, "Not authenticated with npm");
-	const name = await project.manifest.getName();
-	if (await getPublishedVersion(name)) {
-		logger?.verbose(`Checking npm write access for "${name}"...`);
-		const hasAccess = await hasWriteAccess(name, username);
-		assert(hasAccess, `No write access to npm package "${name}"`);
 	}
 };
 //#endregion
@@ -1965,8 +1927,8 @@ const publish$2 = async (project, options = {}) => {
 		if (shouldCleanReadme) {
 			const info = await project.getHostedGitInfo();
 			if (!Object.values(info).every(isEmpty)) {
-				const { host, prefix, owner, repo } = info;
-				await cleanReadme$1(temp.path, `${host}/${prefix}${owner}/${repo}#readme`);
+				const { origin, prefix, owner, repo } = info;
+				await cleanReadme$1(temp.path, `${origin}/${prefix}${owner}/${repo}#readme`);
 			}
 		}
 		logger?.verbose(`Publishing "${await manifest.getName()}" with command: npm ${args.join(" ")}`);
@@ -1991,9 +1953,6 @@ const publish$2 = async (project, options = {}) => {
 var NpmProject = class extends PackageJsonProject {
 	async publish(options = {}) {
 		await publish$2(this, { ...options });
-	}
-	async publishCheck(options = {}) {
-		await check$1(this, options);
 	}
 };
 //#endregion
@@ -2037,26 +1996,6 @@ var NpmWorkspacesProject = class extends PackageJsonMonorepoProject {
 				...options
 			});
 		}
-	}
-	async publishCheck(options = {}) {
-		await check$1(this, options);
-	}
-};
-//#endregion
-//#region src/project-pnpm/check.ts
-const check = async (project, options = {}) => {
-	const { logger } = options;
-	logger?.verbose("Checking npm registry...");
-	const pinged = await pingRegistry();
-	assert(pinged, "Unable to connect to the npm registry");
-	logger?.verbose("Checking npm authentication...");
-	const username = await getAuthenticatedUser();
-	assert(username, "Not authenticated with npm");
-	const name = await project.manifest.getName();
-	if (await getPublishedVersion(name)) {
-		logger?.verbose(`Checking npm write access for "${name}"...`);
-		const hasAccess = await hasWriteAccess(name, username);
-		assert(hasAccess, `No write access to npm package "${name}"`);
 	}
 };
 //#endregion
@@ -2191,8 +2130,8 @@ const publish$1 = async (project, options = {}) => {
 		if (shouldCleanReadme) {
 			const info = await project.getHostedGitInfo();
 			if (!Object.values(info).every(isEmpty)) {
-				const { host, prefix, owner, repo } = info;
-				await cleanReadme(temp.path, `${host}/${prefix}${owner}/${repo}#readme`);
+				const { origin, prefix, owner, repo } = info;
+				await cleanReadme(temp.path, `${origin}/${prefix}${owner}/${repo}#readme`);
 			}
 		}
 		logger?.verbose(`Publishing "${await manifest.getName()}" with command: pnpm ${args.join(" ")}`);
@@ -2217,9 +2156,6 @@ const publish$1 = async (project, options = {}) => {
 var PnpmProject = class extends PackageJsonProject {
 	async publish(options = {}) {
 		await publish$1(this, { ...options });
-	}
-	async publishCheck(options = {}) {
-		await check(this, options);
 	}
 };
 //#endregion
@@ -2265,9 +2201,6 @@ var PnpmWorkspacesProject = class extends PackageJsonMonorepoProject {
 				...options
 			});
 		}
-	}
-	async publishCheck(options = {}) {
-		await check$1(this, options);
 	}
 };
 //#endregion
@@ -2587,7 +2520,8 @@ const createVersionOptions = async (project, options = {}, current, tagPrefix) =
 		{
 			label: "Custom",
 			value: "custom",
-			hint: "Specify an exact version"
+			hint: "Specify an exact version",
+			bump: { firstRelease }
 		},
 		{
 			label: "As-is",
@@ -2718,10 +2652,8 @@ const runBumpPrompts = async (project, options = {}) => {
 				if (isUndefined(val) || !isValidVersion(val)) return "Invalid version.";
 			}
 		}));
-		else {
-			const selected = find(type);
-			Object.assign(promptsRes, selected?.bump);
-		}
+		const selected = find(type);
+		Object.assign(promptsRes, selected?.bump);
 		return promptsRes;
 	};
 	if (project.isMonorepoMode() && project.isIndependentMode) for await (const subProject of project.getProjects()) {
@@ -2745,10 +2677,10 @@ const getCliPromptOptions = async (options = {}) => {
 	const shouldPrompt = (v) => !ci && (isUndefined(v) || dryRun);
 	const res = await group({
 		commit: () => options.skipGit ? Promise.resolve(false) : shouldPrompt(options.skipGit) ? confirm({ message: question("Commit release changes?", dryRun) }) : Promise.resolve(true),
-		tag: () => options.skipGit ? Promise.resolve(false) : shouldPrompt(options.skipGit) ? confirm({ message: question("Create release tags?", dryRun) }) : Promise.resolve(true),
-		push: () => options.skipGit ? Promise.resolve(false) : shouldPrompt(options.skipGit) ? confirm({ message: question("Push release changes?", dryRun) }) : Promise.resolve(true),
+		tag: ({ results: { commit } }) => !commit ? Promise.resolve(false) : shouldPrompt(options.skipGit) ? confirm({ message: question("Create release tags?", dryRun) }) : Promise.resolve(true),
+		push: ({ results: { commit } }) => !commit ? Promise.resolve(false) : shouldPrompt(options.skipGit) ? confirm({ message: question("Push release changes?", dryRun) }) : Promise.resolve(true),
 		publish: () => options.skipPublish ? Promise.resolve(false) : shouldPrompt(options.skipPublish) ? confirm({ message: question("Publish project?", dryRun) }) : Promise.resolve(true),
-		release: () => options.skipRelease || options.skipGit ? Promise.resolve(false) : shouldPrompt(options.skipRelease) ? confirm({ message: question("Create repository release?", dryRun) }) : Promise.resolve(true)
+		release: () => options.skipRelease ? Promise.resolve(false) : shouldPrompt(options.skipRelease) ? confirm({ message: question("Create repository release?", dryRun) }) : Promise.resolve(true)
 	}, { onCancel: () => {
 		abortTask();
 	} });
@@ -2812,17 +2744,22 @@ var ReleaserCli = class extends Releaser {
 	}
 	setCliOptions(options) {
 		return this.enqueue(async () => {
-			const { ci, dryRun, releaseType: as } = options;
+			const { ci, dryRun, releaseType: as, skipBump } = options;
 			const { project, stepsOptions: { bump: bumpOpts } } = this;
-			const bump = await runBumpPrompts(project, {
+			const version = await project.manifest.getVersion();
+			const bump = skipBump ? { version } : await runBumpPrompts(project, {
 				bump: {
 					...bumpOpts,
 					as
 				},
 				run: options
 			});
-			this.setOptions({ bump }).setSkippedSteps(await getCliPromptOptions(options));
+			const skippedSteps = await getCliPromptOptions(options);
 			await runConfirmPrompts(ci, dryRun);
+			this.setOptions({ bump }).setSkippedSteps({
+				bump: version === bump.version && !bump.firstRelease,
+				...skippedSteps
+			});
 		});
 	}
 	setLegacyOptions() {
@@ -2842,30 +2779,6 @@ var ReleaserCli = class extends Releaser {
 			this.setOptions(legacySteps);
 		});
 	}
-	check() {
-		return this.enqueue(async () => {
-			const { project, hosting } = this;
-			const logger = this.logger.createChild("check");
-			logger.info("Checking release environment...");
-			if (![
-				"commit",
-				"tag",
-				"push"
-			].every((k) => this.shouldSkip(k))) {
-				logger.verbose("Checking Git repository...");
-				const isRepo = await isGitRepo();
-				assert(isRepo, "Current directory is not a Git repository");
-				logger.verbose("Checking working tree...");
-				const isClean = await isWorkingTreeClean();
-				assert(isClean, "Git working tree is not clean");
-				logger.verbose("Checking remote repository...");
-				const hasRemote = await gitConfigGet("remote.origin.url");
-				assert(hasRemote, "Git remote \"origin\" is not configured");
-			}
-			if (!this.shouldSkip("publish")) await project.publishCheck({ logger });
-			if (!this.shouldSkip("release")) await hosting?.releaseCheck({ logger });
-		});
-	}
 	start() {
 		return this.enqueue(async () => {
 			const { name, version } = pkgJson;
@@ -2879,7 +2792,7 @@ var ReleaserCli = class extends Releaser {
 		process.exit(0);
 	}
 	async runAction(options) {
-		await this.start().setLegacyOptions().setCliOptions(options).check().bump().commit().tag().push().publish().release().run();
+		await this.start().setLegacyOptions().setCliOptions(options).bump().commit().tag().push().publish().release().run();
 	}
 };
 //#endregion

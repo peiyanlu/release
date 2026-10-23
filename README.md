@@ -36,7 +36,7 @@
 
 ## 环境要求
 
-- Node.js 20 或更新版本
+- Node.js 22.18+
 - Git 仓库
 - npm 发布需要可用的 npm 身份验证；GitHub API 操作需要 GitHub token
 
@@ -53,7 +53,7 @@ pnpm add -D @peiyanlu/release
 release [release-type] [options]
 ```
 
-不指定 `release-type` 时，工具根据提交记录计算升级类型。可指定 `major`、`minor`、`patch` 或 `prerelease`。
+不指定 `release-type` 时，会根据提交记录推断并预选升级类型；CI 模式下自动采用该类型。可指定 `major`、`minor`、`patch` 或 `prerelease`。
 
 ```sh
 pnpm exec release --dry-run
@@ -63,15 +63,16 @@ pnpm exec release --ci
 
 常用选项：
 
-| 选项             | 说明                     |
-|------------------|--------------------------|
-| `-n, --dry-run`  | 预览发布步骤，不写入变更 |
-| `--ci`           | CI 模式，关闭交互式流程  |
-| `--skip-git`     | 跳过 Git 检查和操作      |
-| `--skip-publish` | 跳过包发布               |
-| `--skip-release` | 跳过仓库 Release         |
-| `-v, --version`  | 显示版本                 |
-| `-h, --help`     | 显示完整帮助             |
+| 选项             | 说明                                               |
+|------------------|----------------------------------------------------|
+| `-n, --dry-run`  | 预览发布步骤，不写入变更                           |
+| `--ci`           | CI 模式，关闭交互式流程                            |
+| `--skip-bump`    | 跳过项目版本更新                                   |
+| `--skip-git`     | 跳过 Git 提交、标签、推送；版本推断仍读取 Git 历史 |
+| `--skip-publish` | 跳过项目发布                                       |
+| `--skip-release` | 跳过仓库托管服务上创建发布                         |
+| `-v, --version`  | 显示版本                                           |
+| `-h, --help`     | 显示完整帮助                                       |
 
 ## 配置
 
@@ -89,7 +90,6 @@ export default defineConfig({
   hosting: new GithubHosting({
     token: process.env.GITHUB_TOKEN,
   }),
-  checkout: { branch: 'release' },
   bump: { prerelease: 'beta' },
   commit: { sign: false },
   publish: { tag: 'latest' },
@@ -117,10 +117,11 @@ export default defineConfig({
 
 ## GitHub Action
 
-本仓库也可作为 Action 使用。Action 要求配置文件定义 `project`，并使用 `github-token` 访问 GitHub API。完整工作流默认值为 `full`。
+本仓库也可作为 Action 使用。Action 要求配置文件定义 `project`，并使用 `github-token` 访问 GitHub API。`workflow` 的默认值为 `full`。
 
 ```yaml
 name: Release
+
 on:
   issue_comment:
     types: [ created, deleted ]
@@ -140,26 +141,156 @@ jobs:
         with:
           fetch-depth: 0
           fetch-tags: true
-          
+      
       - uses: pnpm/action-setup@v6
         with:
           version: 12
-        
+      
       - uses: actions/setup-node@v7
         with:
           node-version: 24
           registry-url: https://registry.npmjs.org/
-          
+          package-manager-cache: false
+      
       - run: pnpm install --frozen-lockfile
-        
-      - uses: peiyanlu/release@v2
+      
+      - uses: peiyanlu/release@master
         with:
           workflow: full
           github-token: ${{ secrets.GITHUB_TOKEN }}
           npm-token: ${{ secrets.NPM_TOKEN }}
 ```
 
-确保仓库中已提交 `release.config.ts`，Action 能在 checkout 的项目中加载它。若发布到 npm，将 `npm-token` 配置为仓库 secret；它会作为 `NODE_AUTH_TOKEN` 提供给发布步骤。也可在仓库配置 npm Trusted Publishing。
+确保仓库中已提交 `release.config.ts`，Action 会从检出的项目中加载该文件。若发布到 npm，将 `npm-token` 配置为仓库 secret；它会作为 `NODE_AUTH_TOKEN` 提供给发布步骤。也可在仓库配置 npm Trusted Publishing。
+
+### npm Trusted Publishing
+
+[npm Trusted Publishing](https://docs.npmjs.com/trusted-publishers/) 使用 GitHub Actions 的 OIDC 身份发布 npm 包，不需要长期有效的 `NPM_TOKEN`。
+
+1. **确认条件**：包已至少发布过一个版本，使用公开 npm registry 和 GitHub 托管的 runner。Trusted Publisher 按包和 workflow 文件分别注册。
+2. **在 npm 注册发布者**：打开 [npmjs.com](https://www.npmjs.com/) 上对应包的 **Settings → Trusted Publisher → GitHub Actions**：填写 GitHub 用户或组织名、仓库名和 workflow 文件名（例如 `release.yml`）。
+   如果 workflow 使用 GitHub environment，也填写相同的 environment 名称。
+3. **调整发布 job**：在发布 job 中授予 `id-token: write` 权限，使用 Node.js 22.14.0 或更高版本，以确保 npm 版本为 11.5.1 或更高版本，并从 `actions/setup-node` 移除 `registry-url`（v7 以下），从 Action step 输入中移除 `npm-token`。例如：
+
+```yaml
+name: Release
+
+on:
+  issue_comment:
+    types: [ created, deleted ]
+  push:
+    branches:
+      - master
+
+permissions:
+  contents: write
+  pull-requests: write
+  id-token: write                                              # 新增
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+      
+      - uses: pnpm/action-setup@v6
+        with:
+          version: 12
+      
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24                                     # npm 11.5.1+
+          registry-url: https://registry.npmjs.org/            # v7 以下移除
+          package-manager-cache: false
+      
+      - run: pnpm install --frozen-lockfile
+      
+      - uses: peiyanlu/release@master
+        with:
+          workflow: full
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          #npm-token: ${{ secrets.NPM_TOKEN }}                 # 移除
+```
+
+配置正确后，npm/pnpm 会自动通过 OIDC 认证，公开仓库发布的版本还会自动附带 provenance（来源证明），无需额外开启。
+
+若出现 `ENEEDAUTH`：
+核对 npm 包是否已存在、注册的仓库和 workflow 文件名、GitHub environment，以及发布 job 是否有 `id-token: write` 并使用满足版本要求的 npm CLI。
+
+### Snapshots
+
+为 `workflow_dispatch` 添加 `snapshot` 字符串输入：手动运行时输入非空值会执行快照 job；push 和 issue comment 事件没有该输入，因此仍按原有流程执行。
+
+```yaml
+name: Release
+
+on:
+  issue_comment:
+    types: [ created, deleted ]
+  push:
+    branches:
+      - master
+  workflow_dispatch:
+    inputs:
+      snapshot:
+        description: Snapshot publish tag.
+        type: string
+
+jobs:
+  check:
+    if: inputs.snapshot == ''
+    # 保留现有 check job 的其余配置
+  
+  pull-request:
+    needs: check
+    if: needs.check.outputs.workflow == 'pull-request'
+    # 保留现有 pull-request job 的其余配置
+  
+  release:
+    needs: check
+    if: needs.check.outputs.workflow == 'release'
+    # 保留现有 release job 的其余配置
+  
+  snapshot:
+    if: inputs.snapshot != ''
+    name: Snapshot
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+      
+      - uses: pnpm/action-setup@v6
+        with:
+          version: 12
+      
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          registry-url: https://registry.npmjs.org/
+          package-manager-cache: false
+      
+      - run: pnpm install --frozen-lockfile
+      
+      - uses: peiyanlu/release@master
+        with:
+          workflow: snapshot
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          bump-snapshot: ${{ inputs.snapshot }}
+```
+
+在 GitHub Actions 页面手动运行 workflow 并填写 snapshot 为 canary：此时 `check`、`pull-request` 和 `release` 不执行，快照 job 发布 `1.2.0-canary.<timestamp>`。
+
+Trusted Publisher 注册绑定到具体 workflow 文件。要让快照发布也使用同一注册，建议将快照 job 放在已注册的 workflow 中，而不是另建 workflow。
+
+### 参数
 
 `workflow` 支持：
 

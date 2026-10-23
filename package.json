@@ -59,7 +59,7 @@
     "email": "peiyanlu@vip.qq.com"
   },
   "engines": {
-    "node": ">=20"
+    "node": ">=22.18"
   },
   "keywords": [
     "typescript",
