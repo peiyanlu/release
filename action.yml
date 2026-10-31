@@ -2,6 +2,10 @@ name: release-action
 description: A simple GitHub Action to automate version bumps, changelogs, and releases using Conventional Commits.
 author: YanluPei <peiyanlu@vip.qq.com>
 
+branding:
+  icon: send
+  color: green
+
 inputs:
   workflow:
     description: |
@@ -53,8 +57,4 @@ outputs:
 
 runs:
   using: node24
-  main: dist/action.mjs
-
-branding:
-  icon: send
-  color: green
+  main: action.js
