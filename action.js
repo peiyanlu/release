@@ -3,11 +3,28 @@ import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 
-const cwd = process.cwd()
+const projectDir = process.cwd()
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const actionDir = process.env.GITHUB_ACTION_PATH || __dirname
 
 
+console.log(`Project at: ${ projectDir }`)
+console.log(`Action at: ${ actionDir }`)
+
+console.log(
+  'Parent INPUT keys:',
+  Object.keys(process.env).filter((key) => key.startsWith('INPUT_')),
+)
+
+
+const isDependencyAvailable = name => {
+  try {
+    import.meta.resolve(name)
+    return true
+  } catch {
+    return false
+  }
+}
 
 const run = (command, args, options = {}) => {
   const { error, status, signal } = spawnSync(command, args, {
@@ -29,16 +46,29 @@ const run = (command, args, options = {}) => {
 }
 
 
-console.log(
-  'Parent INPUT keys:',
-  Object.keys(process.env).filter((key) => key.startsWith('INPUT_')),
-)
+const buildAction = (cwd = actionDir) => {
+  run('corepack', [ 'enable' ], { shell: true, cwd })
+  
+  run('pnpm', [ 'install', '--frozen-lockfile' ], { shell: true, cwd })
+  
+  run('pnpm', [ 'exec', 'tsdown' ], { shell: true, cwd })
+}
+
+const installReleaseDeps = (cwd = projectDir) => {
+  if (!isDependencyAvailable('@peiyanlu/release')) {
+    run('corepack', [ 'enable' ], { shell: true, cwd })
+    
+    run('pnpm', [ 'install', '--frozen-lockfile' ], { shell: true, cwd })
+  }
+}
+
+const runAction = (cwd = projectDir) => {
+  run('node', [ join(actionDir, 'dist', 'action.mjs') ], { shell: false, cwd })
+}
 
 
-run('corepack', [ 'enable' ], { shell: true })
+buildAction()
 
-run('pnpm', [ 'install', '--frozen-lockfile' ], { shell: true })
+installReleaseDeps()
 
-run('pnpm', [ 'exec', 'tsdown' ], { shell: true })
-
-run('node', [ join(actionDir, 'dist', 'action.mjs') ], { shell: false, cwd })
+runAction()
