@@ -19,7 +19,8 @@ console.log(
 
 const isDependencyAvailable = name => {
   try {
-    import.meta.resolve(name)
+    const path = import.meta.resolve(name)
+    console.log('@peiyanlu/release', path)
     return true
   } catch {
     return false
@@ -67,8 +68,10 @@ const runAction = (cwd = projectDir) => {
 }
 
 
-buildAction()
+// buildAction()
+//
+// installReleaseDeps()
+//
+// runAction()
 
-installReleaseDeps()
-
-runAction()
+console.log(isDependencyAvailable('@peiyanlu/release'))
