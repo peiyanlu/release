@@ -11,6 +11,11 @@ import {
 } from './releaser-github-action/index.js'
 
 
+console.log(
+  'Parent INPUT keys:',
+  Object.keys(process.env).filter((key) => key.startsWith('INPUT_')),
+)
+
 console.log(`Triggered by event: ${ context.eventName }`)
 
 const workflow = getInput('workflow')
@@ -23,7 +28,7 @@ if (workflow === 'check' && ifCommandComment() === false) {
   process.exit(0)
 }
 
-const GITHUB_TOKEN = getInput('github-token')
+const GITHUB_TOKEN = getInput('github-token', { required: true })
 const NODE_AUTH_TOKEN = getInput('npm-token')
 const inputOptions = getInputOptions()
 const skippedSteps = getInputSkippedSteps()

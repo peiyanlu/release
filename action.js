@@ -34,6 +34,9 @@ run('pnpm', [ 'install', '--frozen-lockfile' ])
 
 run('pnpm', [ 'exec', 'tsdown' ])
 
-console.log('env', process.env)
+console.log(
+  'INPUT keys:',
+  Object.keys(process.env).filter((key) => key.startsWith('INPUT_')),
+)
 
 run('node', [ join(actionDir, 'dist', 'action.mjs') ])
