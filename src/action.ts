@@ -15,6 +15,8 @@ console.log(`Triggered by event: ${ context.eventName }`)
 
 const workflow = getInput('workflow')
 
+console.log(`Current workflow: ${ workflow }`)
+
 if (workflow === 'check' && ifCommandComment() === false) {
   setOutput('continue', 'false')
   setOutput('workflow', 'none')
@@ -30,6 +32,8 @@ if (NODE_AUTH_TOKEN) {
   process.env.NODE_AUTH_TOKEN = NODE_AUTH_TOKEN
 }
 
+console.log('GITHUB_TOKEN:', GITHUB_TOKEN)
+console.log('NODE_AUTH_TOKEN:', NODE_AUTH_TOKEN)
 
 try {
   const { config: { project, hosting, releaser, ...options }, file } = await loadConfig<UserConfig>(process.cwd())
