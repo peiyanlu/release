@@ -11,6 +11,8 @@ const actionDir = process.env.GITHUB_ACTION_PATH || __dirname
 console.log(`Project at: ${ projectDir }`)
 console.log(`Action at: ${ actionDir }`)
 
+console.log('__dirname', __dirname)
+console.log('env', process.env)
 console.log(
   'Parent INPUT keys:',
   Object.keys(process.env).filter((key) => key.startsWith('INPUT_')),
