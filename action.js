@@ -12,6 +12,7 @@ const run = (command, args, options = {}) => {
     cwd: actionDir,
     stdio: 'inherit',
     shell: true,
+    env: process.env,
     ...options,
   })
   
