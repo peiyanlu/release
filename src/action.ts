@@ -1,14 +1,15 @@
 import { getInput, setFailed, setOutput } from '@actions/core'
 import { context, getOctokit } from '@actions/github'
-import { throwError } from '@peiyanlu/ts-utils'
-import { loadConfig, type UserConfig } from './config/index.js'
+import { assert } from '@peiyanlu/ts-utils'
 import {
   getInputOptions,
   getInputSkippedSteps,
   ifCommandComment,
   ifReleaseCommit,
+  loadConfig,
   ReleaserGithubAction,
-} from './releaser-github-action/index.js'
+  type UserConfig,
+} from './index.js'
 
 
 const workflow = getInput('workflow')
@@ -31,14 +32,13 @@ if (NODE_AUTH_TOKEN) {
   process.env.NODE_AUTH_TOKEN = NODE_AUTH_TOKEN
 }
 
+
 try {
   const { config: { project, hosting, releaser, ...options }, file } = await loadConfig<UserConfig>(process.cwd())
   
-  console.log(`Legacy config file: ${ file }`)
+  assert(project, 'Project is required.')
   
-  if (!project) {
-    throwError('Project is required.')
-  }
+  console.log(`Legacy config file: ${ file }`)
   
   const gha = new ReleaserGithubAction({
     project,
@@ -70,6 +70,8 @@ try {
     case 'check':
       const isReleaseCommit = await ifReleaseCommit(gha)
       const workflow = isReleaseCommit ? 'release' : 'pull-request'
+      
+      console.log(`Next workflow: ${ workflow }`)
       
       setOutput('continue', 'true')
       setOutput('workflow', workflow)

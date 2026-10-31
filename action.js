@@ -3,20 +3,15 @@ import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 
-const projectDir = process.cwd()
 const __dirname = dirname(fileURLToPath(import.meta.url))
-const actionDir = process.env.GITHUB_ACTION_PATH || __dirname
 
+
+const projectDir = process.cwd()
+const actionDir = __dirname
 
 console.log(`Project at: ${ projectDir }`)
 console.log(`Action at: ${ actionDir }`)
 
-console.log('__dirname', __dirname)
-console.log('env', process.env)
-console.log(
-  'Parent INPUT keys:',
-  Object.keys(process.env).filter((key) => key.startsWith('INPUT_')),
-)
 
 const run = (command, args, options = {}) => {
   const { error, status, signal } = spawnSync(command, args, {
@@ -27,7 +22,7 @@ const run = (command, args, options = {}) => {
   })
   
   if (error) {
-    console.error(`Failed to start ${ command }: ${ error.message }`)
+    console.error(`Failed to start "${ command }": ${ error.message }`)
   }
   
   if (status !== 0) {
@@ -40,9 +35,7 @@ const run = (command, args, options = {}) => {
 
 const buildAction = (cwd = actionDir) => {
   run('corepack', [ 'enable' ], { shell: true, cwd })
-  
   run('pnpm', [ 'install', '--frozen-lockfile' ], { shell: true, cwd })
-  
   run('pnpm', [ 'exec', 'tsdown' ], { shell: true, cwd })
 }
 

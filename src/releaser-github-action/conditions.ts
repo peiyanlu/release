@@ -10,14 +10,13 @@ export const ifReleaseCommit = async (releaser: ReleaserGithubAction): Promise<b
   
   const message = await gitLog([ '-1', '--pretty=%B' ])
   if (!message?.startsWith('chore(release):')) {
-    logger.verbose(`Commit message:${ message }`)
     logger.verbose('Skipping non-release commit.')
     return false
   }
   
   const authorName = await gitLog([ '-1', '--pretty=%an' ])
   if (!authorName?.startsWith('github-actions[bot]')) {
-    logger.verbose('Skipping commit not authored by the GitHub Actions bot.')
+    logger.info('Skipping commit not authored by the GitHub Actions bot.')
     process.exit(0)
   }
   

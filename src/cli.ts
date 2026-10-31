@@ -9,8 +9,7 @@ import { mkdir } from 'node:fs/promises'
 import { resolve } from 'node:path'
 import { join } from 'path'
 import type { ReleaseType } from 'semver'
-import { loadConfig, type UserConfig } from './config/index.js'
-import { ReleaserCli } from './releaser-cli/index.js'
+import { loadConfig, ReleaserCli, type UserConfig } from './index.js'
 
 
 const pkgJson = readJsonFileSync(join(__dirname, '..', 'package.json'))
