@@ -16,17 +16,6 @@ console.log(
   Object.keys(process.env).filter((key) => key.startsWith('INPUT_')),
 )
 
-
-const isDependencyAvailable = name => {
-  try {
-    const path = import.meta.resolve(name)
-    console.log('@peiyanlu/release', path)
-    return true
-  } catch {
-    return false
-  }
-}
-
 const run = (command, args, options = {}) => {
   const { error, status, signal } = spawnSync(command, args, {
     cwd: actionDir,
@@ -55,23 +44,11 @@ const buildAction = (cwd = actionDir) => {
   run('pnpm', [ 'exec', 'tsdown' ], { shell: true, cwd })
 }
 
-const installReleaseDeps = (cwd = projectDir) => {
-  if (!isDependencyAvailable('@peiyanlu/release')) {
-    run('corepack', [ 'enable' ], { shell: true, cwd })
-    
-    run('pnpm', [ 'install', '--frozen-lockfile' ], { shell: true, cwd })
-  }
-}
-
 const runAction = (cwd = projectDir) => {
   run('node', [ join(actionDir, 'dist', 'action.mjs') ], { shell: false, cwd })
 }
 
 
-// buildAction()
-//
-// installReleaseDeps()
-//
-// runAction()
+buildAction()
 
-console.log(isDependencyAvailable('@peiyanlu/release'))
+runAction()
