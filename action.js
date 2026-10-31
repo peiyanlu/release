@@ -27,15 +27,15 @@ const run = (command, args, options = {}) => {
 }
 
 
-run('corepack', [ 'enable' ],{ shell: true,})
+run('corepack', [ 'enable' ], { shell: true })
 
-run('pnpm', [ 'install', '--frozen-lockfile' ],{ shell: true,})
+run('pnpm', [ 'install', '--frozen-lockfile' ], { shell: true })
 
-run('pnpm', [ 'exec', 'tsdown' ],{ shell: true,})
+run('pnpm', [ 'exec', 'tsdown' ], { shell: true })
 
 console.log(
   'INPUT keys:',
   Object.keys(process.env).filter((key) => key.startsWith('INPUT_')),
 )
 
-run('node', [ join(actionDir, 'dist', 'action.mjs') ])
+run('node', [ join(actionDir, 'dist', 'action.mjs') ], { shell: false })

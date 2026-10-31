@@ -10,6 +10,7 @@ export const ifReleaseCommit = async (releaser: ReleaserGithubAction): Promise<b
   
   const message = await gitLog([ '-1', '--pretty=%B' ])
   if (!message?.startsWith('chore(release):')) {
+    logger.verbose(`Commit message:${ message }`)
     logger.verbose('Skipping non-release commit.')
     return false
   }
