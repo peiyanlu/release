@@ -34,4 +34,6 @@ run('pnpm', [ 'install', '--frozen-lockfile' ])
 
 run('pnpm', [ 'exec', 'tsdown' ])
 
+console.log('env', process.env)
+
 run('node', [ join(actionDir, 'dist', 'action.mjs') ])
