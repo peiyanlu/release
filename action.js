@@ -11,8 +11,7 @@ const run = (command, args, options = {}) => {
   const { error, status, signal } = spawnSync(command, args, {
     cwd: actionDir,
     stdio: 'inherit',
-    shell: true,
-    env: process.env,
+    env: { ...process.env },
     ...options,
   })
   
@@ -28,11 +27,11 @@ const run = (command, args, options = {}) => {
 }
 
 
-run('corepack', [ 'enable' ])
+run('corepack', [ 'enable' ],{ shell: true,})
 
-run('pnpm', [ 'install', '--frozen-lockfile' ])
+run('pnpm', [ 'install', '--frozen-lockfile' ],{ shell: true,})
 
-run('pnpm', [ 'exec', 'tsdown' ])
+run('pnpm', [ 'exec', 'tsdown' ],{ shell: true,})
 
 console.log(
   'INPUT keys:',
