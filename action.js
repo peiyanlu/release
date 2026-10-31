@@ -3,8 +3,10 @@ import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 
+const cwd = process.cwd()
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const actionDir = process.env.GITHUB_ACTION_PATH || __dirname
+
 
 
 const run = (command, args, options = {}) => {
@@ -27,15 +29,16 @@ const run = (command, args, options = {}) => {
 }
 
 
+console.log(
+  'Parent INPUT keys:',
+  Object.keys(process.env).filter((key) => key.startsWith('INPUT_')),
+)
+
+
 run('corepack', [ 'enable' ], { shell: true })
 
 run('pnpm', [ 'install', '--frozen-lockfile' ], { shell: true })
 
 run('pnpm', [ 'exec', 'tsdown' ], { shell: true })
 
-console.log(
-  'INPUT keys:',
-  Object.keys(process.env).filter((key) => key.startsWith('INPUT_')),
-)
-
-run('node', [ join(actionDir, 'dist', 'action.mjs') ], { shell: false })
+run('node', [ join(actionDir, 'dist', 'action.mjs') ], { shell: false, cwd })
