@@ -21,8 +21,8 @@ jobs:
     permissions:
       contents: read
     outputs:
-      continue: ${{ steps.check.outputs.continue }}
-      workflow: ${{ steps.check.outputs.workflow }}
+      continue: ${{ steps.checkkk.outputs.continue }}
+      workflow: ${{ steps.checkkk.outputs.workflow }}
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -31,7 +31,7 @@ jobs:
           fetch-tags: true
       
       - name: Context check
-        id: check
+        id: checkkk
         uses: ./
         with:
           workflow: check
