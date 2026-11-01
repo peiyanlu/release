@@ -3,6 +3,9 @@ import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 
+process.traceProcessWarnings = true
+
+
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const isWin = 'win32' === process.platform
 
@@ -46,8 +49,6 @@ const runAction = (cwd = projectDir) => {
   run('node', [ join(actionDir, 'dist', 'action.mjs') ], { shell: false, cwd })
 }
 
-process.traceDeprecation = true
-process.traceProcessWarnings = true
 
 buildAction()
 
