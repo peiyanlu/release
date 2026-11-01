@@ -1,3 +1,27 @@
+## <small>[2.0.1](https://github.com/peiyanlu/release/compare/v2.0.0...v2.0.1) (2026-11-01)</small>
+
+### 🐛 Bug 修复
+
+* test ([e32a7f3](https://github.com/peiyanlu/release/commit/e32a7f3775e60f7d8063c8ad45a50868334c5fb6))
+* test ([12cdc3d](https://github.com/peiyanlu/release/commit/12cdc3d9a5aef8c281a5bc363cce79c42308faf7))
+* test ([2d90178](https://github.com/peiyanlu/release/commit/2d90178ba87d3db0c8324a172eea7cf5282a5da3))
+* test ([8ef3848](https://github.com/peiyanlu/release/commit/8ef38484e39e6a23998d22e2b407f6b4d849616b))
+* test ([e366630](https://github.com/peiyanlu/release/commit/e366630a7470bfb83434b694f07473316b6b42e5))
+* test ([8b896c3](https://github.com/peiyanlu/release/commit/8b896c3176e7ce512a3adf60d8d393a01f3f3232))
+* test ([46349ae](https://github.com/peiyanlu/release/commit/46349aecd81bd0ae25e4df84f57cc156805e65cf))
+* test ([ddc6788](https://github.com/peiyanlu/release/commit/ddc67880b86afc89a2c8244ab99de53677689b3e))
+* test ([12fa9e6](https://github.com/peiyanlu/release/commit/12fa9e67dd050909f21fe192f69f48bbcf375252))
+* test ([d2f5389](https://github.com/peiyanlu/release/commit/d2f53891a5c1106dd790c7222a308ac80a1fc71d))
+* test ([0ece383](https://github.com/peiyanlu/release/commit/0ece38392dfb86049b3ef2436f0ebd34c279f878))
+* test ([5c2631e](https://github.com/peiyanlu/release/commit/5c2631e77b9f526b1187d95fcc8fe51fdc77d4af))
+* test ([a6a799a](https://github.com/peiyanlu/release/commit/a6a799a915a99e8b355dca41945a6a289e3d7f27))
+* test ([6cfcb94](https://github.com/peiyanlu/release/commit/6cfcb94ae45620079634366304f11f6399172ae1))
+* 仅处理 GitHub Actions bot 的发布提交 ([80cf342](https://github.com/peiyanlu/release/commit/80cf342a868494844fffd4005de5a878aa064f57))
+* 修复 action 依赖缺失 ([ea57323](https://github.com/peiyanlu/release/commit/ea573232ebb71978686bc4c17d985876a7e5bbb4))
+* 修复 action 依赖缺失 ([6088002](https://github.com/peiyanlu/release/commit/6088002e6150d9214eb69de2bd196a2310ad485d))
+* 将 package.json 静态导入改为运行时读取 ([0c7d773](https://github.com/peiyanlu/release/commit/0c7d773b5a2bbeaf4e0e99c6b7c8b536d2e9747d))
+* 调整 CLI 模式中的跳过流程逻辑 ([d0815aa](https://github.com/peiyanlu/release/commit/d0815aa1720b206ab72d95a6c29af4fc3ded5f31))
+
 ## [2.0.0](https://github.com/peiyanlu/release/compare/v1.3.1...v2.0.0) (2026-10-22)
 
 ### ⚠ BREAKING CHANGES
