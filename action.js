@@ -20,11 +20,15 @@ console.log(`Project at: ${ projectDir }`)
 console.log(`Action at: ${ actionDir }`)
 
 
-const run = (command, args, options = {}) => {
-  const { error, status, signal } = spawnSync(command, args, {
+const run = (command, args, options = {}, title) => {
+  const fullCmd = `${ command } ${ args.join(' ') }`.trim()
+  
+  console.log(`::group::${ title ?? fullCmd }`)
+  const { error, status = 1, signal } = spawnSync(command, args, {
     stdio: 'inherit',
     ...options,
   })
+  console.log('::endgroup::')
   
   if (error) {
     console.error(`Failed to start "${ command }": ${ error.message }`)
@@ -32,7 +36,7 @@ const run = (command, args, options = {}) => {
   
   if (status !== 0) {
     const reason = signal ? `(terminated by ${ signal })` : ''
-    console.error(`"${ command } ${ args.join(' ') }" failed with exit code ${ status } ${ reason }`)
+    console.error(`"${ fullCmd }" failed with exit code ${ status } ${ reason }`)
     process.exit(status)
   }
 }
@@ -43,9 +47,9 @@ const buildAction = (cwd = actionDir) => {
   
   console.log('Starting build action...')
   
-  run('corepack', [ 'enable' ], options)
-  run('pnpm', [ 'install', '--frozen-lockfile' ], options)
-  run('pnpm', [ 'exec', 'tsdown' ], options)
+  run('corepack', [ 'enable' ], options, 'Enable Corepack')
+  run('pnpm', [ 'install', '--frozen-lockfile' ], options, 'Install deps')
+  run('pnpm', [ 'exec', 'tsdown' ], options, 'Build action')
 }
 
 const installReleaseDep = (cwd = projectDir) => {
@@ -54,7 +58,7 @@ const installReleaseDep = (cwd = projectDir) => {
   if (!isSelf) {
     console.log('Installing release dep...')
     
-    run('pnpm', [ 'add', '-g', '@peiyanlu/release' ], options)
+    run('pnpm', [ 'add', '-g', '@peiyanlu/release' ], options, 'Install @peiyanlu/release globally')
   }
 }
 
@@ -64,7 +68,7 @@ const runAction = (cwd = projectDir) => {
   
   console.log('Starting release project...')
   
-  run('node', [ join(actionDir, 'dist', 'action.mjs') ], disableShellOptions)
+  run('node', [ join(actionDir, 'dist', 'action.mjs') ], disableShellOptions, 'Run release action')
 }
 
 
