@@ -104,12 +104,10 @@ export class ReleaserGithubAction<P extends Project = Project> extends Releaser<
       let preamble: string | undefined
       const preambleByName = new Map<string, string>()
       
-      console.log('comments', comments)
-      for (let i = comments.length, comment; i >= 0; i--) {
+      // 从最新到最旧扫描：对于 set-options，最新的注释优先；对于 set-preamble，最新的全局和每个包的设置优先。
+      for (let i = comments.length - 1, comment; i >= 0; i--) {
         comment = comments[i]
         
-        console.log('index', i)
-        console.log('comment', comment)
         if (!optionsApplied) {
           const json = parseSetOptionsComment(comment)
           
