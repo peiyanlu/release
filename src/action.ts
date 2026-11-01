@@ -14,11 +14,6 @@ import {
 
 const workflow = getInput('workflow')
 
-console.log(
-  'INPUT keys:',
-  Object.keys(process.env).filter((key) => key.includes('-')),
-)
-
 console.log(`Triggered by event: ${ context.eventName }`)
 console.log(`Current workflow: ${ workflow }`)
 

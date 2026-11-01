@@ -16,10 +16,6 @@ const actionDir = __dirname
 console.log(`Project at: ${ projectDir }`)
 console.log(`Action at: ${ actionDir }`)
 
-console.log(
-  'Parent INPUT keys:',
-  Object.keys(process.env).filter((key) => key.includes('-')),
-)
 
 const run = (command, args, options = {}) => {
   const { error, status, signal } = spawnSync(command, args, {
