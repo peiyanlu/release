@@ -24,7 +24,7 @@ console.log(
 const run = (command, args, options = {}) => {
   const { error, status, signal } = spawnSync(command, args, {
     stdio: 'inherit',
-    env: { ...process.env },
+    // env: { ...process.env },
     ...options,
   })
   
