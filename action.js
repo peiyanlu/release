@@ -45,6 +45,8 @@ const runAction = (cwd = projectDir) => {
 }
 
 
-buildAction()
+// buildAction()
+//
+// runAction()
 
-runAction()
+console.log('123456789')
