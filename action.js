@@ -45,8 +45,6 @@ const run = (command, args, options = {}, title) => {
 const buildAction = (cwd = actionDir) => {
   const options = { shell: isWin, cwd }
   
-  console.log('Starting build action...')
-  
   run('corepack', [ 'enable' ], options, 'Enable Corepack')
   run('pnpm', [ 'install', '--frozen-lockfile' ], options, 'Install deps')
   run('pnpm', [ 'exec', 'tsdown' ], options, 'Build action')
@@ -56,8 +54,6 @@ const installReleaseDep = (cwd = projectDir) => {
   const options = { shell: isWin, cwd }
   
   if (!isSelf) {
-    console.log('Installing release dep...')
-    
     run('pnpm', [ 'add', '-g', '@peiyanlu/release' ], options, 'Install @peiyanlu/release globally')
   }
 }
@@ -65,8 +61,6 @@ const installReleaseDep = (cwd = projectDir) => {
 const runAction = (cwd = projectDir) => {
   /** `shell: true` 会导致带连字符的变量（例如：`INPUT_GITHUB-TOKEN`）不能传递到子进程 */
   const disableShellOptions = { shell: false, cwd }
-  
-  console.log('Starting release project...')
   
   run('node', [ join(actionDir, 'dist', 'action.mjs') ], disableShellOptions, 'Run release action')
 }
