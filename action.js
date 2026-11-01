@@ -16,12 +16,15 @@ const actionDir = __dirname
 console.log(`Project at: ${ projectDir }`)
 console.log(`Action at: ${ actionDir }`)
 
+console.log(
+  'Parent INPUT keys:',
+  Object.keys(process.env).filter((key) => key.startsWith('INPUT_')),
+)
 
 const run = (command, args, options = {}) => {
   const { error, status, signal } = spawnSync(command, args, {
-    cwd: actionDir,
-    stdio: 'inherit',
-    env: { ...process.env },
+    // stdio: 'inherit',
+    // env: { ...process.env },
     ...options,
   })
   
@@ -46,7 +49,7 @@ const buildAction = (cwd = actionDir) => {
 }
 
 const runAction = (cwd = projectDir) => {
-  run('node', [ join(actionDir, 'dist', 'action.mjs') ], { shell: false, cwd })
+  run('node', [ join(actionDir, 'dist', 'action.mjs') ], { shell: true, cwd })
 }
 
 

@@ -14,6 +14,11 @@ import {
 
 const workflow = getInput('workflow')
 
+console.log(
+  'Parent INPUT keys:',
+  Object.keys(process.env).filter((key) => key.startsWith('INPUT_')),
+)
+
 console.log(`Triggered by event: ${ context.eventName }`)
 console.log(`Current workflow: ${ workflow }`)
 
