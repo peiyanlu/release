@@ -30,20 +30,6 @@ jobs:
           fetch-depth: 0
           fetch-tags: true
       
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v6
-        with:
-          version: 12
-      
-      - name: Setup Node.js
-        uses: actions/setup-node@v7
-        with:
-          node-version: 24
-          package-manager-cache: false
-      
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-      
       - name: Context check
         id: check
         uses: ./
@@ -65,20 +51,6 @@ jobs:
         with:
           fetch-depth: 0
           fetch-tags: true
-      
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v6
-        with:
-          version: 12
-      
-      - name: Setup Node.js
-        uses: actions/setup-node@v7
-        with:
-          node-version: 24
-          package-manager-cache: false
-      
-      - name: Install deps
-        run: pnpm install --frozen-lockfile
       
       - name: Create or update pull request
         uses: ./

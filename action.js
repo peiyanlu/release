@@ -13,6 +13,9 @@ const isWin = 'win32' === process.platform
 const projectDir = process.cwd()
 const actionDir = __dirname
 
+// 是否是项目自身
+const homologous = projectDir === actionDir
+
 console.log(`Project at: ${ projectDir }`)
 console.log(`Action at: ${ actionDir }`)
 
@@ -43,12 +46,24 @@ const buildAction = (cwd = actionDir) => {
   run('pnpm', [ 'exec', 'tsdown' ], options)
 }
 
+const installReleaseDep = (cwd = projectDir) => {
+  const options = { shell: isWin, cwd }
+  
+  if (!homologous) {
+    run('pnpm', [ 'add', '-g', '@peiyanlu/release' ], options)
+  }
+}
+
 const runAction = (cwd = projectDir) => {
   /** `shell: true` 会导致带连字符的变量（例如：`INPUT_GITHUB-TOKEN`）不能传递到子进程 */
-  run('node', [ join(actionDir, 'dist', 'action.mjs') ], { shell: false, cwd })
+  const noShellOptions = { shell: false, cwd }
+  
+  run('node', [ join(actionDir, 'dist', 'action.mjs') ], noShellOptions)
 }
 
 
 buildAction()
+
+installReleaseDep()
 
 runAction()
