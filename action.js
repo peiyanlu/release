@@ -40,7 +40,8 @@ const buildAction = (cwd = actionDir) => {
 }
 
 const runAction = (cwd = projectDir) => {
-  run('node', [ join(actionDir, 'dist', 'action.mjs') ], { shell: false, cwd })
+  const nodeTrace = [ '--trace-deprecation', '--trace-warnings' ]
+  run('node', [ ...nodeTrace, join(actionDir, 'dist', 'action.mjs') ], { shell: false, cwd })
 }
 
 
