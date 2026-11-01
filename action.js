@@ -4,6 +4,7 @@ import { fileURLToPath } from 'node:url'
 
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
+const isWin = 'win32' === process.platform
 
 
 const projectDir = process.cwd()
@@ -34,14 +35,15 @@ const run = (command, args, options = {}) => {
 
 
 const buildAction = (cwd = actionDir) => {
-  run('corepack', [ 'enable' ], { shell: true, cwd })
-  run('pnpm', [ 'install', '--frozen-lockfile' ], { shell: true, cwd })
-  run('pnpm', [ 'exec', 'tsdown' ], { shell: true, cwd })
+  const options = { shell: isWin, cwd }
+  
+  run('corepack', [ 'enable' ], options)
+  run('pnpm', [ 'install', '--frozen-lockfile' ], options)
+  run('pnpm', [ 'exec', 'tsdown' ], options)
 }
 
 const runAction = (cwd = projectDir) => {
-  const nodeTrace = [ '--trace-deprecation', '--trace-warnings' ]
-  run('node', [ ...nodeTrace, join(actionDir, 'dist', 'action.mjs') ], { shell: false, cwd })
+  run('node', [ join(actionDir, 'dist', 'action.mjs') ], { shell: false, cwd })
 }
 
 process.traceDeprecation = true
@@ -49,4 +51,4 @@ process.traceProcessWarnings = true
 
 buildAction()
 
-// runAction()
+runAction()
