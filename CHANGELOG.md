@@ -1,3 +1,12 @@
+## <small>[2.0.1](https://github.com/peiyanlu/release/compare/v2.0.0...v2.0.1) (2026-11-01)</small>
+
+### 🐛 Bug 修复
+
+* 仅处理 GitHub Actions bot 的发布提交 ([5b19221](https://github.com/peiyanlu/release/commit/5b19221d8c68d77b92032608d52e3f2a6129b7b0))
+* 修复 action 依赖缺失 ([daf8984](https://github.com/peiyanlu/release/commit/daf8984baf90f6808141ee8a6e84a89bcebee6fa))
+* 将 package.json 静态导入改为运行时读取 ([0c7d773](https://github.com/peiyanlu/release/commit/0c7d773b5a2bbeaf4e0e99c6b7c8b536d2e9747d))
+* 调整 CLI 模式中的跳过流程逻辑 ([d42c7a4](https://github.com/peiyanlu/release/commit/d42c7a4c53c2bf9a14610b241a2f936b324e57e3))
+
 ## [2.0.0](https://github.com/peiyanlu/release/compare/v1.3.1...v2.0.0) (2026-10-22)
 
 ### ⚠ BREAKING CHANGES
