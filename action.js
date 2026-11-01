@@ -49,7 +49,7 @@ const buildAction = (cwd = actionDir) => {
 }
 
 const runAction = (cwd = projectDir) => {
-  run('node', [ join(actionDir, 'dist', 'action.mjs') ], { shell: true, cwd })
+  run('node', [ join(actionDir, 'dist', 'action.mjs') ], { shell: false, cwd })
 }
 
 
