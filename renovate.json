@@ -69,16 +69,5 @@
       ],
       "enabled": false
     }
-  ],
-  "customManagers": [
-    {
-      "customType": "regex",
-      "managerFilePatterns": [
-        "src/.*\\.ts$"
-      ],
-      "matchStrings": [
-        "//\\s*renovate:\\s+datasource=(?<datasource>\\S+)\\s+depName=(?<depName>\\S+)\\s+(?:export\\s+)?(?:var|let|const)\\s+\\S+\\s*=\\s*[\"'](?<currentValue>[^\"']+)[\"']"
-      ]
-    }
   ]
 }
