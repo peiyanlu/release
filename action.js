@@ -48,7 +48,8 @@ const buildAction = (cwd = actionDir) => {
 }
 
 const runAction = (cwd = projectDir) => {
-  run('node', [ join(actionDir, 'dist', 'action.mjs') ], { shell: true, cwd })
+  /** `shell: true` 会导致带连字符的变量（例如：`INPUT_GITHUB-TOKEN`）不能传递到子进程 */
+  run('node', [ join(actionDir, 'dist', 'action.mjs') ], { shell: false, cwd })
 }
 
 
