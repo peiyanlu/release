@@ -14,6 +14,7 @@ import {
 
 const workflow = getInput('workflow')
 
+console.log(context)
 console.log(`Triggered by: ${ context.eventName }`)
 console.log(`Current workflow: ${ workflow }`)
 
