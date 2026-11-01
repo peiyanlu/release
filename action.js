@@ -36,7 +36,7 @@ const run = (command, args, options = {}) => {
 const buildAction = (cwd = actionDir) => {
   run('corepack', [ 'enable' ], { shell: true, cwd })
   run('pnpm', [ 'install', '--frozen-lockfile' ], { shell: true, cwd })
-  run('pnpm', [ 'exec', 'tsdown' ], { shell: true, cwd })
+  // run('pnpm', [ 'exec', 'tsdown' ], { shell: true, cwd })
 }
 
 const runAction = (cwd = projectDir) => {
