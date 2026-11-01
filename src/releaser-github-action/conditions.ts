@@ -9,13 +9,18 @@ export const ifReleaseCommit = async (releaser: ReleaserGithubAction): Promise<b
   const logger = releaser.logger.createChild('if-release-commit')
   
   const message = await gitLog([ '-1', '--pretty=%B' ])
-  
   if (!message?.startsWith('chore(release):')) {
-    logger.verbose('Skipping non-release commit.')
+    logger.verbose('Current commit is not a release commit.')
     return false
   }
   
-  logger.verbose('Checking existing release tags...')
+  const authorName = await gitLog([ '-1', '--pretty=%an' ])
+  if (!authorName?.startsWith('github-actions[bot]')) {
+    logger.info(`Release commit author "${ authorName ?? 'unknown' }" is not "github-actions[bot]".`)
+    process.exit(0)
+  }
+  
+  logger.verbose('Checking for existing release tags...')
   
   if (!dryRun) {
     await gitFetch([ '--tags' ])

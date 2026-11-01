@@ -143,7 +143,7 @@ export class Releaser<
         return
       }
       
-      logger.info(`Checking out branch ${ headBranch }...`)
+      logger.info(`Checking out branch "${ headBranch }"...`)
       
       this.state.headBranch = headBranch
       this.state.baseBranch = await this.getBaseBranch()
@@ -164,13 +164,13 @@ export class Releaser<
       }
       
       if (force) {
-        logger.verbose(`Force checking out branch ${ headBranch }...`)
+        logger.verbose(`Force checking out branch "${ headBranch }"...`)
         
         if (!dryRun) {
           await gitCheckoutBranchForce(headBranch)
         }
       } else {
-        logger.verbose(`Checking out branch ${ headBranch }...`)
+        logger.verbose(`Checking out branch "${ headBranch }"...`)
         
         if (!dryRun) {
           await gitCheckoutBranch(headBranch)
