@@ -104,9 +104,11 @@ export class ReleaserGithubAction<P extends Project = Project> extends Releaser<
       let preamble: string | undefined
       const preambleByName = new Map<string, string>()
       
+      console.log('comments', comments)
       for (let i = comments.length, comment; i >= 0; i--) {
         comment = comments[i]
         
+        console.log('index', i)
         console.log('comment', comment)
         if (!optionsApplied) {
           const json = parseSetOptionsComment(comment)
