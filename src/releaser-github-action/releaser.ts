@@ -107,6 +107,7 @@ export class ReleaserGithubAction<P extends Project = Project> extends Releaser<
       for (let i = comments.length, comment; i >= 0; i--) {
         comment = comments[i]
         
+        console.log('comment', comment)
         if (!optionsApplied) {
           const json = parseSetOptionsComment(comment)
           
