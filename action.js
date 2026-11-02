@@ -42,7 +42,7 @@ const run = (command, args, options = {}, title) => {
 }
 
 
-const init  = () => {
+const init = () => {
   const options = { shell: isWin }
   
   run('npm', [ 'install', '-g', 'corepack' ], options, 'Install Corepack')
@@ -60,7 +60,7 @@ const installReleaseDep = (cwd = projectDir) => {
   const options = { shell: isWin, cwd }
   
   if (!isSelf) {
-    run('npm', [ 'install', '-g', '@peiyanlu/release' ], options, 'Install @peiyanlu/release globally (external projects only')
+    run('pnpm', [ 'add', '-g', '@peiyanlu/release' ], options, 'Install @peiyanlu/release for project')
   }
 }
 
