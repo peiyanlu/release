@@ -163,12 +163,16 @@ jobs:
 
 确保仓库中已提交 `release.config.ts`，Action 会从检出的项目中加载该文件。若发布到 npm，将 `npm-token` 配置为仓库 secret；它会作为 `NODE_AUTH_TOKEN` 提供给发布步骤。也可在仓库配置 npm Trusted Publishing。
 
+### Pull requests
+
+在仓库中 `Settings → Actions → General → Workflow permissions` 启用 `Allow GitHub Actions to create and approve pull requests`。
+
 ### npm Trusted Publishing
 
 [npm Trusted Publishing](https://docs.npmjs.com/trusted-publishers/) 使用 GitHub Actions 的 OIDC 身份发布 npm 包，不需要长期有效的 `NPM_TOKEN`。
 
-1. **确认条件**：包已至少发布过一个版本，使用公开 npm registry 和 GitHub 托管的 runner。Trusted Publisher 按包和 workflow 文件分别注册。
-2. **在 npm 注册发布者**：打开 [npmjs.com](https://www.npmjs.com/) 上对应包的 **Settings → Trusted Publisher → GitHub Actions**：填写 GitHub 用户或组织名、仓库名和 workflow 文件名（例如 `release.yml`）。
+1. **确认条件**：包已至少发布过一个版本，使用公开 npm registry 和 GitHub 托管的 runner，在 package.json 中提供 `repository.url`。Trusted Publisher 按包和 workflow 文件分别注册。
+2. **在 npm 注册发布者**：打开 [npmjs.com](https://www.npmjs.com/) 上对应包的 **Settings → Trusted Publisher → GitHub Actions**：填写 GitHub 用户或组织名、仓库名和 workflow 文件名（例如 `release.yml`），勾选 `Allow npm publish`。
    如果 workflow 使用 GitHub environment，也填写相同的 environment 名称。
 3. **调整发布 job**：在发布 job 中授予 `id-token: write` 权限，使用 Node.js 22.14.0 或更高版本，以确保 npm 版本为 11.5.1 或更高版本，并从 `actions/setup-node` 移除 `registry-url`（v7 以下），从 Action step 输入中移除 `npm-token`。例如：
 
