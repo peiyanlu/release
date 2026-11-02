@@ -54,7 +54,7 @@ const installReleaseDep = (cwd = projectDir) => {
   const options = { shell: isWin, cwd }
   
   if (!isSelf) {
-    run('pnpm', [ 'dlx', '@peiyanlu/release' ],options, 'Install @peiyanlu/release globally')
+    run('pnpm', [ 'add', '@peiyanlu/release' ],options, 'Install @peiyanlu/release globally')
   }
 }
 
