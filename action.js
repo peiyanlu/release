@@ -47,6 +47,7 @@ const init = () => {
   
   run('npm', [ 'install', '-g', 'corepack' ], options, 'Install Corepack')
   run('corepack', [ 'enable' ], options, 'Enable Corepack shims')
+  run('pnpm', [ 'setup' ], options, 'Setup pnpm')
 }
 
 const buildAction = (cwd = actionDir) => {
