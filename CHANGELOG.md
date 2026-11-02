@@ -1,3 +1,16 @@
+## [2.1.0](https://github.com/peiyanlu/release/compare/v2.0.0...v2.1.0) (2026-11-02)
+
+### ✨ 新功能
+
+* 支持交互式初始化配置 ([f04718e](https://github.com/peiyanlu/release/commit/f04718eeea81051d3d393c14d7423f69849d7433))
+
+### 🐛 Bug 修复
+
+* 仅处理 GitHub Actions bot 的发布提交 ([5b19221](https://github.com/peiyanlu/release/commit/5b19221d8c68d77b92032608d52e3f2a6129b7b0))
+* 修复 action 依赖缺失 ([4832429](https://github.com/peiyanlu/release/commit/483242975b81d17f66579597975a05b65c13a8b0))
+* 将 package.json 静态导入改为运行时读取 ([0c7d773](https://github.com/peiyanlu/release/commit/0c7d773b5a2bbeaf4e0e99c6b7c8b536d2e9747d))
+* 调整 CLI 模式中的跳过流程逻辑 ([d42c7a4](https://github.com/peiyanlu/release/commit/d42c7a4c53c2bf9a14610b241a2f936b324e57e3))
+
 ## [2.0.0](https://github.com/peiyanlu/release/compare/v1.3.1...v2.0.0) (2026-10-22)
 
 ### ⚠ BREAKING CHANGES
