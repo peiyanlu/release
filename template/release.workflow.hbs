@@ -20,8 +20,8 @@ jobs:
     permissions:
       contents: read
     outputs:
-      continue: ${{ steps.check.outputs.continue }}
-      workflow: ${{ steps.check.outputs.workflow }}
+      continue: $\{{ steps.check.outputs.continue }}
+      workflow: $\{{ steps.check.outputs.workflow }}
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -34,7 +34,7 @@ jobs:
         uses: peiyanlu/release@master
         with:
           workflow: check
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+          github-token: $\{{ secrets.GITHUB_TOKEN }}
   
   pull-request:
     needs: check
@@ -55,7 +55,7 @@ jobs:
         uses: peiyanlu/release@master
         with:
           workflow: pull-request
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+          github-token: $\{{ secrets.GITHUB_TOKEN }}
   
   release:
     needs: check
@@ -64,7 +64,9 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+{{#if trusted}}
       id-token: write
+{{/if}}
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -91,7 +93,10 @@ jobs:
         uses: peiyanlu/release@master
         with:
           workflow: release
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+          github-token: $\{{ secrets.GITHUB_TOKEN }}
+{{#unless trusted}}
+          npm-token: $\{{ secrets.NPM_TOKEN }}
+{{/unless}}
   
   snapshot:
     if: inputs.snapshot != ''
@@ -99,7 +104,9 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
+{{#if trusted}}
       id-token: write
+{{/if}}
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -126,5 +133,8 @@ jobs:
         uses: peiyanlu/release@master
         with:
           workflow: snapshot
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          bump-snapshot: ${{ inputs.snapshot }}
+          github-token: $\{{ secrets.GITHUB_TOKEN }}
+          bump-snapshot: $\{{ inputs.snapshot }}
+{{#unless trusted}}
+          npm-token: $\{{ secrets.NPM_TOKEN }}
+{{/unless}}

@@ -1,12 +1,14 @@
+import { cancel, confirm, intro, isCancel, outro, select } from '@clack/prompts'
 import { newline } from '@conventional-changelog/template'
 import { type CliOptions, gitAddSync, gitConfigGet, isGitRepo, isWorkingTreeClean } from '@peiyanlu/cli-utils'
 import { readJsonFileSync } from '@peiyanlu/node-utils'
 import { assert, throwError } from '@peiyanlu/ts-utils'
-import { program } from 'commander'
+import { dim } from 'ansis'
+import { Command, program } from 'commander'
 import Handlebars from 'handlebars'
 import { existsSync, readFileSync, writeFileSync } from 'node:fs'
 import { mkdir } from 'node:fs/promises'
-import { resolve } from 'node:path'
+import { relative, resolve } from 'node:path'
 import { join } from 'path'
 import type { ReleaseType } from 'semver'
 import { loadConfig, ReleaserCli, type UserConfig } from './index.js'
@@ -52,35 +54,114 @@ program
   .command('init')
   .description('Initialize release configuration for your project.')
   .option('--npm', 'Use npm as the package manager', false)
-  .option('--pnpm', 'Use pnpm as the package manager', false)
+  .option('--pnpm', 'Use pnpm as the package manager', true)
+  .option('--trusted', 'Use npm Trusted Publishing', true)
   .option('--monorepo', 'Configure a monorepo', false)
   .option('--fixed', 'Use fixed versioning for the monorepo', false)
-  .option('--github-workflow', 'Create a GitHub Actions release workflow', false)
+  .option('--github-workflow', 'Create a GitHub Actions release workflow', true)
   .option('--force', 'Overwrite existing configuration or workflow files', false)
-  .option('--add', 'Stage generated files with Git', false)
-  .action(async (options: CliOptions<boolean>) => {
-    const { npm, pnpm, monorepo, fixed, githubWorkflow, force, add } = options
+  .option('--add', 'Stage generated files with Git', true)
+  .action(async (options: CliOptions<boolean>, command: Command) => {
+    const interactive = Boolean(process.stdin.isTTY && process.stdout.isTTY)
+    
+    const wasProvided = (name: string): boolean => 'cli' === command.getOptionValueSource(name)
+    
+    const ask = async <T>(
+      name: string,
+      prompt: () => Promise<T>,
+      value: T,
+      provided = wasProvided(name),
+    ): Promise<T> => {
+      if (!interactive || provided) return value
+      const answer = await prompt()
+      if (isCancel(answer)) {
+        cancel('Initialization cancelled.')
+        process.exit(0)
+      }
+      return answer as T
+    }
     
     const cwd = process.cwd()
     const tplDir = resolve(__dirname, '..', 'template')
     
-    const { dependencies, devDependencies } = readJsonFileSync(join(cwd, 'package.json'))
+    const detectedPackageManager = existsSync(join(cwd, 'pnpm-lock.yaml'))
+      ? 'pnpm'
+      : existsSync(join(cwd, 'package-lock.json'))
+        ? 'npm'
+        : 'none'
+    const defaultPackageManager = options.npm
+      ? 'npm'
+      : options.pnpm
+        ? 'pnpm'
+        : detectedPackageManager
     
+    if (interactive) intro('🚀 Initialize release config')
+    
+    const packageManager = await ask(
+      'npm',
+      () => select({
+        message: 'Package manager?',
+        options: [
+          { label: 'npm', value: 'npm' },
+          { label: 'pnpm', value: 'pnpm' },
+          { label: 'None', value: 'none' },
+        ],
+        initialValue: defaultPackageManager,
+      }) as Promise<'npm' | 'pnpm' | 'none'>,
+      defaultPackageManager,
+      wasProvided('npm') || wasProvided('pnpm'),
+    )
+    const npm = packageManager === 'npm'
+    const pnpm = packageManager === 'pnpm'
+    
+    const monorepo = await ask('monorepo', () => confirm({
+      message: 'Monorepo?',
+      initialValue: options.monorepo,
+    }) as Promise<boolean>, options.monorepo)
+    const fixed = monorepo
+      ? await ask('fixed', () => confirm({
+        message: 'Fixed versioning?',
+        initialValue: options.fixed,
+      }) as Promise<boolean>, options.fixed)
+      : false
+    const githubWorkflow = await ask('githubWorkflow', () => confirm({
+      message: 'GitHub Actions workflow?',
+      initialValue: options.githubWorkflow,
+    }) as Promise<boolean>, options.githubWorkflow)
+    const trusted = githubWorkflow
+      ? await ask('trusted', () => confirm({
+        message: 'npm Trusted Publishing?',
+        initialValue: options.trusted,
+      }) as Promise<boolean>, options.trusted)
+      : false
+    const add = await ask('add', () => confirm({
+      message: 'Stage files with Git?',
+      initialValue: options.add,
+    }) as Promise<boolean>, options.add)
+    
+    const pkg = readJsonFileSync(join(cwd, 'package.json'))
     const isTS = existsSync(join(cwd, 'tsconfig.json')) || Object
       .keys({
-        ...dependencies,
-        ...devDependencies,
+        ...pkg.dependencies,
+        ...pkg.devDependencies,
       }).includes('typescript')
     
     const configFile = join(cwd, `release.config.${ isTS ? 'ts' : 'js' }`)
     const workflowFile = join(cwd, '.github/workflows', 'release.yml')
     
-    if (existsSync(configFile) && !force) {
-      throwError(`"${ configFile }" already exists`)
-    }
+    const existingFiles = [
+      ...(existsSync(configFile) ? [ configFile ] : []),
+      ...(githubWorkflow && existsSync(workflowFile) ? [ workflowFile ] : []),
+    ]
     
-    if (githubWorkflow && existsSync(workflowFile) && !force) {
-      throwError(`"${ workflowFile }" already exists`)
+    let force = options.force
+    if (existingFiles.length && !force) {
+      const files = existingFiles.map(p => relative(cwd, p)).join(' | ')
+      force = await ask('force', () => confirm({
+        message: `Overwrite files? ${ dim(files) }`,
+        initialValue: false,
+      }) as Promise<boolean>, false)
+      if (!force) throwError(`Existing files: ${ files }`)
     }
     
     const template = readFileSync(join(tplDir, `release.config.hbs`), 'utf-8')
@@ -94,14 +175,19 @@ program
     writeFileSync(configFile, configContent.trimEnd() + newline(), 'utf-8')
     
     if (githubWorkflow) {
-      const workflowContent = readFileSync(join(tplDir, `release.text`), 'utf-8')
       await mkdir('.github/workflows', { recursive: true })
+      const template = readFileSync(join(tplDir, `release.workflow.hbs`), 'utf-8')
+      const workflowContent = Handlebars.compile(template)({
+        trusted,
+      })
       writeFileSync(workflowFile, workflowContent.trimEnd() + newline(), 'utf-8')
     }
     
     if (add) {
       gitAddSync(githubWorkflow ? [ configFile, workflowFile ] : [ configFile ])
     }
+    
+    if (interactive) outro('✨ Release config ready')
   })
 
 
