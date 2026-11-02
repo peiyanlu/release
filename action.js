@@ -42,11 +42,17 @@ const run = (command, args, options = {}, title) => {
 }
 
 
+const init  = () => {
+  const options = { shell: isWin }
+  
+  run('npm', [ 'install', '-g', 'corepack' ], options, 'Install Corepack')
+  run('corepack', [ 'enable' ], options, 'Enable Corepack shims')
+}
+
 const buildAction = (cwd = actionDir) => {
   const options = { shell: isWin, cwd }
   
-  run('corepack', [ 'enable' ], options, 'Enable corepack')
-  run('pnpm', [ 'install', '--frozen-lockfile' ], options, 'Install deps')
+  run('pnpm', [ 'install', '--frozen-lockfile' ], options, 'Install action dependencies')
   run('pnpm', [ 'exec', 'tsdown' ], options, 'Build action')
 }
 
@@ -54,7 +60,7 @@ const installReleaseDep = (cwd = projectDir) => {
   const options = { shell: isWin, cwd }
   
   if (!isSelf) {
-    run('pnpm', [ 'add', '-D', '@peiyanlu/release' ], options, 'Install @peiyanlu/release')
+    run('npm', [ 'install', '-g', '@peiyanlu/release' ], options, 'Install @peiyanlu/release globally (external projects only')
   }
 }
 
@@ -62,9 +68,11 @@ const runAction = (cwd = projectDir) => {
   /** `shell: true` 会导致带连字符的变量（例如：`INPUT_GITHUB-TOKEN`）不能传递到子进程 */
   const disableShellOptions = { shell: false, cwd }
   
-  run('node', [ join(actionDir, 'dist', 'action.mjs') ], disableShellOptions, 'Run release action')
+  run('node', [ join(actionDir, 'dist', 'action.mjs') ], disableShellOptions, 'Run action for project')
 }
 
+
+init()
 
 buildAction()
 
