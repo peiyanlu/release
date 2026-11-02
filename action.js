@@ -47,7 +47,6 @@ const init = () => {
   
   run('npm', [ 'install', '-g', 'corepack' ], options, 'Install Corepack')
   run('corepack', [ 'enable' ], options, 'Enable Corepack shims')
-  run('pnpm', [ 'setup' ], options, 'Setup pnpm')
 }
 
 const buildAction = (cwd = actionDir) => {
@@ -61,7 +60,7 @@ const installReleaseDep = (cwd = projectDir) => {
   const options = { shell: isWin, cwd }
   
   if (!isSelf) {
-    run('pnpm', [ 'add', '-g', '@peiyanlu/release' ], options, 'Install @peiyanlu/release for project')
+    run('pnpm', [ 'add', '-D', '@peiyanlu/release' ], options, 'Install @peiyanlu/release for project')
   }
 }
 
