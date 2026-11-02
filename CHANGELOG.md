@@ -1,3 +1,13 @@
+## <small>[2.1.1](https://github.com/peiyanlu/release/compare/v1.3.1...v2.1.1) (2026-11-02)</small>
+
+### 🐛 Bug 修复
+
+* **action:** 修复 Corepack 初始化与依赖安装 ([fea9aff](https://github.com/peiyanlu/release/commit/fea9affae6d8043d92705411f286156fc924d176))
+
+### 📝 文档
+
+* 补充 PR 权限与 Trusted Publishing 配置说明 ([64d9fcb](https://github.com/peiyanlu/release/commit/64d9fcb4d27414497e83d4a3620c4e49d9005a56))
+
 ## [2.1.0](https://github.com/peiyanlu/release/compare/v2.0.0...v2.1.0) (2026-11-02)
 
 ### ✨ 新功能
