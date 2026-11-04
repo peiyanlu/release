@@ -11,10 +11,17 @@ import {
   small,
   words,
 } from '@conventional-changelog/template'
-import { isEmpty } from '@peiyanlu/ts-utils'
+import { isEmpty, space } from '@peiyanlu/ts-utils'
 
 
 const isLikelyHash = (value: string) => /^[0-9a-f]{7,40}$/i.test(value)
+
+const indent = (text: string, n: number = 1, format?: (line: string) => string) => {
+  return text
+    .split(/\r?\n/)
+    .map(line => format ? format(line) : `${ space(n) }${ line }`)
+    .join('\n')
+}
 
 
 export function headerPartial(context: FinalTemplateContext): string {
@@ -60,8 +67,20 @@ export function template(context: FinalTemplateContext): string {
               note.commit.scope && bold(`${ note.commit.scope }:`),
               commitPartial(context, note.commit),
             )
-            const hasBody = note.commit.subject.trim() !== note.text.trim()
-            const line2 = hasBody ? list([ note.text ], t => t) : ''
+            
+            const listReg = /^(?:[ \t]*)?([-*+]|\d{1,9}[.)])([ \t]{1,4})\S+/
+            const text = note.commit.subject.trim() !== note.text.trim()
+              ? list([ note.text ], t => t)
+              : ''
+            const body: string = note.commit.body
+              ? note.commit.body.match(listReg)
+                ? note.commit.body
+                : list([ note.commit.body ], t => t)
+              : ''
+            
+            const line2 = text
+              ? [ text, indent(body, 2) ].join('\n')
+              : body
             
             return each([ line1, line2 ], t => t, newline())
           },
