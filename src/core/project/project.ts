@@ -323,7 +323,7 @@ export abstract class Project {
     )!
   }
   
-  async inferReleaseType(options: ProjectBumpOptions = {}): Promise<ReleaseType | undefined> {
+  async inferReleaseType(options: ProjectBumpOptions = {}): Promise<'major' | 'minor' | 'patch' | undefined> {
     const { logger, tagPrefix: override } = options
     const { manifest } = this
     

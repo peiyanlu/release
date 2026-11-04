@@ -1,6 +1,6 @@
 import { cancel, confirm, group, isCancel, note, select, text } from '@clack/prompts'
-import { isPrerelease, isValidVersion } from '@peiyanlu/cli-utils'
-import { equals, isUndefined, type MaybePromise } from '@peiyanlu/ts-utils'
+import { isValidVersion } from '@peiyanlu/cli-utils'
+import { equals, isUndefined, type MaybePromise, nonNullable, upperFirst } from '@peiyanlu/ts-utils'
 import { cyan, red, yellow } from 'ansis'
 import { inc, lt, type ReleaseType } from 'semver'
 import {
@@ -24,6 +24,14 @@ interface VersionPromptOption {
   value: VersionPromptValue
   hint: string
   bump?: ProjectBumpOptions
+}
+
+interface CreateVersionOptionsMetadata {
+  tagPrefix?: string
+  firstRelease?: boolean
+  preRelease?: boolean
+  inferred?: string
+  customVersion?: string
 }
 
 
@@ -57,56 +65,25 @@ const createVersionOptions = async <P extends Project = Project>(
   project: P,
   options: PickOverridableOptions<P['bump']> = {},
   current: string,
-  tagPrefix?: string,
+  metadata: CreateVersionOptionsMetadata = {},
 ): Promise<VersionPromptOption[]> => {
-  const firstRelease = await project.isFirstRelease({ tagPrefix })
+  const { tagPrefix, firstRelease, preRelease, inferred, customVersion } = metadata
   
-  if (firstRelease) {
-    return [
-      {
-        label: 'Initial release',
-        value: 'initial',
-        hint: `Release ${ current }`,
-        bump: { version: current, firstRelease },
-      },
-      {
-        label: 'Custom',
-        value: 'custom',
-        hint: 'Specify an exact version',
-        bump: { firstRelease },
-      },
-      {
-        label: 'As-is',
-        value: 'ignore',
-        hint: `Do not update the version ${ current }`,
-        bump: { version: current },
-      },
-    ]
-  }
+  const release: VersionPromptOption[] = await Promise.all(
+    nonNullable([ ...new Set([ inferred, 'patch', 'minor', 'major' ]) ] as ReleaseType[])
+      .map(async as => {
+        return {
+          label: equals(as, inferred) ? `${ upperFirst(as) } ✨` : upperFirst(as),
+          value: as,
+          hint: await getVersionHint<P>(project, { ...options, tagPrefix, as }),
+          bump: { as },
+        }
+      }),
+  )
   
-  const fromPreRelease = isPrerelease(current)
-  const candidates: VersionPromptOption[] = [
-    {
-      label: fromPreRelease ? 'Release' : 'Patch',
-      value: 'patch',
-      hint: await getVersionHint<P>(project, { ...options, tagPrefix, as: 'patch' }),
-      bump: { as: 'patch' },
-    },
-    {
-      label: 'Minor',
-      value: 'minor',
-      hint: await getVersionHint<P>(project, { ...options, tagPrefix, as: 'minor' }),
-      bump: { as: 'minor' },
-    },
-    {
-      label: 'Major',
-      value: 'major',
-      hint: await getVersionHint<P>(project, { ...options, tagPrefix, as: 'major' }),
-      bump: { as: 'major' },
-    },
-  ]
+  const candidates: VersionPromptOption[] = [ ...release ]
   
-  if (fromPreRelease) {
+  if (preRelease) {
     candidates.unshift({
       label: 'Pre-release',
       value: 'prerelease',
@@ -116,7 +93,7 @@ const createVersionOptions = async <P extends Project = Project>(
   } else {
     for (const as of [ 'patch', 'minor', 'major' ] as const) {
       candidates.push({
-        label: `Pre-${ as[0].toUpperCase() }${ as.slice(1) }`,
+        label: `Pre-${ upperFirst(as) }`,
         value: `pre${ as }` as ReleaseType,
         hint: await getVersionHint<P>(project, { ...options, tagPrefix, as, prerelease: 'beta' }),
         bump: { as, prerelease: 'beta' },
@@ -124,16 +101,28 @@ const createVersionOptions = async <P extends Project = Project>(
     }
   }
   
+  if (firstRelease) {
+    candidates.length = 0
+    
+    candidates.push({
+      label: 'Initial release',
+      value: 'initial',
+      hint: `Release ${ current }`,
+      bump: { version: current, firstRelease },
+    })
+  }
+  
   candidates.push(
     {
       label: 'Custom',
       value: 'custom',
-      hint: 'Specify an exact version',
+      hint: `Specify an exact version, default ${ customVersion }`,
+      bump: { firstRelease },
     },
     {
       label: 'As-is',
       value: 'ignore',
-      hint: `Do not update the version ${ current }`,
+      hint: `Don't update the version ${ current }`,
       bump: { version: current },
     },
   )
@@ -157,12 +146,14 @@ export const runBumpPrompts = async <P extends Project = Project>(
   const runVersionPrompts = async <P extends Project = Project>(project: P, tagPrefix?: string) => {
     const promptsRes: PickOverridableOptions<P['bump']> = {}
     
+    const firstRelease = await project.isFirstRelease({ tagPrefix })
     const inferred = await project.inferReleaseType({ ...bump, tagPrefix })
     const name = await project.manifest.getName()
     const current = await project.manifest.getVersion()
+    const preRelease = Boolean(await project.manifest.getPrereleaseVersion())
     
     let useCustom = false
-    let customVersion = current
+    let customVersion = inferred ? inc(current, inferred)! : current
     if (project.isMonorepoMode() && project.isFixedMode) {
       const { version: maxVersion, packages } = await project.getMaxVersion()
       if (lt(current, maxVersion)) {
@@ -188,18 +179,30 @@ export const runBumpPrompts = async <P extends Project = Project>(
       }
     }
     
-    const versionOptions = await createVersionOptions<P>(project, bump, current, tagPrefix)
+    const versionOptions = await createVersionOptions<P>(
+      project,
+      bump,
+      current,
+      {
+        tagPrefix,
+        firstRelease,
+        inferred,
+        customVersion,
+        preRelease,
+      },
+    )
     
-    const find = (val: string) => versionOptions.find(option => option.value === val)
+    const find = (val: string) => versionOptions.find(({ value }) => value === val)
     
-    const fromPreRelease = isPrerelease(current)
-    const initialValue = useCustom
-      ? 'custom'
-      : inferred && find(inferred)
-        ? inferred
-        : fromPreRelease && find('prerelease')
-          ? 'prerelease'
-          : 'patch'
+    const initialValue = firstRelease
+      ? 'initial'
+      : useCustom
+        ? 'custom'
+        : inferred && find(inferred)
+          ? inferred
+          : preRelease && find('prerelease')
+            ? 'prerelease'
+            : 'patch'
     
     const type = ci ? initialValue : await singlePrompt(
       () => select({
@@ -212,7 +215,7 @@ export const runBumpPrompts = async <P extends Project = Project>(
     if (equals(type, 'custom')) {
       promptsRes.version = ci ? customVersion : await singlePrompt(
         () => text({
-          message: question('Enter release version:', dryRun),
+          message: question(`Enter "${ cyan`${ name }` }" release version:`, dryRun),
           initialValue: customVersion,
           placeholder: customVersion,
           validate: (val) => {
