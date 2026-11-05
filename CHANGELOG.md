@@ -1,3 +1,10 @@
+## <small>[2.1.2](https://github.com/peiyanlu/release/compare/v2.1.1...v2.1.2) (2026-11-05)</small>
+
+### 🐛 Bug 修复
+
+* **changelog:** 修复提交正文的缩进与列表格式处理 ([c924197](https://github.com/peiyanlu/release/commit/c92419759e40d98e3e3497e2e403b4a74cb088a6))
+* **releaser-cli:** 修复版本选择提示与首次发布流程 ([be9aadc](https://github.com/peiyanlu/release/commit/be9aadcc96840ad61e23e8a62a19f0e55151febf))
+
 ## <small>[2.1.1](https://github.com/peiyanlu/release/compare/v1.3.1...v2.1.1) (2026-11-02)</small>
 
 ### 🐛 Bug 修复
