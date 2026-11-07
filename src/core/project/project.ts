@@ -1,7 +1,7 @@
 import { gitConfigGet, gitRevParse } from '@peiyanlu/cli-utils'
 import { equals, isEmpty, isFunction, isString, isUndefined, throwError } from '@peiyanlu/ts-utils'
 import { join } from 'path'
-import { gte, inc, major, type ReleaseType, valid } from 'semver'
+import { gte, inc, major, valid } from 'semver'
 import { Changelog, extractLastRelease } from '../changelog/index.js'
 import type { ReleaseData } from '../hosting/index.js'
 import type { ProjectManifest } from '../manifest/manifest.js'
@@ -46,10 +46,6 @@ export abstract class Project {
     
     const { compose, manifest } = options
     this.manifest = compose?.(manifest) ?? manifest
-  }
-  
-  get hasBump(): boolean {
-    return this.versionUpdates.length > 0
   }
   
   async getHostedGitInfo(): Promise<HostedGitInfo> {

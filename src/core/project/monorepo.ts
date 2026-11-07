@@ -222,13 +222,11 @@ export abstract class MonorepoProject extends Project {
     const tags: string[] = []
     
     for await (const project of this.getProjects()) {
-      if (project.hasBump) {
-        const name = await project.manifest.getName()
-        const scope = await this.getScope(name)
-        const tagPrefix = await this.getTagPrefix(scope)
-        
-        tags.push(...await project.getTags({ ...options, tagPrefix }))
-      }
+      const name = await project.manifest.getName()
+      const scope = await this.getScope(name)
+      const tagPrefix = await this.getTagPrefix(scope)
+      
+      tags.push(...await project.getTags({ ...options, tagPrefix }))
     }
     
     return tags
@@ -238,18 +236,16 @@ export abstract class MonorepoProject extends Project {
     const data: ReleaseData[] = []
     
     for await (const project of this.getProjects()) {
-      if (project.hasBump) {
-        const name = await project.manifest.getName()
-        const scope = await this.getScope(name)
-        const tagPrefix = await this.getTagPrefix(scope)
-        
-        const version = await project.manifest.getVersion()
-        const releaseData = await project.getReleaseData({ ...options, tagPrefix })
-        data.push(...releaseData.map(data => ({
-          ...data,
-          title: this.toTag(tagPrefix, version),
-        })))
-      }
+      const name = await project.manifest.getName()
+      const scope = await this.getScope(name)
+      const tagPrefix = await this.getTagPrefix(scope)
+      
+      const version = await project.manifest.getVersion()
+      const releaseData = await project.getReleaseData({ ...options, tagPrefix })
+      data.push(...releaseData.map(data => ({
+        ...data,
+        title: this.toTag(tagPrefix, version),
+      })))
     }
     
     return data

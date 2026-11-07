@@ -43,6 +43,7 @@ try {
   const gha = new ReleaserGithubAction({
     project,
     octokit: getOctokit(GITHUB_TOKEN),
+    verbose: true,
     ...releaser,
   })
     .setOptions({

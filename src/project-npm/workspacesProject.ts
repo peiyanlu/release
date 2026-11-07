@@ -63,16 +63,14 @@ export class NpmWorkspacesProject extends PackageJsonMonorepoProject {
     const onceCall = onceAsync(this.getDefaultPublishTag.bind(this))
     
     for await (const project of this.getProjects()) {
-      if (project.hasBump) {
-        const opts = this.isFixedMode ? {} : await (async () => {
-          const tagsMap = await onceCall()
-          const name = await project.manifest.getName()
-          const tag = tagsMap.get(name)
-          return { tag }
-        })()
-        
-        await publish(project, { ...opts, ...options })
-      }
+      const opts = this.isFixedMode ? {} : await (async () => {
+        const tagsMap = await onceCall()
+        const name = await project.manifest.getName()
+        const tag = tagsMap.get(name)
+        return { tag }
+      })()
+      
+      await publish(project, { ...opts, ...options })
     }
   }
 }
