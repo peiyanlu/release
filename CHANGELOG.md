@@ -1,3 +1,9 @@
+## <small>[2.1.3](https://github.com/peiyanlu/release/compare/v2.1.2...v2.1.3) (2026-11-07)</small>
+
+### 🐛 Bug 修复
+
+* 移除 hasBump 过滤以处理所有项目 ([84ffbbe](https://github.com/peiyanlu/release/commit/84ffbbe9048e9166ee52335720e4601956be36d5))
+
 ## <small>[2.1.2](https://github.com/peiyanlu/release/compare/v2.1.1...v2.1.2) (2026-11-05)</small>
 
 ### 🐛 Bug 修复
