@@ -1,6 +1,6 @@
 import { intro, log, outro } from '@clack/prompts'
 import { readJsonFileSync } from '@peiyanlu/node-utils'
-import { isString, omit } from '@peiyanlu/ts-utils'
+import { isEmptyObject, isString, omit } from '@peiyanlu/ts-utils'
 import {
   blue,
   blueBright,
@@ -15,7 +15,7 @@ import {
   redBright,
   yellow,
 } from 'ansis'
-import { join } from 'path'
+import { join } from 'node:path'
 import type { ReleaseType } from 'semver'
 import { loadConfig, type UserConfig } from '../config/index.js'
 import {
@@ -28,7 +28,7 @@ import {
 } from '../core/index.js'
 import { Logger } from '../core/logger.js'
 import { Releaser } from '../core/releaser.js'
-import { getCliPromptOptions, runBumpPrompts, runConfirmPrompts } from './prompts.js'
+import { runBumpPrompts, runConfirmPrompts, runSkippedStepsPrompts } from './prompts.js'
 
 
 export interface ReleaserCliRunOptions {
@@ -110,9 +110,24 @@ export class ReleaserCli<
     this.end()
   }
   
-  setCliOptions(options: ReleaserCliRunOptions): this {
+  setSkippedOptions(options: ReleaserCliRunOptions): this {
     return this.enqueue(async () => {
-      const { ci, dryRun, releaseType: as, skipBump } = options
+      const { project, stepsOptions: { bump: bumpOpts } } = this
+      
+      const version = await project.manifest.getVersion()
+      
+      const skippedSteps = await runSkippedStepsPrompts(options)
+      
+      this.setSkippedSteps({
+        bump: version === bumpOpts!.version && !bumpOpts!.firstRelease,
+        ...skippedSteps,
+      })
+    })
+  }
+  
+  setBumpOptions(options: ReleaserCliRunOptions): this {
+    return this.enqueue(async () => {
+      const { releaseType: as, skipBump } = options
       const { project, stepsOptions: { bump: bumpOpts } } = this
       
       const version = await project.manifest.getVersion()
@@ -127,16 +142,19 @@ export class ReleaserCli<
           run: options,
         })
       
-      const skippedSteps = await getCliPromptOptions(options)
+      if (isEmptyObject(bump)) {
+        this.logger.info('cli-prompts', 'No bump options returned from prompts.')
+      } else {
+        this.setOptions({ bump })
+      }
+    })
+  }
+  
+  confirmWorkflow(options: ReleaserCliRunOptions): this {
+    return this.enqueue(async () => {
+      const { ci, dryRun } = options
       
       await runConfirmPrompts(ci, dryRun)
-      
-      this
-        .setOptions({ bump })
-        .setSkippedSteps({
-          bump: version === bump.version && !bump.firstRelease,
-          ...skippedSteps,
-        })
     })
   }
   
@@ -178,7 +196,9 @@ export class ReleaserCli<
     await this
       .start()
       .setLegacyOptions()
-      .setCliOptions(options)
+      .setBumpOptions(options)
+      .setSkippedOptions(options)
+      .confirmWorkflow(options)
       .bump()
       .commit()
       .tag()

@@ -1,6 +1,6 @@
 import { normalizePath } from '@peiyanlu/node-utils'
 import { type Dict, onceAsync } from '@peiyanlu/ts-utils'
-import { join } from 'path'
+import { join } from 'node:path'
 import { globSync } from 'tinyglobby'
 import {
   type GetProjectsOptions,

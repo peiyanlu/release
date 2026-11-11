@@ -1,6 +1,6 @@
 import type { getOctokit } from '@actions/github'
 import type { Octokit } from '@octokit/rest'
-import { gitBranchCurrent, gitFetch, gitRevParse } from '@peiyanlu/cli-utils'
+import { gitBranchCurrent, gitFetch, gitRevParse } from '@peiyanlu/git-utils'
 import { type Dict, isEmpty, isNotEmpty, isNull, isUndefined, type Simplify, throwError } from '@peiyanlu/ts-utils'
 import type {
   MonorepoProjectBumpOptions,
@@ -71,7 +71,7 @@ export class ReleaserGithubAction<P extends Project = Project> extends Releaser<
       const { state: { headBranch }, stepsOptions: { bump: bumpOpts } } = this
       
       if (!headBranch) {
-        throwError('Head branch is not set. Please call `checkout` before `fetchParams`.')
+        throwError('Head branch is not set. Please call `checkout` before `fetchOptions`.')
       }
       
       const { project, hosting } = this

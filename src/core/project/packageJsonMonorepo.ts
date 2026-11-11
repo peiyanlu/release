@@ -1,6 +1,6 @@
 import { normalizePath } from '@peiyanlu/node-utils'
 import { type Simplify, throwError } from '@peiyanlu/ts-utils'
-import { isAbsolute, join } from 'path'
+import { isAbsolute, join } from 'node:path'
 import { PackageJsonManifest } from '../manifest/index.js'
 import { MonorepoProject } from './monorepo.js'
 import { PackageJsonProject } from './packageJson.js'
@@ -30,6 +30,6 @@ export class PackageJsonMonorepoProject extends MonorepoProject {
   }
   
   override publish(_options?: ProjectPublishOptions): Promise<void> {
-    throwError('Publishing a package.json monorepo project is not supported')
+    throwError('Publishing a package.json monorepo project is not supported.')
   }
 }

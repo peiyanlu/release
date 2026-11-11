@@ -1,5 +1,5 @@
 import { isEmpty, onceAsync, type Simplify, throwError } from '@peiyanlu/ts-utils'
-import { gt } from 'semver'
+import { eq, gt, lt } from 'semver'
 import type { ReleaseData } from '../hosting/index.js'
 import type { ProjectManifest } from '../manifest/manifest.js'
 import type {
@@ -10,6 +10,7 @@ import type {
 } from './monorepo.types.js'
 import { Project } from './project.js'
 import type {
+  ProjectBumpOptions,
   ProjectMaintenanceBranch,
   ProjectMaintenanceBranchesOptions,
   ProjectOptions,
@@ -88,7 +89,7 @@ export abstract class MonorepoProject extends Project {
       return super.getNextVersion(options)
     }
     
-    throwError('Monorepo project "independent" mode does not support getNextVersion')
+    throwError('Monorepo project does not support `getNextVersion`.')
   }
   
   override async bump(options: MonorepoProjectBumpOptions = {}): Promise<boolean> {
@@ -108,7 +109,7 @@ export abstract class MonorepoProject extends Project {
     let hasRevert = false
     
     if (rootUpdate) {
-      logger?.verbose(`Reverting ${ rootUpdate.name }: ${ rootUpdate.to } -> ${ rootUpdate.from }`)
+      logger?.verbose(`Reverting "${ rootUpdate.name }": ${ rootUpdate.to } -> ${ rootUpdate.from }...`)
       rootUpdate.files.forEach(file => files.add(file))
       
       await manifest.writeVersion(rootUpdate.from, dryRun)
@@ -219,11 +220,33 @@ export abstract class MonorepoProject extends Project {
     return tags.includes(tag)
   }
   
+  async getBumpOptions(
+    project: Project,
+    options: Simplify<MonorepoProjectBumpOptions>,
+    baseVersion?: string,
+    firstRelease?: boolean,
+  ): Promise<ProjectBumpOptions & { scope: string[] }> {
+    const { extraScopes = [], byProject, ...bumpOptions } = options
+    
+    const name = await project.manifest.getName()
+    const scope = await this.getScope(name)
+    const tagPrefix = await this.getTagPrefix(scope)
+    
+    return {
+      firstRelease,
+      ...bumpOptions,
+      ...byProject?.[name],
+      scope: [ scope, ...extraScopes ],
+      tagPrefix,
+      baseVersion,
+    }
+  }
+  
   private getIndependentCommitMessage(): string {
     const { versionUpdates } = this
     
     if (isEmpty(versionUpdates)) {
-      throwError('Nothing to commit')
+      throwError('Nothing to commit.')
     }
     
     return `chore(release): monorepo release\n\n${
@@ -301,28 +324,6 @@ export abstract class MonorepoProject extends Project {
     return branches
   }
   
-  private async getBumpOptions(
-    project: Project,
-    options: Simplify<MonorepoProjectBumpOptions>,
-    baseVersion?: string,
-    firstRelease?: boolean,
-  ) {
-    const { extraScopes = [], byProject, force, ...bumpOptions } = options
-    
-    const name = await project.manifest.getName()
-    const scope = await this.getScope(name)
-    const tagPrefix = await this.getTagPrefix(scope)
-    
-    return {
-      firstRelease,
-      ...bumpOptions,
-      ...byProject?.[name],
-      scope: [ scope, ...extraScopes ],
-      tagPrefix,
-      baseVersion,
-    }
-  }
-  
   private async independentBump(options: Simplify<MonorepoProjectBumpOptions> = {}): Promise<boolean> {
     let hasBump = false
     
@@ -342,11 +343,15 @@ export abstract class MonorepoProject extends Project {
     const { force } = options
     const { manifest } = this
     
-    const rootVersion = await manifest.getVersion()
-    const name = await manifest.getName()
-    const tagPrefix = await this.getTagPrefix(name)
+    const { version: maxVersion } = await this.getMaxVersion()
+    const version = await manifest.getVersion()
     
-    const firstRelease = await this.isFirstRelease({ tagPrefix })
+    const rootName = await manifest.getName()
+    const scope = await this.getScope(rootName)
+    const tagPrefix = await this.getTagPrefix(scope)
+    
+    const rootVersion = lt(version, maxVersion) ? maxVersion : version
+    const firstRelease = eq(version, maxVersion) && await this.isFirstRelease()
     
     let hasBump = false
     let fixedVersion: string | undefined

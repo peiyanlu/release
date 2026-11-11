@@ -12,8 +12,8 @@ import {
   gitPushBranch,
   gitRevParse,
   gitTag,
-} from '@peiyanlu/cli-utils'
-import { throwError } from '@peiyanlu/ts-utils'
+} from '@peiyanlu/git-utils'
+import { throwError, typedEntries, when } from '@peiyanlu/ts-utils'
 import type { GitRepositoryHosting } from './hosting/hosting.js'
 import { Logger } from './logger.js'
 import type { Project } from './project/project.js'
@@ -30,7 +30,6 @@ import type {
   ReleaserStepsOptions,
   ReleaserTagOptions,
 } from './releaser.type.js'
-import { when } from './utils.js'
 
 
 export class Releaser<
@@ -69,9 +68,9 @@ export class Releaser<
     logger.verbose('Setting options for steps:')
     logger.verbose(options)
     
-    for (const [ key, value ] of Object.entries(options)) {
+    for (const [ key, value ] of typedEntries(options)) {
       Object.assign(
-        this.stepsOptions[key as keyof ReleaserStepsOptions] ??= {},
+        this.stepsOptions[key] ??= {},
         value,
       )
     }
@@ -315,7 +314,7 @@ export class Releaser<
           || await gitLsRemote([ '--heads', 'origin', to ])
         
         if (branchExists && !force) {
-          logger.info(`Branch ${ to } already exists, skipping.`)
+          logger.info(`Branch "${ to }" already exists, skipping.`)
           continue
         }
         

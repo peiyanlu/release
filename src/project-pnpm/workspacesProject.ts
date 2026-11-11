@@ -1,7 +1,6 @@
-import { normalizePath } from '@peiyanlu/node-utils'
+import { normalizePath, readTextFile } from '@peiyanlu/node-utils'
 import { onceAsync } from '@peiyanlu/ts-utils'
-import { readFileSync } from 'node:fs'
-import { join } from 'path'
+import { join } from 'node:path'
 import { globSync } from 'tinyglobby'
 import { parse } from 'yaml'
 import {
@@ -22,7 +21,7 @@ export type PnpmWorkspacesProjectPublishOptions = PublishOptions
 
 
 const getPackagesGlobPatterns = async (filepath: string) => {
-  const { packages = [] } = parse(readFileSync(filepath, 'utf8'))
+  const { packages = [] } = parse(await readTextFile(filepath))
   
   return packages as string[]
 }

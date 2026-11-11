@@ -1,5 +1,5 @@
+import { execAsync } from '@peiyanlu/command-utils'
 import {
-  execAsync,
   gitAdd,
   gitBranch,
   gitBranchCurrent,
@@ -11,7 +11,7 @@ import {
   gitPush,
   gitRevParse,
   gitTag,
-} from '@peiyanlu/cli-utils'
+} from '@peiyanlu/git-utils'
 import { equals, isFunction, throwError } from '@peiyanlu/ts-utils'
 import { major, valid } from 'semver'
 import { DEFAULT_PUBLISH_TAG, type ProjectPublishOptions } from '../core/index.js'
@@ -72,7 +72,7 @@ export const publish = async (project: NodeGithubActionProject, options: Publish
   const validVersion = valid(version)
   
   if (!validVersion) {
-    throwError(`Invalid GitHub Action version: ${ version }`)
+    throwError(`Invalid GitHub Action version "${ version }".`)
   }
   
   const { build = [], files = pkg.files = [] } = options
@@ -92,7 +92,7 @@ export const publish = async (project: NodeGithubActionProject, options: Publish
   const originalBranch = await gitBranchCurrent()
   const releaseCommit = await gitRevParse([ '--verify', 'HEAD' ])
   
-  logger?.info(`Publishing GitHub Action ${ versionTag }...`)
+  logger?.info(`Publishing GitHub Action "${ versionTag }"...`)
   logger?.verbose(`Build branch: ${ buildBranch }`)
   logger?.verbose(`Major branch: ${ majorBranch }`)
   

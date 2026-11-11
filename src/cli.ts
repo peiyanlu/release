@@ -1,15 +1,14 @@
 import { cancel, confirm, intro, isCancel, outro, select } from '@clack/prompts'
-import { newline } from '@conventional-changelog/template'
-import { type CliOptions, gitAddSync, gitConfigGet, isGitRepo, isWorkingTreeClean } from '@peiyanlu/cli-utils'
-import { readJsonFileSync } from '@peiyanlu/node-utils'
+import { type CliOptions } from '@peiyanlu/cli-utils'
+import { gitAddSync, gitConfigGet, isGitRepo, isWorkingTreeClean } from '@peiyanlu/git-utils'
+import { readJsonFileSync, readTextFile, writeTextFile } from '@peiyanlu/node-utils'
 import { assert, throwError } from '@peiyanlu/ts-utils'
 import { dim } from 'ansis'
 import { Command, program } from 'commander'
 import Handlebars from 'handlebars'
-import { existsSync, readFileSync, writeFileSync } from 'node:fs'
+import { existsSync } from 'node:fs'
 import { mkdir } from 'node:fs/promises'
-import { relative, resolve } from 'node:path'
-import { join } from 'path'
+import { join, relative, resolve } from 'node:path'
 import type { ReleaseType } from 'semver'
 import { loadConfig, ReleaserCli, type UserConfig } from './index.js'
 
@@ -34,12 +33,12 @@ program
     const { config: { project, hosting, releaser } } = await loadConfig<UserConfig>(process.cwd())
     const { dryRun } = options
     
-    assert(await isGitRepo(), 'Current directory is not a Git repository')
+    assert(await isGitRepo(), 'Current directory is not a Git repository.')
     assert(await isWorkingTreeClean(), 'Git working tree is not clean')
-    assert(await gitConfigGet('remote.origin.url'), 'Git remote "origin" is not configured')
+    assert(await gitConfigGet('remote.origin.url'), 'Git remote "origin" is not configured.')
     
-    assert(project, 'Project not found')
-    assert(hosting, 'GitRepositoryHosting not found')
+    assert(project, 'Project not found.')
+    assert(hosting, 'GitRepositoryHosting not found.')
     
     await new ReleaserCli({
       ...releaser,
@@ -161,10 +160,10 @@ program
         message: `Overwrite files? ${ dim(files) }`,
         initialValue: false,
       }) as Promise<boolean>, false)
-      if (!force) throwError(`Existing files: ${ files }`)
+      if (!force) throwError(`The following files already exist (${ files }).`)
     }
     
-    const template = readFileSync(join(tplDir, `release.config.hbs`), 'utf-8')
+    const template = await readTextFile(join(tplDir, `release.config.hbs`))
     const configContent = Handlebars.compile(template)({
       monorepo,
       fixed,
@@ -172,15 +171,15 @@ program
       pnpm,
       npmOrPnpm: npm || pnpm,
     })
-    writeFileSync(configFile, configContent.trimEnd() + newline(), 'utf-8')
+    await writeTextFile(configFile, configContent.trimEnd())
     
     if (githubWorkflow) {
       await mkdir('.github/workflows', { recursive: true })
-      const template = readFileSync(join(tplDir, `release.workflow.hbs`), 'utf-8')
+      const template = await readTextFile(join(tplDir, `release.workflow.hbs`))
       const workflowContent = Handlebars.compile(template)({
         trusted,
       })
-      writeFileSync(workflowFile, workflowContent.trimEnd() + newline(), 'utf-8')
+      await writeTextFile(workflowFile, workflowContent.trimEnd())
     }
     
     if (add) {

@@ -16,6 +16,6 @@ export class PackageJsonProject extends Project {
   }
   
   override publish(_options?: ProjectPublishOptions): Promise<void> {
-    throwError('Publishing a package.json project is not supported')
+    throwError('Publishing a package.json project is not supported.')
   }
 }

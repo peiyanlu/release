@@ -1,7 +1,8 @@
 import { Octokit } from '@octokit/rest'
-import { getGithubUrl, gitBranchCurrent } from '@peiyanlu/cli-utils'
+import { getGithubUrl } from '@peiyanlu/cli-utils'
+import { gitBranchCurrent } from '@peiyanlu/git-utils'
+import { readTextFileSync } from '@peiyanlu/node-utils'
 import { dedent, isEmpty, newline, sleep, throwError, tryCall } from '@peiyanlu/ts-utils'
-import { readFileSync } from 'node:fs'
 import { parse } from 'node:path'
 import open from 'open'
 import { glob } from 'tinyglobby'
@@ -115,7 +116,7 @@ export class GithubHosting extends GitRepositoryHosting {
     const [ pr ] = await this.listPullRequest({ owner, repo, from })
     
     if (pr) {
-      logger?.info(`Updating existing pull request #${ pr.number }`)
+      logger?.info(`Updating existing pull request #${ pr.number }.`)
     }
     
     logger?.verbose('Pull request data:')
@@ -172,7 +173,7 @@ export class GithubHosting extends GitRepositoryHosting {
         repo,
         release_id,
         name: filename,
-        data: readFileSync(file, 'utf-8'),
+        data: readTextFileSync(file),
       })
     }))
   }

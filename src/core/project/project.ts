@@ -1,8 +1,9 @@
-import { gitConfigGet, gitRevParse } from '@peiyanlu/cli-utils'
+import { gitConfigGet, gitRevParse } from '@peiyanlu/git-utils'
+import { readTextFileSync } from '@peiyanlu/node-utils'
 import { equals, isEmpty, isFunction, isString, isUndefined, throwError } from '@peiyanlu/ts-utils'
-import { join } from 'path'
-import { gte, inc, major, valid } from 'semver'
-import { Changelog, extractLastRelease } from '../changelog/index.js'
+import { join } from 'node:path'
+import { gte, inc, major, type ReleaseType, valid } from 'semver'
+import { Changelog, extractLastRelease, type VersionBumpType } from '../changelog/index.js'
 import type { ReleaseData } from '../hosting/index.js'
 import type { ProjectManifest } from '../manifest/manifest.js'
 import {
@@ -13,7 +14,6 @@ import {
   getVersionFromTags,
   type HostedGitInfo,
   parseHostedGitUrl,
-  readTextSync,
   setSnapshotIdentifier,
 } from '../utils.js'
 import type { MonorepoProject } from './monorepo.js'
@@ -61,7 +61,7 @@ export abstract class Project {
     const { versionUpdates, versionUpdates: [ { to } ] } = this
     
     if (isEmpty(versionUpdates)) {
-      throwError('Nothing to commit')
+      throwError('Nothing to commit.')
     }
     
     return `chore(release): ${ to }`
@@ -112,7 +112,7 @@ export abstract class Project {
     
     const lastRelease = await extractLastRelease(
       isEmpty(versionUpdates)
-        ? readTextSync(join(projectDir, changelogFile!))
+        ? readTextFileSync(join(projectDir, changelogFile!))
         : versionUpdates[0].notes,
     )
     
@@ -280,9 +280,11 @@ export abstract class Project {
     }
     
     const forcePrerelease = equals('prerelease', as)
-    let releaseType = as
+    let releaseType: ReleaseType | undefined = undefined
     
-    if (!as || forcePrerelease) {
+    if (as && !forcePrerelease) {
+      releaseType = as
+    } else {
       const inferred = await this.inferReleaseType({ ...options, tagPrefix })
       
       if (inferred) {
@@ -304,9 +306,8 @@ export abstract class Project {
     }
     
     const identifier = getPrereleaseIdentifier(
-      forcePrerelease
-        ? prerelease ?? 'beta'
-        : prerelease,
+      // 没有标识符的强制预发布仍然必须成为预发布版本
+      forcePrerelease ? (prerelease ?? '') : prerelease,
       snapshot,
     )
     
@@ -319,7 +320,7 @@ export abstract class Project {
     )!
   }
   
-  async inferReleaseType(options: ProjectBumpOptions = {}): Promise<'major' | 'minor' | 'patch' | undefined> {
+  async inferReleaseType(options: ProjectBumpOptions = {}): Promise<VersionBumpType | undefined> {
     const { logger, tagPrefix: override } = options
     const { manifest } = this
     
@@ -327,7 +328,7 @@ export abstract class Project {
     const { releaseType, reason } = await this.changelog({ ...options, tagPrefix }).inferReleaseType()
     
     if (reason) {
-      logger?.verbose(`${ reason } for "${ await manifest.getName() }"`)
+      logger?.verbose(`${ reason } for "${ await manifest.getName() }".`)
     }
     
     return releaseType
@@ -342,7 +343,7 @@ export abstract class Project {
     
     const nextVersion = await this.getNextVersion(options)
     if (!nextVersion || (version === nextVersion && !firstRelease)) {
-      logger?.verbose(`No version changes for "${ name }". Skipping.`)
+      logger?.verbose(`No version changes for "${ name }", skipping.`)
       return false
     }
     
@@ -371,7 +372,7 @@ export abstract class Project {
       
       versionUpdate.notes = dryRun ? await log.read() : await log.write()
       
-      logger?.verbose(`Release notes:\n\n${ versionUpdate.notes ?? '...' }`)
+      logger?.verbose(`Release notes:\n\n${ versionUpdate.notes || '...' }`)
       
       this.changedFiles.push(log.infile)
     }
@@ -388,7 +389,7 @@ export abstract class Project {
     }
     
     for (const update of versionUpdates) {
-      logger?.verbose(`Reverting ${ update.name }: ${ update.to } -> ${ update.from }`)
+      logger?.verbose(`Reverting "${ update.name }": ${ update.to } -> ${ update.from }...`)
       update.files.forEach(file => filesSet.add(file))
       
       await manifest.writeVersion(update.from, dryRun)

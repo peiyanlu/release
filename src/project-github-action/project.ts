@@ -1,4 +1,4 @@
-import { runGit } from '@peiyanlu/cli-utils'
+import { runGit } from '@peiyanlu/command-utils'
 import { tryCall } from '@peiyanlu/ts-utils'
 import {
   PackageJsonProject,

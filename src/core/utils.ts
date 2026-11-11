@@ -1,6 +1,5 @@
-import { runGit } from '@peiyanlu/cli-utils'
-import { isUndefined } from '@peiyanlu/ts-utils'
-import { existsSync, readFileSync } from 'node:fs'
+import { runGit } from '@peiyanlu/command-utils'
+import { firstFromIterable, isUndefined, when } from '@peiyanlu/ts-utils'
 import semver, { clean as cleanFn, prerelease as prereleaseFn, rcompare, type ReleaseType, SemVer, valid } from 'semver'
 
 
@@ -62,10 +61,6 @@ export const getReleaseType = (releaseType: ReleaseType, version: string, prerel
   return releaseType
 }
 
-export const when = <T>(condition: unknown, ...value: T[]): T[] => condition ? [ ...value ] : []
-
-export const unless = <T>(condition: unknown, ...value: T[]): T[] => condition ? [] : [ ...value ]
-
 
 interface GitLogTagsParams {
   path?: string
@@ -78,14 +73,6 @@ export interface GetSemverTagsParams extends GitLogTagsParams {
   prefix?: string | RegExp
   skipUnstable?: boolean
   clean?: boolean
-}
-
-
-export async function firstFromStream<T>(stream: AsyncIterable<T>): Promise<T | undefined> {
-  const iterator = stream[Symbol.asyncIterator]()
-  const { value, done } = await iterator.next()
-  
-  return done ? undefined : value
 }
 
 
@@ -156,7 +143,7 @@ export async function* getSemverTags(params: GetSemverTagsParams = {}): AsyncIte
 }
 
 export async function getLastSemverTag(params: GetSemverTagsParams = {}): Promise<string | undefined> {
-  return firstFromStream(getSemverTags(params))
+  return firstFromIterable(getSemverTags(params))
 }
 
 export async function getVersionFromTags(params: GetSemverTagsParams = {}): Promise<string | undefined> {
@@ -172,12 +159,6 @@ export async function getVersionFromTags(params: GetSemverTagsParams = {}): Prom
   }
   
   return semverTags.sort(rcompare)[0]
-}
-
-
-export const readTextSync = (path: string): string => {
-  if (!existsSync(path)) return ''
-  return readFileSync(path).toString('utf8')
 }
 
 
