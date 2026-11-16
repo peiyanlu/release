@@ -1,7 +1,7 @@
 import { existsSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { pathToFileURL } from 'node:url'
-import type { GitRepositoryHosting, Project, ReleaserOptions, ReleaserStepsOptions } from '../core/index.js'
+import type { GitRepositoryHosting, Project, ReleaserOptions, ReleaserStepsOptions } from '../core/index.ts'
 
 
 export interface UserConfig<

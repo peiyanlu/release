@@ -1,7 +1,7 @@
 import { readFile, writeFile } from 'node:fs/promises'
-import { ProjectManifest } from './manifest.js'
-import type { ProjectManifestVersionUpdate } from './manifest.types.js'
-import type { PackageJsonProps } from './packageJson.types.js'
+import { ProjectManifest } from './manifest.ts'
+import type { ProjectManifestVersionUpdate } from './manifest.types.ts'
+import type { PackageJsonProps } from './packageJson.types.ts'
 
 
 export class PackageJsonManifest<T extends PackageJsonProps = PackageJsonProps> extends ProjectManifest<T> {

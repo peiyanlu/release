@@ -1,7 +1,7 @@
 import type { AnyFunction } from '@peiyanlu/ts-utils'
-import type { GitRepositoryHosting } from './hosting/hosting.js'
-import type { Logger } from './logger.js'
-import type { Project } from './project/project.js'
+import type { GitRepositoryHosting } from './hosting/hosting.ts'
+import type { Logger } from './logger.ts'
+import type { Project } from './project/project.ts'
 
 
 export type PickOverridableOptions<T extends AnyFunction> = Partial<

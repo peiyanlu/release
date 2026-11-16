@@ -9,7 +9,7 @@ import Handlebars from 'handlebars'
 import { existsSync } from 'node:fs'
 import { mkdir } from 'node:fs/promises'
 import { join, relative, resolve } from 'node:path'
-import { question, singlePrompt } from './prompts.js'
+import { question, singlePrompt } from './prompts.ts'
 
 
 const isNpm = (v: string) => 'npm' === v

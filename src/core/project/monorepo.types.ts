@@ -1,7 +1,7 @@
 import type { Simplify } from '@peiyanlu/ts-utils'
-import type { ProjectManifest } from '../manifest/manifest.js'
-import { Project } from './project.js'
-import type { ProjectBumpOptions, ProjectOptions } from './project.types.js'
+import type { ProjectManifest } from '../manifest/manifest.ts'
+import { Project } from './project.ts'
+import type { ProjectBumpOptions, ProjectOptions } from './project.types.ts'
 
 
 export type MonorepoMode = 'fixed' | 'independent'

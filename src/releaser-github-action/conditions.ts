@@ -1,7 +1,7 @@
 import { context } from '@actions/github'
 import { gitFetch, gitLog } from '@peiyanlu/git-utils'
-import { isCommandComment } from './comment.js'
-import type { ReleaserGithubAction } from './releaser.js'
+import { isCommandComment } from './comment.ts'
+import type { ReleaserGithubAction } from './releaser.ts'
 
 
 export const ifReleaseCommit = async (releaser: ReleaserGithubAction): Promise<boolean> => {

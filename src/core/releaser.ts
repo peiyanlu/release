@@ -14,9 +14,9 @@ import {
   gitTag,
 } from '@peiyanlu/git-utils'
 import { throwError, typedEntries, when } from '@peiyanlu/ts-utils'
-import type { GitRepositoryHosting } from './hosting/hosting.js'
-import { Logger } from './logger.js'
-import type { Project } from './project/project.js'
+import type { GitRepositoryHosting } from './hosting/hosting.ts'
+import { Logger } from './logger.ts'
+import type { Project } from './project/project.ts'
 import type {
   PickOverridableOptions,
   ReleaserCheckoutOptions,
@@ -29,7 +29,7 @@ import type {
   ReleaserStep,
   ReleaserStepsOptions,
   ReleaserTagOptions,
-} from './releaser.type.js'
+} from './releaser.type.ts'
 
 
 export class Releaser<

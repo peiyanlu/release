@@ -5,9 +5,9 @@ import { isInDir, normalizePath } from '@peiyanlu/node-utils'
 import { assert, isEmptyArray, type Primitive, splitNonEmptyLines } from '@peiyanlu/ts-utils'
 import { dim, red } from 'ansis'
 import { dirname, resolve } from 'node:path'
-import { type Project } from '../core/index.js'
-import { defaultTypes, loadConfig, type UserConfig } from '../index.js'
-import { abortTask, question, singlePrompt } from './prompts.js'
+import { type Project } from '../core/index.ts'
+import { defaultTypes, loadConfig, type UserConfig } from '../index.ts'
+import { abortTask, question, singlePrompt } from './prompts.ts'
 
 
 interface ProjectScope {

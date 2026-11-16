@@ -1,2 +1,2 @@
-export * from './hosting.js'
-export * from './hosting.types.js'
+export * from './hosting.ts'
+export * from './hosting.types.ts'

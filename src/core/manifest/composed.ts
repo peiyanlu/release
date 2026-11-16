@@ -1,6 +1,6 @@
 import type { Dict } from '@peiyanlu/ts-utils'
-import { ProjectManifest } from './manifest.js'
-import type { ProjectManifestVersionUpdate } from './manifest.types.js'
+import { ProjectManifest } from './manifest.ts'
+import type { ProjectManifestVersionUpdate } from './manifest.types.ts'
 
 
 export class ComposedProjectManifest<T = Dict> extends ProjectManifest<T> {

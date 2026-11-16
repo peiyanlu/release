@@ -6,7 +6,7 @@ import { dedent, isEmpty, newline, sleep, throwError, tryCall } from '@peiyanlu/
 import { parse } from 'node:path'
 import open from 'open'
 import { glob } from 'tinyglobby'
-import { type CreateReleaseOptions, GitRepositoryHosting, type Project } from '../core/index.js'
+import { type CreateReleaseOptions, GitRepositoryHosting, type Project } from '../core/index.ts'
 import type {
   GetReleaseOptions,
   GithubCreatePullRequestOptions,
@@ -14,7 +14,7 @@ import type {
   ListPullRequestOptions,
   RepositoryId,
   UploadAssetsOptions,
-} from './github.type.js'
+} from './github.type.ts'
 
 
 export class GithubHosting extends GitRepositoryHosting {

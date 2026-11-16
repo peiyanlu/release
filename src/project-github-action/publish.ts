@@ -14,8 +14,8 @@ import {
 } from '@peiyanlu/git-utils'
 import { equals, isFunction, throwError } from '@peiyanlu/ts-utils'
 import { major, valid } from 'semver'
-import { DEFAULT_PUBLISH_TAG, type ProjectPublishOptions } from '../core/index.js'
-import { NodeGithubActionProject } from './project.js'
+import { DEFAULT_PUBLISH_TAG, type ProjectPublishOptions } from '../core/index.ts'
+import { NodeGithubActionProject } from './project.ts'
 
 
 export interface PublishOptions extends ProjectPublishOptions {

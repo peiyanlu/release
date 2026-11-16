@@ -1,2 +1,2 @@
-export * from './project.js'
-export * from './publish.js'
+export * from './project.ts'
+export * from './publish.ts'

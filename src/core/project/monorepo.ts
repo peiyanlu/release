@@ -1,14 +1,14 @@
 import { isEmpty, onceAsync, type Simplify, throwError } from '@peiyanlu/ts-utils'
 import { eq, gt, lt } from 'semver'
-import type { ReleaseData } from '../hosting/index.js'
-import type { ProjectManifest } from '../manifest/manifest.js'
+import type { ReleaseData } from '../hosting/index.ts'
+import type { ProjectManifest } from '../manifest/manifest.ts'
 import type {
   GetProjectsOptions,
   MonorepoMode,
   MonorepoProjectBumpOptions,
   MonorepoProjectOptions,
-} from './monorepo.types.js'
-import { Project } from './project.js'
+} from './monorepo.types.ts'
+import { Project } from './project.ts'
 import type {
   ProjectBumpOptions,
   ProjectMaintenanceBranch,
@@ -17,7 +17,7 @@ import type {
   ProjectReleaseOptions,
   ProjectRevertOptions,
   ProjectTagsOptions,
-} from './project.types.js'
+} from './project.types.ts'
 
 
 export abstract class MonorepoProject extends Project {

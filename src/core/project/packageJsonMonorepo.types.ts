@@ -1,4 +1,4 @@
-import type { GetProjectsOptions, MonorepoMode, MonorepoProjectOptions } from './monorepo.types.js'
+import type { GetProjectsOptions, MonorepoMode, MonorepoProjectOptions } from './monorepo.types.ts'
 
 
 export interface PackageJsonMonorepoProjectOptions extends Omit<MonorepoProjectOptions, 'getProjects' | 'manifest'> {

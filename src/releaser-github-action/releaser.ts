@@ -11,11 +11,11 @@ import type {
   ReleaserPushOptions,
   ReleaserSetUserOptions,
   ReleaserTagOptions,
-} from '../core/index.js'
-import { Releaser } from '../core/releaser.js'
-import { GithubHosting } from '../hosting-github/github.js'
-import { parseSetOptionsComment, parseSetPreambleComment } from './comment.js'
-import { ifCommandComment, ifReleaseCommit } from './conditions.js'
+} from '../core/index.ts'
+import { Releaser } from '../core/releaser.ts'
+import { GithubHosting } from '../hosting-github/github.ts'
+import { parseSetOptionsComment, parseSetPreambleComment } from './comment.ts'
+import { ifCommandComment, ifReleaseCommit } from './conditions.ts'
 
 
 export interface ReleaserGithubActionOptions<P extends Project = Project> extends Omit<ReleaserOptions<P, GithubHosting>, 'hosting'> {

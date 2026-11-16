@@ -6,9 +6,9 @@ import {
   type ProjectBumpOptions,
   type ProjectOptions,
   type ProjectReleaseOptions,
-} from '../core/index.js'
-import { getSemverTags } from '../core/utils.js'
-import { publish, type PublishOptions } from './publish.js'
+} from '../core/index.ts'
+import { getSemverTags } from '../core/utils.ts'
+import { publish, type PublishOptions } from './publish.ts'
 
 
 export interface NodeGithubActionProjectOptions extends PackageJsonProjectOptions {

@@ -17,7 +17,7 @@ import {
 } from 'ansis'
 import { join } from 'node:path'
 import type { ReleaseType } from 'semver'
-import { loadConfig, type UserConfig } from '../config/index.js'
+import { loadConfig, type UserConfig } from '../config/index.ts'
 import {
   type GitRepositoryHosting,
   type PickOverridableOptions,
@@ -26,10 +26,10 @@ import {
   type ReleaserPushOptions,
   type ReleaserStepsOptions,
   type ReleaserTagOptions,
-} from '../core/index.js'
-import { Logger } from '../core/logger.js'
-import { Releaser } from '../core/releaser.js'
-import { runBumpPrompts, runConfirmPrompts, runSkippedStepsPrompts } from './prompts.js'
+} from '../core/index.ts'
+import { Logger } from '../core/logger.ts'
+import { Releaser } from '../core/releaser.ts'
+import { runBumpPrompts, runConfirmPrompts, runSkippedStepsPrompts } from './prompts.ts'
 
 
 export interface ReleaserCliRunOptions {

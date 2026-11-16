@@ -2,8 +2,8 @@ import { execAsync } from '@peiyanlu/command-utils'
 import { copyDir, createMatcher, createTempDir } from '@peiyanlu/node-utils'
 import { isEmpty, isFunction, unless, when } from '@peiyanlu/ts-utils'
 import { resolve } from 'node:path'
-import { Project, type ProjectPublishOptions } from '../core/index.js'
-import { cleanPackageJSON, cleanReadme, IGNORE_FILES } from './cleanup.js'
+import { Project, type ProjectPublishOptions } from '../core/index.ts'
+import { cleanPackageJSON, cleanReadme, IGNORE_FILES } from './cleanup.ts'
 
 
 export interface CleanupOptions {

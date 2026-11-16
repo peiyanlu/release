@@ -3,9 +3,9 @@ import { readTextFileSync } from '@peiyanlu/node-utils'
 import { equals, isEmpty, isFunction, isString, isUndefined, throwError } from '@peiyanlu/ts-utils'
 import { join } from 'node:path'
 import { gte, inc, major, type ReleaseType, valid } from 'semver'
-import { Changelog, extractLastRelease, type VersionBumpType } from '../changelog/index.js'
-import type { ReleaseData } from '../hosting/index.js'
-import type { ProjectManifest } from '../manifest/manifest.js'
+import { Changelog, extractLastRelease, type VersionBumpType } from '../changelog/index.ts'
+import type { ReleaseData } from '../hosting/index.ts'
+import type { ProjectManifest } from '../manifest/manifest.ts'
 import {
   getLastSemverTag,
   getPrereleaseIdentifier,
@@ -15,8 +15,8 @@ import {
   type HostedGitInfo,
   parseHostedGitUrl,
   setSnapshotIdentifier,
-} from '../utils.js'
-import type { MonorepoProject } from './monorepo.js'
+} from '../utils.ts'
+import type { MonorepoProject } from './monorepo.ts'
 import type {
   ProjectBumpOptions,
   ProjectMaintenanceBranch,
@@ -27,7 +27,7 @@ import type {
   ProjectRevertOptions,
   ProjectTagsOptions,
   ProjectVersionUpdate,
-} from './project.types.js'
+} from './project.types.ts'
 
 
 export const DEFAULT_TAG_PREFIX = 'v'

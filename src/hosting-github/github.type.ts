@@ -1,5 +1,5 @@
 import { Octokit } from '@octokit/rest'
-import type { CreatePullRequestOptions } from '../core/index.js'
+import type { CreatePullRequestOptions } from '../core/index.ts'
 
 
 export interface GithubOptions {

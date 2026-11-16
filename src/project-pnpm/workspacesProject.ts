@@ -9,8 +9,8 @@ import {
   PackageJsonMonorepoProject,
   type PackageJsonMonorepoProjectOptions,
   type ProjectBumpOptions,
-} from '../core/index.js'
-import { publish, type PublishOptions } from './publish.js'
+} from '../core/index.ts'
+import { publish, type PublishOptions } from './publish.ts'
 
 
 export type PnpmWorkspacesProjectOptions = Omit<PackageJsonMonorepoProjectOptions, 'getProjects'>

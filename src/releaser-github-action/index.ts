@@ -1,3 +1,3 @@
-export * from './conditions.js'
-export * from './options.js'
-export * from './releaser.js'
+export * from './conditions.ts'
+export * from './options.ts'
+export * from './releaser.ts'

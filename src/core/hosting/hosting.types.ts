@@ -1,5 +1,5 @@
-import type { ChildLogger } from '../logger.js'
-import type { Project } from '../project/project.js'
+import type { ChildLogger } from '../logger.ts'
+import type { Project } from '../project/project.ts'
 
 
 export interface ReleaseData {

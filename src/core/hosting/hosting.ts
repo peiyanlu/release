@@ -1,4 +1,4 @@
-import type { CreatePullRequestOptions, CreateReleaseOptions } from './hosting.types.js'
+import type { CreatePullRequestOptions, CreateReleaseOptions } from './hosting.types.ts'
 
 
 /** Git 仓库托管服务的基类 */

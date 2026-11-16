@@ -5,9 +5,9 @@ import { assert } from '@peiyanlu/ts-utils'
 import { program } from 'commander'
 import { join } from 'node:path'
 import type { ReleaseType } from 'semver'
-import { runCommitCli } from './cli/commit.js'
-import { runInitCli } from './cli/init.js'
-import { loadConfig, ReleaserCli, type UserConfig } from './index.js'
+import { runCommitCli } from './cli/commit.ts'
+import { runInitCli } from './cli/init.ts'
+import { loadConfig, ReleaserCli, type UserConfig } from './index.ts'
 
 
 const pkgJson = readJsonFileSync(join(__dirname, '..', 'package.json'))

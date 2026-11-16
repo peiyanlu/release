@@ -1,11 +1,11 @@
 import { normalizePath } from '@peiyanlu/node-utils'
 import { type Simplify, throwError } from '@peiyanlu/ts-utils'
 import { isAbsolute, join } from 'node:path'
-import { PackageJsonManifest } from '../manifest/index.js'
-import { MonorepoProject } from './monorepo.js'
-import { PackageJsonProject } from './packageJson.js'
-import type { PackageJsonMonorepoProjectOptions } from './packageJsonMonorepo.types.js'
-import type { ProjectPublishOptions } from './project.types.js'
+import { PackageJsonManifest } from '../manifest/index.ts'
+import { MonorepoProject } from './monorepo.ts'
+import { PackageJsonProject } from './packageJson.ts'
+import type { PackageJsonMonorepoProjectOptions } from './packageJsonMonorepo.types.ts'
+import type { ProjectPublishOptions } from './project.types.ts'
 
 
 /**

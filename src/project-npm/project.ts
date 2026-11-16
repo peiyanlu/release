@@ -1,5 +1,5 @@
-import { PackageJsonProject, type PackageJsonProjectOptions, type ProjectBumpOptions } from '../core/index.js'
-import { publish, type PublishOptions } from './publish.js'
+import { PackageJsonProject, type PackageJsonProjectOptions, type ProjectBumpOptions } from '../core/index.ts'
+import { publish, type PublishOptions } from './publish.ts'
 
 
 export type NpmProjectOptions = PackageJsonProjectOptions

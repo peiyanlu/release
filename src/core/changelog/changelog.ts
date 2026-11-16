@@ -7,9 +7,9 @@ import { createWriteStream, existsSync } from 'node:fs'
 import { finished } from 'node:stream/promises'
 import { join } from 'node:path'
 import type { ReleaseType } from 'semver'
-import type { ChangelogOptions } from './changelog.types.js'
-import { defaultTypes } from './committype.js'
-import { headerPartial, preamblePartial, template } from './templates.js'
+import type { ChangelogOptions } from './changelog.types.ts'
+import { defaultTypes } from './committype.ts'
+import { headerPartial, preamblePartial, template } from './templates.ts'
 
 
 type OptionalOrComplete<T extends object> =

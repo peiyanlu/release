@@ -1,8 +1,8 @@
 import type { ReleaseType } from 'semver'
-import type { ChangelogOptions } from '../changelog/index.js'
-import type { ChildLogger } from '../logger.js'
-import type { ProjectManifestVersionUpdate } from '../manifest/index.js'
-import type { ProjectManifest } from '../manifest/manifest.js'
+import type { ChangelogOptions } from '../changelog/index.ts'
+import type { ChildLogger } from '../logger.ts'
+import type { ProjectManifestVersionUpdate } from '../manifest/index.ts'
+import type { ProjectManifest } from '../manifest/manifest.ts'
 
 
 export type TagPrefixResolver = (scope: string) => string | Promise<string>

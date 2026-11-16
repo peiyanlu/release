@@ -9,7 +9,7 @@ import {
   loadConfig,
   ReleaserGithubAction,
   type UserConfig,
-} from './index.js'
+} from './index.ts'
 
 
 const workflow = getInput('workflow')

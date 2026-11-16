@@ -10,8 +10,8 @@ import {
   type Project,
   type ProjectBumpOptions,
   type VersionBumpType,
-} from '../core/index.js'
-import { type CliStepsSkip, type ReleaserCliRunOptions } from './releaser.js'
+} from '../core/index.ts'
+import { type CliStepsSkip, type ReleaserCliRunOptions } from './releaser.ts'
 
 
 type VersionPromptValue = ReleaseType | 'custom' | 'ignore' | 'first'

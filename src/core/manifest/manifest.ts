@@ -1,7 +1,7 @@
 import type { Dict } from '@peiyanlu/ts-utils'
 import { dirname } from 'node:path'
 import { prerelease } from 'semver'
-import type { ProjectManifestVersionUpdate } from './manifest.types.js'
+import type { ProjectManifestVersionUpdate } from './manifest.types.ts'
 
 
 export abstract class ProjectManifest<T = Dict> {

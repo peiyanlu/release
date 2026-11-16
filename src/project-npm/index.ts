@@ -1,2 +1,2 @@
-export * from './project.js'
-export * from './workspacesProject.js'
+export * from './project.ts'
+export * from './workspacesProject.ts'

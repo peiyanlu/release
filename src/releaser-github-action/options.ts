@@ -1,7 +1,7 @@
 import { getBooleanInput, getInput } from '@actions/core'
 import { type Dict, isBoolean } from '@peiyanlu/ts-utils'
 import type { ReleaseType } from 'semver'
-import type { ReleaserSkipOptions } from '../core/index.js'
+import type { ReleaserSkipOptions } from '../core/index.ts'
 
 
 const omitEmpty = <T extends object>(object: T) => {

@@ -1,4 +1,4 @@
-import type { ProjectOptions } from './project.types.js'
+import type { ProjectOptions } from './project.types.ts'
 
 
 export interface PackageJsonProjectOptions extends Omit<ProjectOptions, 'manifest'> {

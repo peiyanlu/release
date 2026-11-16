@@ -1,1 +1,1 @@
-export * from './releaser.js'
+export * from './releaser.ts'

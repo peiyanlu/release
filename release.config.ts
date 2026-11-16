@@ -1,10 +1,12 @@
-import { defineConfig, GithubHosting, PnpmProject } from '@peiyanlu/release'
+import { defineConfig, GithubHosting, PnpmProject, type UserConfig } from '@peiyanlu/release'
 
 
-export default defineConfig({
+const config: UserConfig<PnpmProject, GithubHosting> = defineConfig({
   project: new PnpmProject(),
   hosting: new GithubHosting(),
   releaser: {
     verbose: true,
   },
 })
+
+export default config
