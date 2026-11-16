@@ -20,7 +20,7 @@
     "build": "tsdown",
     "prepublishOnly": "tsdown",
     "release": "node index.js",
-    "release:dry": "node index.js -C -n",
+    "release:dry": "node index.js --dry-run --skip-working-tree-check",
     "test": "vitest run",
     "test:cov": "vitest run --coverage"
   },

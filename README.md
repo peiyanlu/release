@@ -58,21 +58,42 @@ release [release-type] [options]
 ```sh
 pnpm exec release --dry-run
 pnpm exec release minor --dry-run
+pnpm exec release minor --pre-id beta --dry-run
 pnpm exec release --ci
 ```
 
 常用选项：
 
-| 选项             | 说明                                               |
-|------------------|----------------------------------------------------|
-| `-n, --dry-run`  | 预览发布步骤，不写入变更                           |
-| `--ci`           | CI 模式，关闭交互式流程                            |
-| `--skip-bump`    | 跳过项目版本更新                                   |
-| `--skip-git`     | 跳过 Git 提交、标签、推送；版本推断仍读取 Git 历史 |
-| `--skip-publish` | 跳过项目发布                                       |
-| `--skip-release` | 跳过仓库托管服务上创建发布                         |
-| `-v, --version`  | 显示版本                                           |
-| `-h, --help`     | 显示完整帮助                                       |
+| 选项                        | 说明                                               |
+|-----------------------------|----------------------------------------------------|
+| `--pre-id <preId>`          | 预发布标识                                         |
+| `-n, --dry-run`             | 预览发布步骤，不写入变更                           |
+| `--ci`                      | CI 模式，关闭交互式流程                            |
+| `--skip-bump`               | 跳过项目版本更新                                   |
+| `--skip-git`                | 跳过 Git 提交、标签、推送；版本推断仍读取 Git 历史 |
+| `--skip-working-tree-check` | 跳过 Git 工作区是否干净的检查                      |
+| `--skip-publish`            | 跳过项目发布                                       |
+| `--skip-release`            | 跳过仓库托管服务上创建发布                         |
+| `-v, --version`             | 显示版本                                           |
+| `-h, --help`                | 显示完整帮助                                       |
+
+### 创建提交
+
+`release commit` 会交互式填写提交类型、scope 和描述，预览后确认创建一条 `Conventional Commit`。运行时会自动暂存已追踪文件；新文件需要先手动加入暂存区。命令会显示待提交文件。
+
+scope 候选取自暂存文件路径：单仓库根据项目目录下变更文件所在的目录生成候选；monorepo 根据 `release.config` 中的项目目录筛选受影响的项目。多个 scope 时可以选择全部 scope，也可以选择单个 scope。两种模式都支持自定义 scope 或不使用 scope。
+
+```sh
+# 新文件需要先暂存；已追踪文件会由命令自动暂存
+git add path/to/new-file
+pnpm exec release commit
+```
+
+使用 `--amend` 可将这些改动并入上一条提交，并用本次填写的提交信息替换原提交信息：
+
+```sh
+pnpm exec release commit --amend
+```
 
 ## 配置
 

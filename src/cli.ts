@@ -1,15 +1,12 @@
-import { cancel, confirm, intro, isCancel, outro, select } from '@clack/prompts'
 import { type CliOptions } from '@peiyanlu/cli-utils'
-import { gitAddSync, gitConfigGet, isGitRepo, isWorkingTreeClean } from '@peiyanlu/git-utils'
-import { readJsonFileSync, readTextFile, writeTextFile } from '@peiyanlu/node-utils'
-import { assert, throwError } from '@peiyanlu/ts-utils'
-import { dim } from 'ansis'
-import { Command, program } from 'commander'
-import Handlebars from 'handlebars'
-import { existsSync } from 'node:fs'
-import { mkdir } from 'node:fs/promises'
-import { join, relative, resolve } from 'node:path'
+import { gitConfigGet, isGitRepo, isWorkingTreeClean } from '@peiyanlu/git-utils'
+import { readJsonFileSync } from '@peiyanlu/node-utils'
+import { assert } from '@peiyanlu/ts-utils'
+import { program } from 'commander'
+import { join } from 'node:path'
 import type { ReleaseType } from 'semver'
+import { runCommitCli } from './cli/commit.js'
+import { runInitCli } from './cli/init.js'
 import { loadConfig, ReleaserCli, type UserConfig } from './index.js'
 
 
@@ -23,18 +20,23 @@ program
   .argument('[release-type]', `Release type. One of 'major', 'minor', 'patch', or 'prerelease'.`)
   .enablePositionalOptions()
   .option('-n, --dry-run', 'Run in dry mode.')
+  .option(
+    '--pre-id <preId>',
+    `Pre-release identifier. Such as 'alpha', 'beta', 'rc', 'next', 'canary', 'nightly', or 'dev'.`,
+  )
   .option('--ci', 'Enable CI mode.')
   .option('--skip-bump', 'Skip updating the project version.')
   .option('--skip-git', 'Skip Git commit, tag, and push operations. Git history is still read.')
+  .option('--skip-working-tree-check', 'Skip checking whether the Git working tree is clean.')
   .option('--skip-publish', 'Skip publishing the project.')
   .option('--skip-release', 'Skip creating a release on the repository hosting service.')
   .helpOption('-h, --help', 'Display help information.')
   .action(async (releaseType: ReleaseType, options: CliOptions<boolean>) => {
     const { config: { project, hosting, releaser } } = await loadConfig<UserConfig>(process.cwd())
-    const { dryRun } = options
+    const { dryRun, skipWorkingTreeCheck } = options
     
     assert(await isGitRepo(), 'Current directory is not a Git repository.')
-    assert(await isWorkingTreeClean(), 'Git working tree is not clean')
+    !skipWorkingTreeCheck && assert(await isWorkingTreeClean(), 'Git working tree is not clean.')
     assert(await gitConfigGet('remote.origin.url'), 'Git remote "origin" is not configured.')
     
     assert(project, 'Project not found.')
@@ -50,8 +52,16 @@ program
   })
 
 program
+  .command('commit')
+  .description('Create a Conventional Commit from staged changes.')
+  .option('-n, --dry-run', 'Run in dry mode.')
+  .option('--amend', 'Amend the previous commit with the entered message.')
+  .action(runCommitCli)
+
+program
   .command('init')
   .description('Initialize release configuration for your project.')
+  .option('-n, --dry-run', 'Run in dry mode.')
   .option('--npm', 'Use npm as the package manager', false)
   .option('--pnpm', 'Use pnpm as the package manager', true)
   .option('--trusted', 'Use npm Trusted Publishing', true)
@@ -60,134 +70,7 @@ program
   .option('--github-workflow', 'Create a GitHub Actions release workflow', true)
   .option('--force', 'Overwrite existing configuration or workflow files', false)
   .option('--add', 'Stage generated files with Git', true)
-  .action(async (options: CliOptions<boolean>, command: Command) => {
-    const interactive = Boolean(process.stdin.isTTY && process.stdout.isTTY)
-    
-    const wasProvided = (name: string): boolean => 'cli' === command.getOptionValueSource(name)
-    
-    const ask = async <T>(
-      name: string,
-      prompt: () => Promise<T>,
-      value: T,
-      provided = wasProvided(name),
-    ): Promise<T> => {
-      if (!interactive || provided) return value
-      const answer = await prompt()
-      if (isCancel(answer)) {
-        cancel('Initialization cancelled.')
-        process.exit(0)
-      }
-      return answer as T
-    }
-    
-    const cwd = process.cwd()
-    const tplDir = resolve(__dirname, '..', 'template')
-    
-    const detectedPackageManager = existsSync(join(cwd, 'pnpm-lock.yaml'))
-      ? 'pnpm'
-      : existsSync(join(cwd, 'package-lock.json'))
-        ? 'npm'
-        : 'none'
-    const defaultPackageManager = options.npm
-      ? 'npm'
-      : options.pnpm
-        ? 'pnpm'
-        : detectedPackageManager
-    
-    if (interactive) intro('🚀 Initialize release config')
-    
-    const packageManager = await ask(
-      'npm',
-      () => select({
-        message: 'Package manager?',
-        options: [
-          { label: 'npm', value: 'npm' },
-          { label: 'pnpm', value: 'pnpm' },
-          { label: 'None', value: 'none' },
-        ],
-        initialValue: defaultPackageManager,
-      }) as Promise<'npm' | 'pnpm' | 'none'>,
-      defaultPackageManager,
-      wasProvided('npm') || wasProvided('pnpm'),
-    )
-    const npm = packageManager === 'npm'
-    const pnpm = packageManager === 'pnpm'
-    
-    const monorepo = await ask('monorepo', () => confirm({
-      message: 'Monorepo?',
-      initialValue: options.monorepo,
-    }) as Promise<boolean>, options.monorepo)
-    const fixed = monorepo
-      ? await ask('fixed', () => confirm({
-        message: 'Fixed versioning?',
-        initialValue: options.fixed,
-      }) as Promise<boolean>, options.fixed)
-      : false
-    const githubWorkflow = await ask('githubWorkflow', () => confirm({
-      message: 'GitHub Actions workflow?',
-      initialValue: options.githubWorkflow,
-    }) as Promise<boolean>, options.githubWorkflow)
-    const trusted = githubWorkflow
-      ? await ask('trusted', () => confirm({
-        message: 'npm Trusted Publishing?',
-        initialValue: options.trusted,
-      }) as Promise<boolean>, options.trusted)
-      : false
-    const add = await ask('add', () => confirm({
-      message: 'Stage files with Git?',
-      initialValue: options.add,
-    }) as Promise<boolean>, options.add)
-    
-    const pkg = readJsonFileSync(join(cwd, 'package.json'))
-    const isTS = existsSync(join(cwd, 'tsconfig.json')) || Object
-      .keys({
-        ...pkg.dependencies,
-        ...pkg.devDependencies,
-      }).includes('typescript')
-    
-    const configFile = join(cwd, `release.config.${ isTS ? 'ts' : 'js' }`)
-    const workflowFile = join(cwd, '.github/workflows', 'release.yml')
-    
-    const existingFiles = [
-      ...(existsSync(configFile) ? [ configFile ] : []),
-      ...(githubWorkflow && existsSync(workflowFile) ? [ workflowFile ] : []),
-    ]
-    
-    let force = options.force
-    if (existingFiles.length && !force) {
-      const files = existingFiles.map(p => relative(cwd, p)).join(' | ')
-      force = await ask('force', () => confirm({
-        message: `Overwrite files? ${ dim(files) }`,
-        initialValue: false,
-      }) as Promise<boolean>, false)
-      if (!force) throwError(`The following files already exist (${ files }).`)
-    }
-    
-    const template = await readTextFile(join(tplDir, `release.config.hbs`))
-    const configContent = Handlebars.compile(template)({
-      monorepo,
-      fixed,
-      npm,
-      pnpm,
-      npmOrPnpm: npm || pnpm,
-    })
-    await writeTextFile(configFile, configContent.trimEnd())
-    
-    if (githubWorkflow) {
-      await mkdir('.github/workflows', { recursive: true })
-      const template = await readTextFile(join(tplDir, `release.workflow.hbs`))
-      const workflowContent = Handlebars.compile(template)({
-        trusted,
-      })
-      await writeTextFile(workflowFile, workflowContent.trimEnd())
-    }
-    
-    if (add) {
-      gitAddSync(githubWorkflow ? [ configFile, workflowFile ] : [ configFile ])
-    }
-    
-    if (interactive) outro('✨ Release config ready')
-  })
+  .action(runInitCli)
 
 
 program.parse(process.argv)

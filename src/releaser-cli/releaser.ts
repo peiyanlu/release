@@ -24,6 +24,7 @@ import {
   type Project,
   type ReleaserOptions,
   type ReleaserPushOptions,
+  type ReleaserStepsOptions,
   type ReleaserTagOptions,
 } from '../core/index.js'
 import { Logger } from '../core/logger.js'
@@ -41,6 +42,7 @@ export interface ReleaserCliRunOptions {
   skipRelease?: boolean
   
   releaseType?: ReleaseType
+  preId?: string
 }
 
 export interface CliStepsSkip {
@@ -119,7 +121,7 @@ export class ReleaserCli<
       const skippedSteps = await runSkippedStepsPrompts(options)
       
       this.setSkippedSteps({
-        bump: version === bumpOpts!.version && !bumpOpts!.firstRelease,
+        bump: version === bumpOpts?.version && !bumpOpts?.firstRelease,
         ...skippedSteps,
       })
     })
@@ -127,7 +129,9 @@ export class ReleaserCli<
   
   setBumpOptions(options: ReleaserCliRunOptions): this {
     return this.enqueue(async () => {
-      const { releaseType: as, skipBump } = options
+      const logger = this.logger.createChild('prompts-options')
+      
+      const { skipBump } = options
       const { project, stepsOptions: { bump: bumpOpts } } = this
       
       const version = await project.manifest.getVersion()
@@ -137,15 +141,18 @@ export class ReleaserCli<
         : await runBumpPrompts(project, {
           bump: {
             ...bumpOpts,
-            as,
           } as PickOverridableOptions<P['bump']>,
           run: options,
         })
+      const promptsSteps: ReleaserStepsOptions<P, G> = {
+        bump,
+      }
       
-      if (isEmptyObject(bump)) {
-        this.logger.info('cli-prompts', 'No bump options returned from prompts.')
-      } else {
-        this.setOptions({ bump })
+      logger.verbose('Prompts result for steps:')
+      logger.verbose(promptsSteps)
+      
+      if (!isEmptyObject(promptsSteps.bump)) {
+        this.setOptions(promptsSteps)
       }
     })
   }
@@ -166,12 +173,36 @@ export class ReleaserCli<
       const legacySteps = omit(config, [ 'project', 'hosting', 'releaser' ])
       
       if (file) {
-        logger.verbose(`Legacy config file: ${ file }`)
+        logger.verbose('Legacy config file:')
+        logger.verbose(file)
         logger.verbose('Legacy config for steps:')
         logger.verbose(legacySteps)
       }
       
-      this.setOptions(legacySteps)
+      if (!isEmptyObject(legacySteps)) {
+        this.setOptions(legacySteps)
+      }
+    })
+  }
+  
+  setCliOptions(options: ReleaserCliRunOptions): this {
+    return this.enqueue(async () => {
+      const logger = this.logger.createChild('cli-options')
+      
+      const { releaseType: as, preId: prerelease } = options
+      const cliSteps: ReleaserStepsOptions<P, G> = {
+        bump: {
+          ...as ? { as } : {},
+          ...prerelease ? { prerelease } : {},
+        } as PickOverridableOptions<P['bump']>,
+      }
+      
+      logger.verbose('Cli options for steps:')
+      logger.verbose(cliSteps)
+      
+      if (!isEmptyObject(cliSteps.bump)) {
+        this.setOptions(cliSteps)
+      }
     })
   }
   
@@ -196,6 +227,7 @@ export class ReleaserCli<
     await this
       .start()
       .setLegacyOptions()
+      .setCliOptions(options)
       .setBumpOptions(options)
       .setSkippedOptions(options)
       .confirmWorkflow(options)
