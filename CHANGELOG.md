@@ -1,3 +1,18 @@
+## [2.2.0](https://github.com/peiyanlu/release/compare/v2.1.3...v2.2.0) (2026-11-16)
+
+### ✨ 新功能
+
+* **cli:** 支持交互式创建提交并新增跳过工作区检查选项 ([c55482f](https://github.com/peiyanlu/release/commit/c55482feacb4131b07bca2d9d49afb1ce8baea57))
+
+### 🐛 Bug 修复
+
+* **deps:** 升级 npm 依赖 ([90e683f](https://github.com/peiyanlu/release/commit/90e683f4229d2e8bde928010ded3fbe42860c3d8))
+* 仅对版本已变更的项目执行发布与 Release 生成 ([3dcc8e2](https://github.com/peiyanlu/release/commit/3dcc8e21e581cbfaccbe6b70790ffa0fac9dc2ee))
+
+### ♻️ 代码重构
+
+* **releaser-cli:** 重构版本提示并迁移工具依赖 ([f36494a](https://github.com/peiyanlu/release/commit/f36494a37f1ef81129764e1dd79ef5004774b2c7))
+
 ## <small>[2.1.3](https://github.com/peiyanlu/release/compare/v2.1.2...v2.1.3) (2026-11-07)</small>
 
 ### 🐛 Bug 修复
