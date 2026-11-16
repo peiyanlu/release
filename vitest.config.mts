@@ -1,7 +1,7 @@
 import { defineConfig } from 'vitest/config'
 
 
-export default defineConfig({
+const config: ReturnType<typeof defineConfig> = defineConfig({
   test: {
     clearMocks: true,
     restoreMocks: true,
@@ -24,3 +24,5 @@ export default defineConfig({
     ],
   },
 })
+
+export default config

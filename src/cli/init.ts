@@ -17,7 +17,7 @@ const isPnpm = (v: string) => 'pnpm' === v
 const isYarn = (v: string) => 'yarn' === v
 
 
-export const runInitCli = async (options: CliOptions<boolean>, command: Command) => {
+export const runInitCli = async (options: CliOptions<boolean>, command: Command): Promise<void> => {
   const { dryRun = false } = options
   
   const interactive = process.stdin.isTTY && process.stdout.isTTY

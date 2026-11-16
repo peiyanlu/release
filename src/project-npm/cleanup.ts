@@ -7,7 +7,7 @@ type PackageJson = Dict<any>
 
 
 // https://pnpm.io/package_json#publishconfig
-export const PUBLISH_CONFIG_FIELDS = [
+export const PUBLISH_CONFIG_FIELDS: string[] = [
   'bin',
   'main',
   'exports',
@@ -25,7 +25,7 @@ export const PUBLISH_CONFIG_FIELDS = [
   'engines',
 ]
 
-export const IGNORE_FIELDS = [
+export const IGNORE_FIELDS: string[] = [
   'babel',
   'browserslist',
   'c8',
@@ -53,13 +53,13 @@ export const IGNORE_FIELDS = [
   'packageManager',
 ]
 
-export const KEEP_SCRIPT_NAMES = [
+export const KEEP_SCRIPT_NAMES: string[] = [
   'preinstall',
   'install',
   'postinstall',
 ]
 
-export const IGNORE_FILES = [
+export const IGNORE_FILES: string[] = [
   '.DS_Store',
   '.git',
   '.vscode',

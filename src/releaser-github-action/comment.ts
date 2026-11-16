@@ -19,7 +19,7 @@ export const SET_OPTION_COMMAND = '!release/set-options'
 export const SET_PREAMBLE_COMMAND = '!release/set-preamble'
 
 /** 所有支持的拉取请求评论命令 */
-export const COMMANDS = [
+export const COMMANDS: string[] = [
   SET_OPTION_COMMAND,
   SET_PREAMBLE_COMMAND,
 ]
@@ -38,7 +38,7 @@ const startsWithCommand = (body: string, command: string) => {
 }
 
 /** 评论内容是否是支持的命令评论之一 */
-export const isCommandComment = (body?: string) =>
+export const isCommandComment = (body?: string): boolean =>
   isString(body) && COMMANDS.some(command => startsWithCommand(body, command))
 
 /** 解析 releaser 参数 */
