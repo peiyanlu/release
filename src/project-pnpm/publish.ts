@@ -1,6 +1,7 @@
+import { getPublishedVersion } from '@peiyanlu/cli-utils'
 import { execAsync } from '@peiyanlu/command-utils'
 import { copyDir, createMatcher, createTempDir } from '@peiyanlu/node-utils'
-import { isEmpty, isFunction, unless, when } from '@peiyanlu/ts-utils'
+import { equals, isEmpty, isFunction, unless, when } from '@peiyanlu/ts-utils'
 import { resolve } from 'node:path'
 import { Project, type ProjectPublishOptions } from '../core/index.ts'
 import { cleanPackageJSON, cleanReadme, IGNORE_FILES } from './cleanup.ts'
@@ -29,7 +30,17 @@ export interface PublishOptions extends ProjectPublishOptions, CleanupOptions {
 
 export const publish = async (project: Project, options: PublishOptions = {}): Promise<void> => {
   const { manifest, manifest: { projectDir } } = project
-  const { access, tag, otp, env = process.env, dryRun, logger, gitChecks, cleanPublish } = options
+  const { access, registry, tag, otp, env = process.env, dryRun, logger, gitChecks, cleanPublish } = options
+  
+  const name = await manifest.getName()
+  const version = await manifest.getVersion()
+  
+  if (!dryRun) {
+    if (equals(version, await getPublishedVersion(`${ name }@${ version }`, registry))) {
+      logger?.info(`Skipping "${ name }@${ version }": this version is already published.`)
+      return
+    }
+  }
   
   const publishTag = isFunction(tag)
     ? tag(
@@ -41,6 +52,7 @@ export const publish = async (project: Project, options: PublishOptions = {}): P
   const args = [
     'publish',
     ...when(access, '--access', access!),
+    ...when(registry, '--registry', registry!),
     ...when(publishTag, '--tag', publishTag!),
     ...when(dryRun, '--dry-run'),
     ...when(otp, '--otp', otp!),
