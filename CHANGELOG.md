@@ -1,3 +1,9 @@
+## <small>[2.2.1](https://github.com/peiyanlu/release/compare/v2.2.0...v2.2.1) (2026-11-19)</small>
+
+### 🐛 Bug 修复
+
+* 发布前跳过已发布版本 ([1b897c2](https://github.com/peiyanlu/release/commit/1b897c2ec9aeeb52cda463feefc76663cb0308d6))
+
 ## [2.2.0](https://github.com/peiyanlu/release/compare/v2.1.3...v2.2.0) (2026-11-16)
 
 ### ✨ 新功能
