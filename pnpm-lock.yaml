@@ -24,8 +24,8 @@ importers:
         specifier: ^22.0.1
         version: 22.0.1
       '@peiyanlu/cli-utils':
-        specifier: ^1.0.0
-        version: 1.0.0
+        specifier: ^1.1.1
+        version: 1.1.1(@clack/prompts@1.9.0)
       '@peiyanlu/command-utils':
         specifier: ^0.1.0
         version: 0.1.0
@@ -33,14 +33,11 @@ importers:
         specifier: ^0.1.0
         version: 0.1.0
       '@peiyanlu/node-utils':
-        specifier: ^0.1.1
-        version: 0.1.1
+        specifier: ^0.2.0
+        version: 0.2.0
       '@peiyanlu/ts-utils':
-        specifier: ^1.0.0
-        version: 1.0.0
-      ansis:
-        specifier: ^4.5.0
-        version: 4.5.0
+        specifier: ^1.1.0
+        version: 1.1.0
       commander:
         specifier: ^15.1.0
         version: 15.1.0
@@ -76,8 +73,8 @@ importers:
         specifier: ^0.0.7
         version: 0.0.7
       '@types/node':
-        specifier: ^24.19.2
-        version: 24.19.2
+        specifier: ^26.6.6
+        version: 26.6.6
       '@types/semver':
         specifier: ^7.8.0
         version: 7.8.0
@@ -92,7 +89,7 @@ importers:
         version: 6.0.3
       vitest:
         specifier: ^5.1.0
-        version: 5.1.0(@types/node@24.19.2)(@vitest/coverage-v8@5.1.0)(vite@7.3.0(@types/node@24.19.2)(yaml@2.9.1))
+        version: 5.1.0(@types/node@26.6.6)(@vitest/coverage-v8@5.1.0)(vite@7.3.0(@types/node@26.6.6)(yaml@2.9.1))
 
 packages:
 
@@ -324,6 +321,9 @@ packages:
     cpu: [x64]
     os: [win32]
 
+  '@isaacs/nonrecursive-glob-match@1.1.0':
+    resolution: {integrity: sha512-GPm/Dbvk5RLmhRnxXIa7nTpK0xtl4E0wj0MslsuNiJ1FIROU+2+9lgUC/dgF7Ey4QCWhfEsgxilMRMCdHPfDfw==}
+
   '@jridgewell/resolve-uri@3.1.2':
     resolution: {integrity: sha512-bRISgCIjP20/tbWSPWMEi54QVPRZExkuD9lJL+UIxUKtwVJA8wW1Trb1jMs1RFXo1CBTNZ/5hpC9QvmKWdopKw==}
     engines: {node: '>=6.0.0'}
@@ -402,9 +402,14 @@ packages:
   '@oxc-project/types@0.158.0':
     resolution: {integrity: sha512-xZ66qA4WmLbTLlxH3mqMd8f9UKbaOzOT0ATwFf4DH/14pMgpUrtqtjyYzOQmgfl2a0iRAAMbQ9G1th/67jRzGw==}
 
-  '@peiyanlu/cli-utils@1.0.0':
-    resolution: {integrity: sha512-Eyhd+FCaKyPYbuMnFiHOt9qbyV5izRIuFNvD73yXDLvMtwU+lZir3yFdiureoiPkg8wPb94D2MBXfoCiE/WnPg==}
+  '@peiyanlu/cli-utils@1.1.1':
+    resolution: {integrity: sha512-ItoqlC8elHWffyXOANz/xrlfcrQDpcHb8f/YRzRiEA32L+Yo2/dV9EHrpjCNZOFzDZzuWeZ/2VQU6xmLgdZWlw==}
     engines: {node: '>=22'}
+    peerDependencies:
+      '@clack/prompts': ^1.9.0
+    peerDependenciesMeta:
+      '@clack/prompts':
+        optional: true
 
   '@peiyanlu/command-utils@0.1.0':
     resolution: {integrity: sha512-8caoCHZmfl306pcC2689m/qhQpPjS+IP1PqYYC45T1C4NKfAGkS1/mnXy9X3bDdhhNfICD0/Y6mwKw0zhnpPyw==}
@@ -418,12 +423,16 @@ packages:
     resolution: {integrity: sha512-0Qw60jl1HPbHaqiiIKIMVBufCzeRviMGyrI1pJ7u1kfWrvHcP+2PH1pQ9SSXNIie5/2dTwsyp0cQbwDEyZGjPA==}
     engines: {node: '>=22'}
 
+  '@peiyanlu/node-utils@0.2.0':
+    resolution: {integrity: sha512-1lixOIxzio4ujjd2XQg2cehboeXENMjhXtNtdYyK32KiFtCL2Lhbb9laf+oplbO8qAv2ffW5n9kl0ZLK75/aHQ==}
+    engines: {node: '>=22'}
+
   '@peiyanlu/test-tools@0.0.7':
     resolution: {integrity: sha512-hTDBWgh2In2+JyOoBYmIfbBMrosauzQyCmMZ0DdCOlr77kJBQkL7McRFwSC2bI6hUoogwNHElIfC3sakolXdSA==}
     engines: {node: '>=22'}
 
-  '@peiyanlu/ts-utils@1.0.0':
-    resolution: {integrity: sha512-gRJyyG3868xGCG+qHG/oMGiQikPQkM5Guf71eBgEODfgDMohtmKWJcPOgm+z5cq1LvgMK1Btkm47NhwTPLW1BA==}
+  '@peiyanlu/ts-utils@1.1.0':
+    resolution: {integrity: sha512-cHX7omExoUWVLtfDSdstDxfa09SSIh9y30jiSaPuXPH9K29g9FeE0m6IX7otPCNTcdrUMSLYiNXCTDz7Ch4TyA==}
     engines: {node: '>=22'}
 
   '@publint/pack@0.1.7':
@@ -689,8 +698,8 @@ packages:
   '@types/estree@1.0.8':
     resolution: {integrity: sha512-dWHzHa2WqEXI/O1E9OjrocMTKJl2mSrEolh1Iomrv6U+JuNwaHXsXx9bLu5gG7BUWFIN0skIQJQ/L1rIex4X6w==}
 
-  '@types/node@24.19.2':
-    resolution: {integrity: sha512-93d49wCWJkCyN87MxLpNN6KXPCwFw7bVUg79mGUV1OS40JGWwVCr8n61DXCSqz7CV6/VfPkb7xec7uP2M+QHWQ==}
+  '@types/node@26.6.6':
+    resolution: {integrity: sha512-MzQj+8Kx3XI40OmUAE6Qoh58ZMNstNNMwn2nfd3qWsfe7nDNSqJNzes4njhz6AHwrSHOffSLwXU6yb474Q4aog==}
 
   '@types/semver@7.8.0':
     resolution: {integrity: sha512-1mAINjtQCXXeLkJ9ehXkwOcBpqtLxiVtKhpUf83DdRNdQKV0iXZpaHYqRr7nj+wvxuJzoAmAwXI+sCNMv1CzLQ==}
@@ -755,10 +764,6 @@ packages:
     resolution: {integrity: sha512-CSTUi/ya58q2PuWTpk//BNSpXgOz7ol45T+SDuU7QfD/vN1FcLjSh99KDQzLf4AbIy43ORUw5UFehhfMGPNj9w==}
     cpu: [x64]
     os: [win32]
-
-  ansis@4.5.0:
-    resolution: {integrity: sha512-KwIVkfFfJSSzBmZhDGuTmkhWqTdyB5oNVzzznBJbBZ5bZtHiqSrcugRF0RKJKT4Ss3d7ZrcjnlFVDlQNmtWfWw==}
-    engines: {node: '>=14'}
 
   argue-cli@3.2.0:
     resolution: {integrity: sha512-VipTB0gXgGIFO2Rg9yEVN5wLt2AurJcZqDbgmYSwPwsykhLrQhs240/bfceev4w68lI8JshoOJIk9uW7tFzROw==}
@@ -958,6 +963,10 @@ packages:
     resolution: {integrity: sha512-vpLQEs+VLCr1nU0BXS07maYoFwlDAH0gngQuuttxIwutDFEMHq2blX+8vpgxDdK3J1PwjCJiep77OitTZ4Ll1A==}
     engines: {node: 18 || 20 || >=22}
 
+  minimatch@11.0.9:
+    resolution: {integrity: sha512-KCFkfyjqerNlSstjlhIGNXIKZGA/6O4V4RlhZ+Dsr621SPPw0mzlypE9D9ZOoPiVefHID+j7/XuMMlqfD/F60Q==}
+    engines: {node: 20 || >=22}
+
   minimist@1.2.8:
     resolution: {integrity: sha512-2yyAR8qBkN3YuheJanUpWC5U3bb5osDywNB8RzDVlDwDHbocAJveqqj1u8+SVD7jkWT4yvsHCpWqqWqAxb0zCA==}
 
@@ -1143,8 +1152,8 @@ packages:
   unconfig-core@7.5.0:
     resolution: {integrity: sha512-Su3FauozOGP44ZmKdHy2oE6LPjk51M/TRRjHv2HNCWiDvfvCoxC2lno6jevMA91MYAdCdwP05QnWdWpSbncX/w==}
 
-  undici-types@7.24.6:
-    resolution: {integrity: sha512-WRNW+sJgj5OBN4/0JpHFqtqzhpbnV0GuB+OozA9gCL7a993SmU+1JBZCzLNxYsbMfIeDL+lTsphD5jN5N+n0zg==}
+  undici-types@8.9.0:
+    resolution: {integrity: sha512-KTDyRTYX8sWmKXAikPHHSyc63CRPETMctyjKFupcC6OBLXT3xsN0e9aF7m+mIXutFWpUXuedtowG7iLOzp0kQg==}
 
   undici@6.29.1:
     resolution: {integrity: sha512-EvRlUt/QqAEvXdQeRMYUfwOQsfzpDztykrG2owGEE/rBOBoYv9uF39ZzsNDh4lTFHhTr2XOZjKkYgueD12ZmGA==}
@@ -1443,6 +1452,8 @@ snapshots:
   '@esbuild/win32-x64@0.27.2':
     optional: true
 
+  '@isaacs/nonrecursive-glob-match@1.1.0': {}
+
   '@jridgewell/resolve-uri@3.1.2': {}
 
   '@jridgewell/sourcemap-codec@1.6.0': {}
@@ -1530,36 +1541,43 @@ snapshots:
 
   '@oxc-project/types@0.158.0': {}
 
-  '@peiyanlu/cli-utils@1.0.0':
+  '@peiyanlu/cli-utils@1.1.1(@clack/prompts@1.9.0)':
     dependencies:
       '@peiyanlu/command-utils': 0.1.0
-      '@peiyanlu/node-utils': 0.1.1
-      '@peiyanlu/ts-utils': 1.0.0
-      ansis: 4.5.0
+      '@peiyanlu/node-utils': 0.2.0
+      '@peiyanlu/ts-utils': 1.1.0
       semver: 7.8.6
+    optionalDependencies:
+      '@clack/prompts': 1.9.0
 
   '@peiyanlu/command-utils@0.1.0':
     dependencies:
       '@peiyanlu/node-utils': 0.1.1
-      '@peiyanlu/ts-utils': 1.0.0
+      '@peiyanlu/ts-utils': 1.1.0
 
   '@peiyanlu/git-utils@0.1.0':
     dependencies:
       '@peiyanlu/command-utils': 0.1.0
       '@peiyanlu/node-utils': 0.1.1
-      '@peiyanlu/ts-utils': 1.0.0
+      '@peiyanlu/ts-utils': 1.1.0
 
   '@peiyanlu/node-utils@0.1.1':
     dependencies:
-      '@peiyanlu/ts-utils': 1.0.0
+      '@peiyanlu/ts-utils': 1.1.0
       minimatch: 10.2.6
+      tinyglobby: 0.2.17
+
+  '@peiyanlu/node-utils@0.2.0':
+    dependencies:
+      '@peiyanlu/ts-utils': 1.1.0
+      minimatch: 11.0.9
       tinyglobby: 0.2.17
 
   '@peiyanlu/test-tools@0.0.7':
     dependencies:
-      '@peiyanlu/ts-utils': 1.0.0
+      '@peiyanlu/ts-utils': 1.1.0
 
-  '@peiyanlu/ts-utils@1.0.0': {}
+  '@peiyanlu/ts-utils@1.1.0': {}
 
   '@publint/pack@0.1.7':
     dependencies:
@@ -1718,9 +1736,9 @@ snapshots:
 
   '@types/estree@1.0.8': {}
 
-  '@types/node@24.19.2':
+  '@types/node@26.6.6':
     dependencies:
-      undici-types: 7.24.6
+      undici-types: 8.9.0
 
   '@types/semver@7.8.0': {}
 
@@ -1734,7 +1752,7 @@ snapshots:
       obug: 3.0.0
       std-env: 4.3.0
       tinyrainbow: 3.2.0
-      vitest: 5.1.0(@types/node@24.19.2)(@vitest/coverage-v8@5.1.0)(vite@7.3.0(@types/node@24.19.2)(yaml@2.9.1))
+      vitest: 5.1.0(@types/node@26.6.6)(@vitest/coverage-v8@5.1.0)(vite@7.3.0(@types/node@26.6.6)(yaml@2.9.1))
 
   '@vitest/istanbul-lib-coverage@2.1.0': {}
 
@@ -1742,14 +1760,14 @@ snapshots:
     dependencies:
       '@vitest/istanbul-lib-coverage': 2.1.0
 
-  '@vitest/mocker@5.1.0(vite@7.3.0(@types/node@24.19.2)(yaml@2.9.1))':
+  '@vitest/mocker@5.1.0(vite@7.3.0(@types/node@26.6.6)(yaml@2.9.1))':
     dependencies:
       '@jridgewell/trace-mapping': 0.3.31
       '@vitest/spy': 5.1.0
       estree-walker: 3.0.3
       magic-string: 1.4.5
     optionalDependencies:
-      vite: 7.3.0(@types/node@24.19.2)(yaml@2.9.1)
+      vite: 7.3.0(@types/node@26.6.6)(yaml@2.9.1)
 
   '@vitest/spy@5.1.0': {}
 
@@ -1770,8 +1788,6 @@ snapshots:
 
   '@yuku-toolchain/win32-x64@0.28.1':
     optional: true
-
-  ansis@4.5.0: {}
 
   argue-cli@3.2.0: {}
 
@@ -1969,6 +1985,11 @@ snapshots:
     dependencies:
       brace-expansion: 5.0.12
 
+  minimatch@11.0.9:
+    dependencies:
+      '@isaacs/nonrecursive-glob-match': 1.1.0
+      brace-expansion: 5.0.12
+
   minimist@1.2.8: {}
 
   mri@1.2.0: {}
@@ -2147,7 +2168,7 @@ snapshots:
       '@quansync/fs': 1.1.0
       quansync: 1.0.0
 
-  undici-types@7.24.6: {}
+  undici-types@8.9.0: {}
 
   undici@6.29.1: {}
 
@@ -2155,7 +2176,7 @@ snapshots:
 
   verkit@0.5.0: {}
 
-  vite@7.3.0(@types/node@24.19.2)(yaml@2.9.1):
+  vite@7.3.0(@types/node@26.6.6)(yaml@2.9.1):
     dependencies:
       esbuild: 0.27.2
       fdir: 6.5.0(picomatch@4.0.7)
@@ -2164,14 +2185,14 @@ snapshots:
       rollup: 4.54.0
       tinyglobby: 0.2.17
     optionalDependencies:
-      '@types/node': 24.19.2
+      '@types/node': 26.6.6
       fsevents: 2.3.3
       yaml: 2.9.1
 
-  vitest@5.1.0(@types/node@24.19.2)(@vitest/coverage-v8@5.1.0)(vite@7.3.0(@types/node@24.19.2)(yaml@2.9.1)):
+  vitest@5.1.0(@types/node@26.6.6)(@vitest/coverage-v8@5.1.0)(vite@7.3.0(@types/node@26.6.6)(yaml@2.9.1)):
     dependencies:
       '@types/chai': 5.2.3
-      '@vitest/mocker': 5.1.0(vite@7.3.0(@types/node@24.19.2)(yaml@2.9.1))
+      '@vitest/mocker': 5.1.0(vite@7.3.0(@types/node@26.6.6)(yaml@2.9.1))
       chai: 6.3.0
       es-module-lexer: 2.3.2
       expect-type: 1.4.0
@@ -2182,10 +2203,10 @@ snapshots:
       tinybench: 6.2.2
       tinyexec: 1.3.1
       tinyglobby: 0.2.17
-      vite: 7.3.0(@types/node@24.19.2)(yaml@2.9.1)
+      vite: 7.3.0(@types/node@26.6.6)(yaml@2.9.1)
       why-is-node-running: 3.2.1
     optionalDependencies:
-      '@types/node': 24.19.2
+      '@types/node': 26.6.6
       '@vitest/coverage-v8': 5.1.0(vitest@5.1.0)
     transitivePeerDependencies:
       - msw

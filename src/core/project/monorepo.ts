@@ -1,4 +1,4 @@
-import { isEmpty, onceAsync, type Simplify, throwError } from '@peiyanlu/ts-utils'
+import { isEmpty, type Simplify, throwError } from '@peiyanlu/ts-utils'
 import { eq, gt, lt } from 'semver'
 import type { ReleaseData } from '../hosting/index.ts'
 import type { ProjectManifest } from '../manifest/manifest.ts'

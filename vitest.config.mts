@@ -1,7 +1,7 @@
-import { defineConfig } from 'vitest/config'
+import { defineConfig, type UserWorkspaceConfig } from 'vitest/config'
 
 
-const config: ReturnType<typeof defineConfig> = defineConfig({
+const config: UserWorkspaceConfig = defineConfig({
   test: {
     clearMocks: true,
     restoreMocks: true,

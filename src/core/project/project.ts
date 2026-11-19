@@ -135,7 +135,7 @@ export abstract class Project {
         title: this.toTag(tagPrefix, version),
         version,
         isPrerelease,
-        isLatest: await this.isLatestRelease(options),
+        isLatest: await this.isLatestRelease({ ...options, tagPrefix }),
       },
     ]
   }

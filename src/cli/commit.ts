@@ -1,13 +1,12 @@
 import { confirm, intro, log, multiline, note, outro, select, text } from '@clack/prompts'
 import type { CliOptions } from '@peiyanlu/cli-utils'
+import { abortTask, question, singlePrompt } from '@peiyanlu/cli-utils/prompts'
 import { gitAddTracked, gitCommitAmend, gitCommitMessage, gitDiff, gitLog } from '@peiyanlu/git-utils'
-import { isInDir, normalizePath } from '@peiyanlu/node-utils'
-import { assert, isEmptyArray, type Primitive, splitNonEmptyLines } from '@peiyanlu/ts-utils'
-import { dim, red } from 'ansis'
+import { isInDir, normalizePath, styleText } from '@peiyanlu/node-utils'
+import { assert, isEmptyArray, splitNonEmptyLines, unique } from '@peiyanlu/ts-utils'
 import { dirname, resolve } from 'node:path'
 import { type Project } from '../core/index.ts'
 import { defaultTypes, loadConfig, type UserConfig } from '../index.ts'
-import { abortTask, question, singlePrompt } from './prompts.ts'
 
 
 interface ProjectScope {
@@ -17,10 +16,7 @@ interface ProjectScope {
 }
 
 
-const abortMsg = 'Commit cancelled.'
-
-const unique = <T = Primitive>(v: T[]) => [ ...new Set([ ...v ]) ]
-
+const abortMsg = '✕ Commit cancelled.'
 
 const getDirectoryScopes = (cwd: string, projectDir: string, files: string[]): string[] => {
   return unique(files
@@ -138,7 +134,7 @@ const promptScope = async (scopes: ProjectScope[], init: string | undefined, dry
   return selection
 }
 
-const printer = (msg: string) => log.message(dim`${ msg }`)
+const printer = (msg: string) => log.message(styleText.dim`${ msg }`)
 
 
 export const runCommitCli = async (options: CliOptions<boolean>): Promise<void> => {
@@ -197,7 +193,7 @@ export const runCommitCli = async (options: CliOptions<boolean>): Promise<void> 
   
   const shouldCommit = await singlePrompt(
     () => confirm({
-      message: question(red`${ amend ? 'Amend previous commit' : 'Create this commit' }?`, dryRun),
+      message: question(styleText.red`${ amend ? 'Amend previous commit' : 'Create this commit' }?`, dryRun),
     }),
     abortMsg,
   )

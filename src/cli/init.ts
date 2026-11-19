@@ -1,21 +1,17 @@
 import { confirm, intro, outro, select } from '@clack/prompts'
-import type { CliOptions } from '@peiyanlu/cli-utils'
+import { type CliOptions, isNpm, isPnpm } from '@peiyanlu/cli-utils'
+import { question, singlePrompt } from '@peiyanlu/cli-utils/prompts'
 import { gitAdd } from '@peiyanlu/git-utils'
-import { readJsonFileSync, readTextFile, writeTextFile } from '@peiyanlu/node-utils'
+import { readJsonFileSync, readTextFile, styleText, writeTextFile } from '@peiyanlu/node-utils'
 import { assert } from '@peiyanlu/ts-utils'
-import { dim } from 'ansis'
 import { Command } from 'commander'
 import Handlebars from 'handlebars'
 import { existsSync } from 'node:fs'
 import { mkdir } from 'node:fs/promises'
 import { join, relative, resolve } from 'node:path'
-import { question, singlePrompt } from './prompts.ts'
 
 
-const isNpm = (v: string) => 'npm' === v
-const isPnpm = (v: string) => 'pnpm' === v
-const isYarn = (v: string) => 'yarn' === v
-
+const abortMsg = '✕ Initialization cancelled.'
 
 export const runInitCli = async (options: CliOptions<boolean>, command: Command): Promise<void> => {
   const { dryRun = false } = options
@@ -35,7 +31,7 @@ export const runInitCli = async (options: CliOptions<boolean>, command: Command)
   ): Promise<Exclude<T, symbol>> => {
     if (provided) return value
     
-    return singlePrompt(prompt, 'Initialization cancelled.')
+    return singlePrompt(prompt, abortMsg)
   }
   
   const cwd = process.cwd()
@@ -135,7 +131,7 @@ export const runInitCli = async (options: CliOptions<boolean>, command: Command)
     force = await ask(
       'force',
       () => confirm({
-        message: question(`Overwrite files? ${ dim(files) }`, dryRun),
+        message: question(`Overwrite files? ${ styleText.dim(files) }`, dryRun),
         initialValue: options.force,
       }),
       options.force,

@@ -1,7 +1,8 @@
-import { cancel, confirm, group, isCancel, note, select, text } from '@clack/prompts'
+import { confirm, group, note, select, text } from '@clack/prompts'
 import { isPrerelease, isValidVersion } from '@peiyanlu/cli-utils'
-import { equals, isNotEmpty, isUndefined, type MaybePromise, nonNullable, upperFirst } from '@peiyanlu/ts-utils'
-import { cyan, red, yellow } from 'ansis'
+import { abortTask, question, singlePrompt } from '@peiyanlu/cli-utils/prompts'
+import { styleText } from '@peiyanlu/node-utils'
+import { equals, isNotEmpty, isUndefined, nonNullable, upperFirst } from '@peiyanlu/ts-utils'
 import { eq, gt, lt, type ReleaseType } from 'semver'
 import {
   type MonorepoProject,
@@ -38,25 +39,7 @@ export interface ReleaserCliPromptOptions<P extends Project = Project> {
 }
 
 
-const abortTask = (msg?: string): never => {
-  cancel(`${ red('✕') } ${ msg ?? 'Release cancelled.' }`)
-  process.exit(0)
-}
-
-const singlePrompt = async <T>(fn: () => MaybePromise<T>, abortMsg?: string): Promise<T> => {
-  const value = await fn()
-  
-  if (isCancel(value)) {
-    abortTask(abortMsg)
-  }
-  
-  return value
-}
-
-const question = (msg: string, dryRun?: boolean): string => {
-  const color = dryRun ? yellow : red
-  return `${ color('?') } ${ msg }`
-}
+const abortMsg = '✕ Release cancelled.'
 
 
 const getFixedMonorepoNextVersion = async (
@@ -321,16 +304,17 @@ const runVersionPrompts = async <P extends Project = Project>(
   
   const type = ci ? initialValue : await singlePrompt(
     () => select({
-      message: question(`Select "${ cyan`${ name }` }" release version type:`, dryRun),
+      message: question(`Select "${ styleText.cyan`${ name }` }" release version type:`, dryRun),
       options: versionOptions,
       initialValue,
     }),
-  ) as VersionPromptValue
+    abortMsg,
+  )
   
   if (equals(type, 'custom')) {
     promptsRes.version = ci ? customVersion : await singlePrompt(
       () => text({
-        message: question(`Enter "${ cyan`${ name }` }" release version:`, dryRun),
+        message: question(`Enter "${ styleText.cyan`${ name }` }" release version:`, dryRun),
         initialValue: customVersion,
         placeholder: customVersion,
         validate: (val) => {
@@ -342,7 +326,8 @@ const runVersionPrompts = async <P extends Project = Project>(
           }
         },
       }),
-    ) as string
+      abortMsg,
+    )
   }
   
   const selected = find(type)
@@ -456,7 +441,8 @@ export const runConfirmPrompts = async (ci = false, dryRun = false): Promise<voi
   const ok = ci
     ? true
     : await singlePrompt(
-      () => confirm({ message: question(red('Confirm start workflow?'), dryRun) }),
+      () => confirm({ message: question(styleText.red('Confirm start workflow?'), dryRun) }),
+      abortMsg,
     )
   if (!ok) {
     abortTask()

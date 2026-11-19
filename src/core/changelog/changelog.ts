@@ -1,20 +1,16 @@
 import { normalizePath, readTextFile, writeTextFile } from '@peiyanlu/node-utils'
-import { isBlankString, isZero, newline } from '@peiyanlu/ts-utils'
+import { isBlankString, isZero, newline, type OptionalOrComplete } from '@peiyanlu/ts-utils'
 import { ConventionalChangelog, type Preset } from 'conventional-changelog'
 import createPreset from 'conventional-changelog-conventionalcommits'
 import { Bumper, type Preset as BumpPreset } from 'conventional-recommended-bump'
 import { createWriteStream, existsSync } from 'node:fs'
-import { finished } from 'node:stream/promises'
 import { join } from 'node:path'
+import { finished } from 'node:stream/promises'
 import type { ReleaseType } from 'semver'
 import type { ChangelogOptions } from './changelog.types.ts'
 import { defaultTypes } from './committype.ts'
 import { headerPartial, preamblePartial, template } from './templates.ts'
 
-
-type OptionalOrComplete<T extends object> =
-  | T
-  | { [K in keyof T]?: undefined }
 
 export type VersionBumpType = Extract<ReleaseType, 'major' | 'minor' | 'patch'>
 

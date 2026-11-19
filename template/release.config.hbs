@@ -5,11 +5,11 @@ import { defineConfig, GithubHosting, {{#if monorepo}}NpmWorkspacesProject{{else
 import { defineConfig, GithubHosting, {{#if monorepo}}PnpmWorkspacesProject{{else}}PnpmProject{{/if}} } from '@peiyanlu/release'
 {{/if}}
 {{else}}
-import { defineConfig } from '@peiyanlu/release'
+import { defineConfig, GithubHosting } from '@peiyanlu/release'
 {{/if}}
 
 
-export default defineConfig({
+const config: ReturnType<typeof defineConfig> = defineConfig({
 {{#if npmOrPnpm}}
 {{#if monorepo}}
   project: new {{#if npm}}NpmWorkspacesProject{{else}}PnpmWorkspacesProject{{/if}}({
@@ -21,9 +21,11 @@ export default defineConfig({
 {{else}}
   project: new {{#if npm}}NpmProject{{else}}PnpmProject{{/if}}(),
 {{/if}}
-  hosting: new GithubHosting(),
 {{/if}}
+  hosting: new GithubHosting(),
   releaser: {
     verbose: true,
   },
 })
+
+export default config

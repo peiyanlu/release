@@ -47,14 +47,18 @@ export class GithubHosting extends GitRepositoryHosting {
       
       const browserRelease = async () => {
         const url = new URL(`${ getGithubUrl(owner, repo) }/releases/new`)
+        const opts = {
+          tag: data.nextTag,
+          title: data.title,
+          body: data.notes,
+          prerelease: data.isPrerelease,
+        }
+        
+        logger?.verbose(`GitHub release page parameters:`)
+        logger?.verbose(opts)
         
         Object
-          .entries({
-            tag: data.nextTag,
-            title: data.title,
-            body: data.notes,
-            prerelease: data.isPrerelease,
-          })
+          .entries(opts)
           .forEach(([ key, value ]) => {
             url.searchParams.set(key, String(value))
           })
@@ -78,6 +82,9 @@ export class GithubHosting extends GitRepositoryHosting {
             prerelease: data.isPrerelease,
             make_latest: (data.isLatest ? 'true' : 'false') as 'true' | 'false' | 'legacy',
           }
+          
+          logger?.verbose(`GitHub release ${ release ? 'update' : 'creation' } options:`)
+          logger?.verbose(opts)
           
           if (release) {
             const { data } = await octokit.rest.repos.updateRelease({ ...opts, release_id: release.id })

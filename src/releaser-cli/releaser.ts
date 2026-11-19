@@ -1,20 +1,6 @@
 import { intro, log, outro } from '@clack/prompts'
-import { readJsonFileSync } from '@peiyanlu/node-utils'
+import { readJsonFileSync, type StyleFormat, styleText } from '@peiyanlu/node-utils'
 import { isEmptyObject, isString, omit } from '@peiyanlu/ts-utils'
-import {
-  blue,
-  blueBright,
-  cyan,
-  cyanBright,
-  dim,
-  green,
-  greenBright,
-  magenta,
-  magentaBright,
-  red,
-  redBright,
-  yellow,
-} from 'ansis'
 import { join } from 'node:path'
 import type { ReleaseType } from 'semver'
 import { loadConfig, type UserConfig } from '../config/index.ts'
@@ -73,20 +59,20 @@ export class ReleaserCli<
         dryRun,
         verbose,
         colors: [
-          blue,
-          blueBright,
-          cyan,
-          cyanBright,
-          green,
-          greenBright,
-          magenta,
-          magentaBright,
-          red,
-          redBright,
-        ].sort(() => Math.random() - .5),
+          'blue',
+          'blueBright',
+          'cyan',
+          'cyanBright',
+          'green',
+          'greenBright',
+          'magenta',
+          'magentaBright',
+          'red',
+          'redBright',
+        ].sort(() => Math.random() - .5).map(k => styleText[k as StyleFormat]),
         printer: ({ dryRun, stage, message, color }) => {
           const msg = isString(message) ? message : JSON.stringify(message, null, 2)
-          log.message(dim`${ dryRun ? yellow`[dry-run]` : '' }${ color(`[${ stage }]`) }: ${ msg }`)
+          log.message(styleText.dim`${ dryRun ? styleText.yellow`[dry-run]` : '' }${ color(`[${ stage }]`) }: ${ msg }`)
         },
       }),
       ...options,
@@ -210,7 +196,7 @@ export class ReleaserCli<
     return this.enqueue(async () => {
       const { name, version } = pkgJson
       
-      console.log(`${ blue`i` } ${ name } v${ version }\n`)
+      console.log(`${ styleText.blue`i` } ${ name } v${ version }\n`)
       
       intro('🚀 Starting release')
     })
