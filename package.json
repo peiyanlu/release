@@ -48,7 +48,7 @@
     "yaml": "^2.9.1"
   },
   "devDependencies": {
-    "@peiyanlu/test-tools": "^0.0.7",
+    "@peiyanlu/test-tools": "^1.0.0",
     "@types/node": "^24.19.2",
     "@types/semver": "^7.8.0",
     "@vitest/coverage-v8": "^5.1.0",
