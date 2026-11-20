@@ -73,8 +73,8 @@ importers:
         version: 2.9.1
     devDependencies:
       '@peiyanlu/test-tools':
-        specifier: ^0.0.7
-        version: 0.0.7
+        specifier: ^1.0.0
+        version: 1.0.1
       '@types/node':
         specifier: ^24.19.2
         version: 24.19.2
@@ -418,12 +418,16 @@ packages:
     resolution: {integrity: sha512-0Qw60jl1HPbHaqiiIKIMVBufCzeRviMGyrI1pJ7u1kfWrvHcP+2PH1pQ9SSXNIie5/2dTwsyp0cQbwDEyZGjPA==}
     engines: {node: '>=22'}
 
-  '@peiyanlu/test-tools@0.0.7':
-    resolution: {integrity: sha512-hTDBWgh2In2+JyOoBYmIfbBMrosauzQyCmMZ0DdCOlr77kJBQkL7McRFwSC2bI6hUoogwNHElIfC3sakolXdSA==}
+  '@peiyanlu/test-tools@1.0.1':
+    resolution: {integrity: sha512-xvSOEIyO1VompZE1d70kF9pp+QWdjHLd5zm7TNbjvuOclyf9u3PhrPkbh7zyPzcOOLeJqOaE1qzTna0q2+d0+g==}
     engines: {node: '>=22'}
 
   '@peiyanlu/ts-utils@1.0.0':
     resolution: {integrity: sha512-gRJyyG3868xGCG+qHG/oMGiQikPQkM5Guf71eBgEODfgDMohtmKWJcPOgm+z5cq1LvgMK1Btkm47NhwTPLW1BA==}
+    engines: {node: '>=22'}
+
+  '@peiyanlu/ts-utils@1.1.0':
+    resolution: {integrity: sha512-cHX7omExoUWVLtfDSdstDxfa09SSIh9y30jiSaPuXPH9K29g9FeE0m6IX7otPCNTcdrUMSLYiNXCTDz7Ch4TyA==}
     engines: {node: '>=22'}
 
   '@publint/pack@0.1.7':
@@ -1555,11 +1559,13 @@ snapshots:
       minimatch: 10.2.6
       tinyglobby: 0.2.17
 
-  '@peiyanlu/test-tools@0.0.7':
+  '@peiyanlu/test-tools@1.0.1':
     dependencies:
-      '@peiyanlu/ts-utils': 1.0.0
+      '@peiyanlu/ts-utils': 1.1.0
 
   '@peiyanlu/ts-utils@1.0.0': {}
+
+  '@peiyanlu/ts-utils@1.1.0': {}
 
   '@publint/pack@0.1.7':
     dependencies:
