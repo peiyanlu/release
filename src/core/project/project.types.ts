@@ -69,11 +69,13 @@ export interface ProjectNextVersionOptions extends ProjectTagPrefixOptions {
   version?: string
   /**
    * 要升级到的发布类型。
-   * 未提供时，根据提交记录确定版本。
+   * 如果未提供，将根据提交记录确定版本。
+   * `prerelease` 会保留根据提交记录确定的类型（没有提交时为 `patch`），并将版本设为预发布版本。
    */
   as?: ReleaseType
   /**
    * 要使用的预发布标识符。
+   * 如果提供，强制将版本设为预发布版本。
    */
   prerelease?: string
   /**
@@ -87,12 +89,11 @@ export interface ProjectNextVersionOptions extends ProjectTagPrefixOptions {
   firstRelease?: boolean
 }
 
-type ProjectBumpChangelogOptions = Pick<ChangelogOptions, 'releaseCount' | 'preamble' | 'transformTypes'>
+type ProjectBumpChangelogOptions = Pick<ChangelogOptions, 'releaseCount' | 'preamble' | 'transformTypes' | 'breakingSync'>
 
 export interface ProjectBumpOptions extends ProjectNextVersionOptions, ProjectBumpChangelogOptions {
   /** 跳过变更日志生成 */
   skipChangelog?: boolean
-  
   /**
    * 是否仅试运行。
    * 为 `true` 时，不会将版本写入清单文件，只在内存中更新。

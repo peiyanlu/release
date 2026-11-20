@@ -1,6 +1,6 @@
 import { gitConfigGet, gitRevParse } from '@peiyanlu/git-utils'
 import { readTextFileSync } from '@peiyanlu/node-utils'
-import { equals, isEmpty, isFunction, isString, isUndefined, throwError } from '@peiyanlu/ts-utils'
+import { equals, isEmpty, isFunction, isString, isUndefined, notEquals, throwError } from '@peiyanlu/ts-utils'
 import { join } from 'node:path'
 import { gte, inc, major, type ReleaseType, valid } from 'semver'
 import { Changelog, extractLastRelease, type VersionBumpType } from '../changelog/index.ts'
@@ -236,7 +236,7 @@ export abstract class Project {
   
   changelog(options: ProjectBumpOptions & { scope?: string[] } = {}): Changelog {
     const { manifest: { projectDir }, options: { changelogFile } } = this
-    const { tagPrefix, releaseCount, preamble, transformTypes, scope } = options
+    const { tagPrefix, releaseCount, preamble, transformTypes, scope, breakingSync } = options
     
     return new Changelog({
       pkgDir: projectDir,
@@ -246,6 +246,7 @@ export abstract class Project {
       preamble,
       transformTypes,
       scope,
+      breakingSync,
     })
   }
   
@@ -310,10 +311,15 @@ export abstract class Project {
       forcePrerelease ? (prerelease ?? '') : prerelease,
       snapshot,
     )
+    const release = getReleaseType(releaseType, version, identifier)
+    
+    if (notEquals(releaseType, release)) {
+      logger?.verbose(`Final release type for "${ name }" is "${ release }" because of identifier "${ identifier }".`)
+    }
     
     return inc(
       version,
-      getReleaseType(releaseType, version, identifier),
+      release,
       false,
       identifier,
       getPrereleaseIdentifierBase(snapshot),
@@ -357,7 +363,7 @@ export abstract class Project {
     this.versionUpdates.push(versionUpdate)
     this.changedFiles.push(...versionUpdate.files)
     
-    if (version === nextVersion) {
+    if (equals(version, nextVersion)) {
       logger?.verbose(`${ name }: ${ nextVersion }`)
     } else {
       logger?.verbose(`${ name }: ${ version } -> ${ nextVersion }`)
@@ -368,7 +374,10 @@ export abstract class Project {
       const lastReleaseTag = await this.getLastReleaseTag({ tagPrefix })
       
       const log = this.changelog({ ...options, tagPrefix })
-      log.setOptions({ version: nextVersion, previousTag: lastReleaseTag })
+      log.setOptions({
+        version: nextVersion,
+        previousTag: lastReleaseTag,
+      })
       
       versionUpdate.notes = dryRun ? await log.read() : await log.write()
       

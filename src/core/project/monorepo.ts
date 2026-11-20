@@ -1,7 +1,8 @@
-import { isEmpty, type Simplify, throwError } from '@peiyanlu/ts-utils'
+import { equals, isEmpty, notEquals, type Simplify, throwError } from '@peiyanlu/ts-utils'
 import { eq, gt, lt } from 'semver'
 import type { ReleaseData } from '../hosting/index.ts'
 import type { ProjectManifest } from '../manifest/manifest.ts'
+import { isBreakingBump } from '../utils.ts'
 import type {
   GetProjectsOptions,
   MonorepoMode,
@@ -18,6 +19,13 @@ import type {
   ProjectRevertOptions,
   ProjectTagsOptions,
 } from './project.types.ts'
+
+
+interface FixedBumpProject {
+  project: Project
+  options: MonorepoProjectBumpOptions
+  version?: string
+}
 
 
 export abstract class MonorepoProject extends Project {
@@ -183,9 +191,7 @@ export abstract class MonorepoProject extends Project {
   }
   
   async getMaxVersion(): Promise<{ version: string; packages: string[] }> {
-    const { manifest } = this
-    
-    let max = await manifest.getVersion()
+    let max = await this.manifest.getVersion()
     const packages = []
     
     for await (const project of this.getProjects()) {
@@ -225,6 +231,36 @@ export abstract class MonorepoProject extends Project {
       tagPrefix,
       baseVersion,
     }
+  }
+  
+  /** 获取在固定模式下未更改的项目是否以及为什么应被升级 */
+  private async getUnchangedProjectsBump(
+    projects: FixedBumpProject[],
+    fixedVersion: string,
+    options: MonorepoProjectBumpOptions,
+  ): Promise<boolean | 'breaking'> {
+    const { force = 'breaking', logger } = options
+    
+    if (notEquals(force, 'breaking')) {
+      return force
+    }
+    
+    for (const { project, version } of projects) {
+      if (!version) {
+        continue
+      }
+      
+      const name = await project.manifest.getName()
+      const currentVersion = await project.manifest.getVersion()
+      
+      if (isBreakingBump(currentVersion, fixedVersion)) {
+        logger?.verbose(`${ name }: ${ currentVersion } -> ${ fixedVersion } is a breaking bump, bumping all projects.`)
+        
+        return 'breaking'
+      }
+    }
+    
+    return false
   }
   
   private getIndependentCommitMessage(): string {
@@ -323,23 +359,21 @@ export abstract class MonorepoProject extends Project {
   }
   
   private async fixedBump(options: Simplify<MonorepoProjectBumpOptions> = {}): Promise<boolean> {
-    const { force } = options
-    const { manifest } = this
-    
     const { version: maxVersion } = await this.getMaxVersion()
-    const version = await manifest.getVersion()
+    const currentVersion = await this.manifest.getVersion()
     
-    const rootName = await manifest.getName()
+    const rootName = await this.manifest.getName()
     const scope = await this.getScope(rootName)
     const tagPrefix = await this.getTagPrefix(scope)
     
-    const rootVersion = lt(version, maxVersion) ? maxVersion : version
-    const firstRelease = eq(version, maxVersion) && await this.isFirstRelease()
+    const rootVersion = lt(currentVersion, maxVersion) ? maxVersion : currentVersion
+    const firstRelease = eq(currentVersion, maxVersion) && await this.isFirstRelease()
+    
+    const projects: FixedBumpProject[] = []
     
     let hasBump = false
     let fixedVersion: string | undefined
     
-    const updatedProjects: { project: Project; options: MonorepoProjectBumpOptions; }[] = []
     for await (const project of this.getProjects()) {
       const projectBumpOptions = await this.getBumpOptions(
         project,
@@ -347,31 +381,41 @@ export abstract class MonorepoProject extends Project {
         rootVersion,
         firstRelease,
       )
-      
       const nextVersion = await project.getNextVersion(projectBumpOptions)
       
-      if (nextVersion || force) {
-        updatedProjects.push({
-          project,
-          options: projectBumpOptions,
-        })
-        
-        if (nextVersion && (!fixedVersion || gt(nextVersion, fixedVersion))) {
-          fixedVersion = nextVersion
-        }
+      projects.push({
+        project,
+        options: projectBumpOptions,
+        version: nextVersion,
+      })
+      
+      if (nextVersion && (!fixedVersion || gt(nextVersion, fixedVersion))) {
+        fixedVersion = nextVersion
       }
     }
     
     if (fixedVersion) {
+      const unchangedBump = await this.getUnchangedProjectsBump(projects, fixedVersion, options)
+      
       hasBump = await super.bump({
         ...options,
         forcePrivate: true,
         version: fixedVersion,
+        snapshot: undefined,
         tagPrefix,
       })
       
-      for (const { project, options } of updatedProjects) {
-        hasBump = await project.bump({ ...options, version: fixedVersion }) || hasBump
+      for (const { project, options, version } of projects) {
+        if (!version && !unchangedBump) {
+          continue
+        }
+        
+        hasBump = await project.bump({
+          ...options,
+          version: fixedVersion,
+          snapshot: undefined,
+          breakingSync: !version && equals(unchangedBump, 'breaking'),
+        }) || hasBump
         
         this.changedFiles.push(...project.changedFiles)
         this.versionUpdates.push(...project.versionUpdates)

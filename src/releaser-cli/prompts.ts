@@ -216,7 +216,7 @@ const getCustomVersionInfo = async <P extends Project = Project>(
   let customVersion = current
   const nextVersion = await getNextVersion(project, {
     ...options,
-    as: inferred,
+    as: inferred ?? (isNotEmpty(options.prerelease) ? 'patch' : undefined),
     firstRelease,
   })
   
@@ -294,13 +294,17 @@ const runVersionPrompts = async <P extends Project = Project>(
   
   const initialValue = useCustom
     ? 'custom'
-    : firstRelease
-      ? 'first'
-      : inferred && find(inferred)
+    : toPrerelease
+      ? inferred && find(inferred)
         ? inferred
-        : preRelease && find('prerelease')
-          ? 'prerelease'
-          : 'ignore'
+        : 'patch'
+      : firstRelease
+        ? 'first'
+        : inferred && find(inferred)
+          ? inferred
+          : preRelease && find('prerelease')
+            ? 'prerelease'
+            : 'ignore'
   
   const type = ci ? initialValue : await singlePrompt(
     () => select({

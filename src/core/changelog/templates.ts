@@ -1,4 +1,10 @@
-import type { AnyObject, CommitNote, FinalTemplateContext, TransformedCommit } from '@conventional-changelog/template'
+import type {
+  AnyObject,
+  CommitNote,
+  FinalTemplateContext,
+  TemplateContext,
+  TransformedCommit,
+} from '@conventional-changelog/template'
 import {
   bold,
   compareUrl,
@@ -12,6 +18,12 @@ import {
   words,
 } from '@conventional-changelog/template'
 import { isEmpty, space } from '@peiyanlu/ts-utils'
+
+
+export interface ExtraTemplateContext extends TemplateContext {
+  /** 该项目在没有更改的情况下被升级，以与其他项目中的重大更改保持同步 */
+  breakingSync?: boolean
+}
 
 
 const isLikelyHash = (value: string) => /^[0-9a-f]{7,40}$/i.test(value)
@@ -35,11 +47,15 @@ export function headerPartial(context: FinalTemplateContext): string {
   return heading(2, isPatch ? small(fullTitle) : fullTitle)
 }
 
-export function preamblePartial(contest: FinalTemplateContext): string {
-  const { preamble, commitGroups, noteGroups } = contest
+export function preamblePartial(contest: FinalTemplateContext & ExtraTemplateContext): string {
+  const { preamble, commitGroups, noteGroups, breakingSync } = contest
   return segments(
     preamble,
-    isEmpty(preamble) && isEmpty(commitGroups) && isEmpty(noteGroups) && 'Version bump without any changes.',
+    isEmpty(preamble) && isEmpty(commitGroups) && isEmpty(noteGroups) && (
+      breakingSync
+        ? 'Version bump to keep in sync with breaking changes in other packages.'
+        : 'Version bump without any changes.'
+    ),
   )
 }
 
@@ -70,7 +86,9 @@ export function template(context: FinalTemplateContext): string {
             
             const listReg = /^(?:[ \t]*)?([-*+]|\d{1,9}[.)])([ \t]{1,4})\S+/
             const text = note.commit.subject.trim() !== note.text.trim()
-              ? list([ note.text ], t => t)
+              ? note.text.match(listReg)
+                ? note.text
+                : list([ note.text ], t => t)
               : ''
             const body: string = note.commit.body
               ? note.commit.body.match(listReg)

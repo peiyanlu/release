@@ -48,9 +48,14 @@ export type MonorepoProjectBumpByProjectOptions = Pick<ProjectBumpOptions, NextV
 
 export interface MonorepoProjectBumpOptions extends Omit<ProjectBumpOptions, 'tagPrefix'> {
   /**
-   * 在固定版本模式下，强制升级单体仓库中没有变更的项目。
+   * 在固定版本模式下，强制升级单体仓库中没有变更的项目：
+   * 
+   * `'breaking'` - 当任何项目的变更版本是 `'breaking'`，确保各项目保持彼此有效的版本范围；
+   * `true` - 始终升级；
+   * `false` - 从不升级。
+   * @default 'breaking'
    */
-  force?: boolean
+  force?: boolean | 'breaking'
   /**
    * 要纳入项目变更日志的额外 scope。
    * 例如，要纳入 `fix(deps): 修复依赖项漏洞` 这类提交，可将 `deps` 添加到 `extraScopes`。

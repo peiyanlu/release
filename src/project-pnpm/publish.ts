@@ -1,7 +1,7 @@
 import { getPublishedVersion } from '@peiyanlu/cli-utils'
 import { execAsync } from '@peiyanlu/command-utils'
 import { copyDir, createMatcher, createTempDir } from '@peiyanlu/node-utils'
-import { equals, isEmpty, isFunction, unless, when } from '@peiyanlu/ts-utils'
+import { equals, isEmpty, isFunction, joinWithSpace, unless, when } from '@peiyanlu/ts-utils'
 import { resolve } from 'node:path'
 import { Project, type ProjectPublishOptions } from '../core/index.ts'
 import { cleanPackageJSON, cleanReadme, IGNORE_FILES } from './cleanup.ts'
@@ -86,7 +86,7 @@ export const publish = async (project: Project, options: PublishOptions = {}): P
       }
     }
     
-    logger?.verbose(`Publishing "${ await manifest.getName() }" with command: pnpm ${ args.join(' ') }`)
+    logger?.verbose(`Publishing "${ await manifest.getName() }" with command: pnpm ${ joinWithSpace(args) }`)
     
     await execAsync(
       'pnpm',
@@ -100,7 +100,7 @@ export const publish = async (project: Project, options: PublishOptions = {}): P
     
     await temp.remove()
   } else {
-    logger?.verbose(`Publishing "${ await manifest.getName() }" with command: pnpm ${ args.join(' ') }`)
+    logger?.verbose(`Publishing "${ await manifest.getName() }" with command: pnpm ${ joinWithSpace(args) }`)
     
     await execAsync(
       'pnpm',
