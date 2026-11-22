@@ -50,10 +50,11 @@ pnpm add -D @peiyanlu/release
 ## CLI
 
 ```sh
-release [release-type] [options]
+release [release-type] [options] [--config.<path> <value>]
 ```
 
-不指定 `release-type` 时，会根据提交记录推断并预选升级类型；CI 模式下自动采用该类型。可指定 `major`、`minor`、`patch` 或 `prerelease`。
+- 不指定 `release-type` 时，会推断并预选升级类型；CI 模式下自动采用推断的升级类型。
+- 指定 `release-type` 时，会覆盖 `config.bump.as`，可指定 SemVer 支持的 `major`、`premajor`、`minor`、`preminor`、`patch`、`prepatch`、`release` 或 `prerelease`，`release` 用于将预发布版本转为正式版本。
 
 ```sh
 pnpm exec release --dry-run
@@ -66,7 +67,7 @@ pnpm exec release --ci
 
 | 选项                        | 说明                                               |
 |-----------------------------|----------------------------------------------------|
-| `--pre-id <preId>`          | 预发布标识                                         |
+| `--pre-id <preId>`          | 设置预发布标识并生成预发布版本，如 `patch` 会升级为 `prepatch`；覆盖 `config.bump.prerelease`。<br/>例如 `alpha`、`beta`、`rc`、`next`、`canary`、`nightly` 或 `dev` |
 | `-n, --dry-run`             | 预览发布步骤，不写入变更                           |
 | `--ci`                      | CI 模式，关闭交互式流程                            |
 | `--skip-bump`               | 跳过项目版本更新                                   |
@@ -76,6 +77,16 @@ pnpm exec release --ci
 | `--skip-release`            | 跳过仓库托管服务上创建发布                         |
 | `-v, --version`             | 显示版本                                           |
 | `-h, --help`                | 显示完整帮助                                       |
+
+可用 `--config.<path> <value>` 临时覆盖配置文件中的任意字段。路径用点号分隔；值会先按 JSON 解析，因此数字、布尔值、数组和对象会保留对应类型，不能解析为 JSON 的值按字符串处理。
+也可以写成 `--config.<path>=<value>`。
+
+```sh
+pnpm exec release --config.bump.releaseCount 3 --dry-run
+pnpm exec release --config.publish.tag latest --config.bump.skipChangelog true --dry-run
+```
+
+需要传入看起来像数字的字符串时，将它写成 JSON 字符串，例如 `--config.publish.tag '"123"'`。
 
 ### 创建提交
 
@@ -117,7 +128,7 @@ export default defineConfig({
 })
 ```
 
-`defineConfig` 接受 `project`、可选的 `hosting`，以及 `checkout`、`bump`、`commit`、`tag`、`push`、`publish`、`release`、`pullRequest` 等步骤选项。项目和步骤选项的 TypeScript 类型可用于编辑器提示。
+`defineConfig` 接受 `project`、可选的 `hosting`，以及 `checkout`、`bump`、`commit`、`tag`、`push`、`publish`、`release`、`pullRequest` 等步骤选项，以及 `skipSteps` 跳过指定步骤（例如 `{ publish: true }`）。项目和步骤选项的 TypeScript 类型可用于编辑器提示。
 
 ### pnpm workspace monorepo
 
@@ -336,7 +347,7 @@ Trusted Publisher 注册绑定到具体 workflow 文件。要让快照发布也�
 | `workflow`                   | 工作流，默认 `full`                                 |
 | `checkout-branch`            | 发布分支，默认 `release-branch`                     |
 | `bump-version`               | 指定版本号                                          |
-| `bump-as`                    | 版本类型：`major`、`minor`、`patch` 或 `prerelease` |
+| `bump-as`                    | 版本类型：`major`、`premajor`、`minor`、`preminor`、`patch`、`prepatch`、`release` 或 `prerelease`；`release` 用于将预发布版本转为正式版本 |
 | `bump-prerelease`            | 预发布标识，如 `beta`                               |
 | `bump-snapshot`              | 快照版本标识                                        |
 | `bump-first-release`         | 是否按首次发布处理                                  |

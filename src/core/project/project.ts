@@ -381,7 +381,7 @@ export abstract class Project {
       
       versionUpdate.notes = dryRun ? await log.read() : await log.write()
       
-      logger?.verbose(`Release notes:\n\n${ versionUpdate.notes || '...' }`)
+      logger?.verbose(`Release notes:\n\n${ versionUpdate.notes.trim() || '...' }`)
       
       this.changedFiles.push(log.infile)
     }

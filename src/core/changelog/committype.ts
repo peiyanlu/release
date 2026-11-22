@@ -62,40 +62,4 @@ export const defaultTypes: CommitType[] = [
     section: '🤖 CI',
     effect: 'hidden',
   },
-  // 自定义提交类型
-  {
-    type: 'security',
-    section: '🛡️ 安全修复',
-    effect: 'changelog',
-  },
-  {
-    type: 'hotfix',
-    section: '🚑 热修复',
-    effect: 'changelog',
-  },
-  {
-    type: 'i18n',
-    section: '🌐 国际化',
-    effect: 'changelog',
-  },
-  {
-    type: 'ux',
-    section: '🎨 用户体验',
-    effect: 'changelog',
-  },
-  {
-    type: 'deps',
-    section: '📦 依赖更新',
-    effect: 'changelog',
-  },
-  {
-    type: 'tool',
-    section: '🛠️ 工具链',
-    effect: 'hidden',
-  },
-  {
-    type: 'config',
-    section: '⚙️ 配置',
-    effect: 'hidden',
-  },
 ]

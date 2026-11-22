@@ -1,7 +1,13 @@
 import { existsSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { pathToFileURL } from 'node:url'
-import type { GitRepositoryHosting, Project, ReleaserOptions, ReleaserStepsOptions } from '../core/index.ts'
+import type {
+  GitRepositoryHosting,
+  Project,
+  ReleaserOptions,
+  ReleaserStepsOptions,
+  ReleaserStepsSkipOptions,
+} from '../core/index.ts'
 
 
 export interface UserConfig<
@@ -11,6 +17,7 @@ export interface UserConfig<
   project?: P
   hosting?: G
   releaser?: Omit<ReleaserOptions, 'project' | 'hosting'>
+  stepsSkip?: ReleaserStepsSkipOptions
 }
 
 export const defineConfig = <

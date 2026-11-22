@@ -1,7 +1,7 @@
 import { getBooleanInput, getInput } from '@actions/core'
 import { type Dict, isBoolean } from '@peiyanlu/ts-utils'
 import type { ReleaseType } from 'semver'
-import type { ReleaserSkipOptions } from '../core/index.ts'
+import type { ReleaserStepsSkipOptions } from '../core/index.ts'
 
 
 const omitEmpty = <T extends object>(object: T) => {
@@ -69,7 +69,7 @@ export const getInputOptions = <T extends Dict>(): InputOptions<T> => ({
   }),
 })
 
-export const getInputSkippedSteps = (): ReleaserSkipOptions => ({
+export const getInputStepsSkipOptions = (): ReleaserStepsSkipOptions => ({
   bump: getOptionalBooleanInput('bump-skip'),
   publish: getOptionalBooleanInput('publish-skip'),
 })

@@ -3,7 +3,7 @@ import { context, getOctokit } from '@actions/github'
 import { assert } from '@peiyanlu/ts-utils'
 import {
   getInputOptions,
-  getInputSkippedSteps,
+  getInputStepsSkipOptions,
   ifCommandComment,
   ifReleaseCommit,
   loadConfig,
@@ -26,7 +26,7 @@ if (workflow === 'check' && ifCommandComment() === false) {
 const GITHUB_TOKEN = getInput('github-token', { required: true })
 const NODE_AUTH_TOKEN = getInput('npm-token')
 const inputOptions = getInputOptions()
-const skippedSteps = getInputSkippedSteps()
+const stepsSkipOptions = getInputStepsSkipOptions()
 
 if (NODE_AUTH_TOKEN) {
   process.env.NODE_AUTH_TOKEN = NODE_AUTH_TOKEN
@@ -34,7 +34,10 @@ if (NODE_AUTH_TOKEN) {
 
 
 try {
-  const { config: { project, hosting, releaser, ...options }, file } = await loadConfig<UserConfig>(process.cwd())
+  const {
+    config: { project, hosting, releaser, stepsSkip, ...options },
+    file,
+  } = await loadConfig<UserConfig>(process.cwd())
   
   assert(project, 'Project is required.')
   
@@ -65,7 +68,10 @@ try {
         ...inputOptions.publish,
       },
     })
-    .setSkippedSteps(skippedSteps)
+    .setSkipOptions({
+      ...stepsSkip,
+      ...stepsSkipOptions,
+    })
   
   switch (workflow) {
     case 'check':

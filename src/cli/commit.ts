@@ -1,4 +1,4 @@
-import { confirm, intro, log, multiline, note, outro, select, text } from '@clack/prompts'
+import { autocomplete, confirm, intro, log, multiline, note, outro, select, text } from '@clack/prompts'
 import type { CliOptions } from '@peiyanlu/cli-utils'
 import { abortTask, question, singlePrompt } from '@peiyanlu/cli-utils/prompts'
 import { gitAddTracked, gitCommitAmend, gitCommitMessage, gitDiff, gitLog } from '@peiyanlu/git-utils'
@@ -101,12 +101,12 @@ const promptScope = async (scopes: ProjectScope[], init: string | undefined, dry
   options.push(
     {
       label: 'Custom',
-      hint: '',
+      hint: 'Specify an exact scope',
       value: customScope,
     },
     {
       label: 'No-Scope',
-      hint: '',
+      hint: 'Do not use scope',
       value: '',
     },
   )
@@ -164,7 +164,7 @@ export const runCommitCli = async (options: CliOptions<boolean>): Promise<void> 
   const [ _, oType, oScope, oSubject ] = msg.match(/^(\w+)(?:\(([^)]+)\))?:\s+(\S+)/) ?? []
   
   const type = await singlePrompt(
-    () => select({
+    () => autocomplete({
       message: question('Commit type?', dryRun),
       options: defaultTypes.map(({ type, section }) => ({
         label: type,
@@ -172,6 +172,8 @@ export const runCommitCli = async (options: CliOptions<boolean>): Promise<void> 
         hint: section,
       })),
       initialValue: amend ? oType : undefined,
+      placeholder: 'Type to search...',
+      completeOnTab: true,
     }),
     abortMsg,
   )

@@ -10,6 +10,7 @@ import {
   type PickOverridableOptions,
   type Project,
   type ProjectBumpOptions,
+  type ReleaserStepsSkipOptions,
   type VersionBumpType,
 } from '../core/index.ts'
 import { type CliStepsSkip, type ReleaserCliRunOptions } from './releaser.ts'
@@ -33,8 +34,13 @@ interface CreateVersionOptionsMetadata {
   customVersion?: string
 }
 
-export interface ReleaserCliPromptOptions<P extends Project = Project> {
+export interface RunBumpPrompts<P extends Project = Project> {
   bump: PickOverridableOptions<P['bump']>
+  run: ReleaserCliRunOptions
+}
+
+export interface RunStepsSkipPrompts {
+  stepsSkip: ReleaserStepsSkipOptions
   run: ReleaserCliRunOptions
 }
 
@@ -108,7 +114,7 @@ const createVersionOptions = async <P extends Project = Project>(
     {
       label: 'As-Is',
       value: 'ignore',
-      hint: `Don't update the version ${ current }`,
+      hint: `Do not update the version ${ current }`,
       bump: { version: current, firstRelease: false },
     },
   ]
@@ -141,16 +147,17 @@ const createVersionOptions = async <P extends Project = Project>(
   const versionOptions: VersionPromptOption[] = await Promise.all(
     nonNullable([ ...new Set([ inferred, ...bumpTypes ]) ])
       .map(async as => {
+        const finalAs: ReleaseType = toPrerelease ? `pre${ as }` : as
         return {
           label: toPrerelease
             ? equals(as, inferred) ? `Pre-${ upperFirst(as) } ✨` : `Pre-${ upperFirst(as) }`
             : equals(as, inferred) ? `${ upperFirst(as) } ✨` : upperFirst(as),
-          value: as,
+          value: finalAs,
           hint: await getNextVersion<P>(
             project,
-            { ...options, tagPrefix, firstRelease, as },
+            { ...options, tagPrefix, firstRelease, as: finalAs },
           ) ?? noVersionHint,
-          bump: { ...bump, as },
+          bump: { ...bump, as: finalAs },
         }
       }),
   )
@@ -176,14 +183,15 @@ const createVersionOptions = async <P extends Project = Project>(
   // 没有配置生成预发布并且本身不是预发布
   if (!toPrerelease && !preRelease) {
     for (const as of bumpTypes) {
+      const preAs = `pre${ as }` as ReleaseType
       candidates.push({
         label: `Pre-${ upperFirst(as) }`,
-        value: `pre${ as }` as ReleaseType,
+        value: preAs,
         hint: await getNextVersion<P>(
           project,
-          { ...options, tagPrefix, firstRelease, as, prerelease: '' },
+          { ...options, tagPrefix, firstRelease, as: preAs, prerelease: '' },
         ) ?? noVersionHint,
-        bump: { ...bump, as, prerelease: '' },
+        bump: { ...bump, as: preAs, prerelease: '' },
       })
     }
   }
@@ -211,12 +219,13 @@ const getCustomVersionInfo = async <P extends Project = Project>(
   current: string,
   inferred?: VersionBumpType,
   firstRelease?: boolean,
+  toPrerelease?: boolean,
 ) => {
   let useCustom = false
   let customVersion = current
   const nextVersion = await getNextVersion(project, {
     ...options,
-    as: inferred ?? (isNotEmpty(options.prerelease) ? 'patch' : undefined),
+    as: inferred ?? (toPrerelease ? 'patch' : undefined),
     firstRelease,
   })
   
@@ -266,7 +275,7 @@ const runVersionPrompts = async <P extends Project = Project>(
   
   const firstRelease = await project.isFirstRelease({ tagPrefix })
   const preRelease = Boolean(await project.manifest.getPrereleaseVersion())
-  const toPrerelease = equals(bumpOptions.as, 'prerelease') || isNotEmpty(bumpOptions.prerelease)
+  const toPrerelease = isNotEmpty(bumpOptions.prerelease)
   
   const { useCustom, customVersion } = await getCustomVersionInfo(
     project,
@@ -274,6 +283,7 @@ const runVersionPrompts = async <P extends Project = Project>(
     current,
     inferred,
     firstRelease,
+    toPrerelease,
   )
   
   const versionOptions = await createVersionOptions<P>(
@@ -343,7 +353,7 @@ const runVersionPrompts = async <P extends Project = Project>(
 
 export const runBumpPrompts = async <P extends Project = Project>(
   project: P,
-  options: ReleaserCliPromptOptions<P>,
+  options: RunBumpPrompts<P>,
 ): Promise<PickOverridableOptions<P['bump']>> => {
   const { bump: bumpOpts, run } = options
   const { dryRun = false, ci = false } = run
@@ -390,44 +400,45 @@ export const runBumpPrompts = async <P extends Project = Project>(
   return result
 }
 
-export const runSkippedStepsPrompts = async (options: ReleaserCliRunOptions): Promise<CliStepsSkip> => {
-  const { dryRun = false, ci = false } = options
+export const runStepsSkipPrompts = async (options: RunStepsSkipPrompts): Promise<CliStepsSkip> => {
+  const { stepsSkip, run } = options
+  const { dryRun = false, ci = false } = run
   
   const shouldPrompt = (v: unknown) => !ci && (isUndefined(v) || dryRun)
   
   const res = await group(
     {
-      commit: () => options.skipGit
+      commit: () => stepsSkip.commit
         ? Promise.resolve(false)
-        : shouldPrompt(options.skipGit)
+        : shouldPrompt(stepsSkip.commit)
           ? confirm({ message: question('Commit release changes?', dryRun) }) as Promise<boolean>
           : Promise.resolve(true),
       tag: ({ results: { commit } }) => !commit
         ? Promise.resolve(false)
-        : shouldPrompt(options.skipGit)
+        : shouldPrompt(stepsSkip.tag)
           ? confirm({ message: question('Create release tags?', dryRun) }) as Promise<boolean>
           : Promise.resolve(true),
       push: ({ results: { commit } }) => !commit
         ? Promise.resolve(false)
-        : shouldPrompt(options.skipGit)
+        : shouldPrompt(stepsSkip.push)
           ? confirm({ message: question('Push release changes?', dryRun) }) as Promise<boolean>
           : Promise.resolve(true),
       
-      publish: () => options.skipPublish
+      publish: () => stepsSkip.publish
         ? Promise.resolve(false)
-        : shouldPrompt(options.skipPublish)
+        : shouldPrompt(stepsSkip.publish)
           ? confirm({ message: question('Publish project?', dryRun) }) as Promise<boolean>
           : Promise.resolve(true),
       
-      release: () => options.skipRelease
+      release: () => stepsSkip.release
         ? Promise.resolve(false)
-        : shouldPrompt(options.skipRelease)
+        : shouldPrompt(stepsSkip.release)
           ? confirm({ message: question('Create repository release?', dryRun) }) as Promise<boolean>
           : Promise.resolve(true),
     },
     {
       onCancel: () => {
-        abortTask()
+        abortTask(abortMsg)
       },
     },
   )
@@ -449,6 +460,6 @@ export const runConfirmPrompts = async (ci = false, dryRun = false): Promise<voi
       abortMsg,
     )
   if (!ok) {
-    abortTask()
+    abortTask(abortMsg)
   }
 }

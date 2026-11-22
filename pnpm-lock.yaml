@@ -70,8 +70,8 @@ importers:
         version: 2.9.1
     devDependencies:
       '@peiyanlu/test-tools':
-        specifier: ^0.0.7
-        version: 0.0.7
+        specifier: ^1.0.1
+        version: 1.0.1
       '@types/node':
         specifier: ^26.6.6
         version: 26.6.6
@@ -427,8 +427,8 @@ packages:
     resolution: {integrity: sha512-1lixOIxzio4ujjd2XQg2cehboeXENMjhXtNtdYyK32KiFtCL2Lhbb9laf+oplbO8qAv2ffW5n9kl0ZLK75/aHQ==}
     engines: {node: '>=22'}
 
-  '@peiyanlu/test-tools@0.0.7':
-    resolution: {integrity: sha512-hTDBWgh2In2+JyOoBYmIfbBMrosauzQyCmMZ0DdCOlr77kJBQkL7McRFwSC2bI6hUoogwNHElIfC3sakolXdSA==}
+  '@peiyanlu/test-tools@1.0.1':
+    resolution: {integrity: sha512-xvSOEIyO1VompZE1d70kF9pp+QWdjHLd5zm7TNbjvuOclyf9u3PhrPkbh7zyPzcOOLeJqOaE1qzTna0q2+d0+g==}
     engines: {node: '>=22'}
 
   '@peiyanlu/ts-utils@1.1.0':
@@ -1573,7 +1573,7 @@ snapshots:
       minimatch: 11.0.9
       tinyglobby: 0.2.17
 
-  '@peiyanlu/test-tools@0.0.7':
+  '@peiyanlu/test-tools@1.0.1':
     dependencies:
       '@peiyanlu/ts-utils': 1.1.0
 

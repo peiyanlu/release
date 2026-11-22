@@ -11,6 +11,9 @@ import { mkdir } from 'node:fs/promises'
 import { join, relative, resolve } from 'node:path'
 
 
+type NonSymbol<T> = Exclude<T, symbol>
+
+
 const abortMsg = '✕ Initialization cancelled.'
 
 export const runInitCli = async (options: CliOptions<boolean>, command: Command): Promise<void> => {
@@ -26,9 +29,9 @@ export const runInitCli = async (options: CliOptions<boolean>, command: Command)
   const ask = async <T>(
     name: string,
     prompt: () => Promise<T>,
-    value: Exclude<T, symbol>,
+    value: NonSymbol<T>,
     provided = wasProvided(name),
-  ): Promise<Exclude<T, symbol>> => {
+  ): Promise<NonSymbol<T>> => {
     if (provided) return value
     
     return singlePrompt(prompt, abortMsg)

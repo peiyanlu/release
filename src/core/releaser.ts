@@ -25,9 +25,9 @@ import type {
   ReleaserOptions,
   ReleaserPushOptions,
   ReleaserSetUserOptions,
-  ReleaserSkipOptions,
   ReleaserStep,
   ReleaserStepsOptions,
+  ReleaserStepsSkipOptions,
   ReleaserTagOptions,
 } from './releaser.type.ts'
 
@@ -40,7 +40,7 @@ export class Releaser<
   readonly hosting?: G
   readonly logger: Logger
   readonly stepsOptions: ReleaserStepsOptions<P, G> = {}
-  protected readonly skippedSteps: ReleaserSkipOptions = {}
+  protected readonly stepsSkipOptions: ReleaserStepsSkipOptions = {}
   protected readonly state: {
     headBranch?: string
     baseBranch?: string
@@ -117,16 +117,16 @@ export class Releaser<
     })
   }
   
-  setSkippedSteps(options: ReleaserSkipOptions): this {
-    const logger = this.logger.createChild('set-skipped-steps')
+  setSkipOptions(options: ReleaserStepsSkipOptions): this {
+    const logger = this.logger.createChild('set-skip-options')
     
-    logger.verbose('Setting skipped for steps:')
+    logger.verbose('Setting skip options for steps:')
     logger.verbose(options)
     
-    Object.assign(this.skippedSteps, options)
+    Object.assign(this.stepsSkipOptions, options)
     
-    logger.verbose('Final skipped for steps:')
-    logger.verbose(this.skippedSteps)
+    logger.verbose('Final skip options for steps:')
+    logger.verbose(this.stepsSkipOptions)
     
     return this
   }
@@ -526,7 +526,7 @@ export class Releaser<
   }
   
   protected shouldSkip(step: ReleaserStep): boolean {
-    return this.skippedSteps[step] === true
+    return this.stepsSkipOptions[step] === true
   }
   
   private async getBaseBranch(): Promise<string> {

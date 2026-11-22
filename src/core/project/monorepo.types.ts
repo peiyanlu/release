@@ -49,7 +49,7 @@ export type MonorepoProjectBumpByProjectOptions = Pick<ProjectBumpOptions, NextV
 export interface MonorepoProjectBumpOptions extends Omit<ProjectBumpOptions, 'tagPrefix'> {
   /**
    * 在固定版本模式下，强制升级单体仓库中没有变更的项目：
-   * 
+   *
    * `'breaking'` - 当任何项目的变更版本是 `'breaking'`，确保各项目保持彼此有效的版本范围；
    * `true` - 始终升级；
    * `false` - 从不升级。

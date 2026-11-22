@@ -94,4 +94,4 @@ export interface ReleaserStepsOptions<
 }
 
 export type ReleaserStep = keyof ReleaserStepsOptions
-export type ReleaserSkipOptions = Partial<Record<ReleaserStep, boolean>>
+export type ReleaserStepsSkipOptions = Partial<Record<ReleaserStep, boolean>>

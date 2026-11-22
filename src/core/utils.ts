@@ -66,7 +66,7 @@ export const getReleaseType = (releaseType: ReleaseType, version: string, prerel
       }
     }
     
-    return `pre${ releaseType }` as ReleaseType
+    return releaseType.startsWith('pre') ? releaseType : `pre${ releaseType }` as ReleaseType
   }
   
   return releaseType
