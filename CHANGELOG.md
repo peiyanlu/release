@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [2.3.0](https://github.com/peiyanlu/release/compare/v2.2.1...v2.3.0) (2026-11-24)
+
+### ✨ 新功能
+
+* **cli:** 支持通过 `--config.<path> <value>` 覆盖配置项 ([8b0c875](https://github.com/peiyanlu/release/commit/8b0c875c568ed092a13e1368bff827ac0ad0e1d2))
+* **monorepo:** 固定模式下按破坏性变更决定是否升级无变更项目 ([3c2aa4c](https://github.com/peiyanlu/release/commit/3c2aa4c43b3d3120c7f99efe05470caf60a25554))
+
+### ♻️ 代码重构
+
+* 迁移提示工具至 cli-utils 并用 styleText 替代 ansis ([90e56a9](https://github.com/peiyanlu/release/commit/90e56a912cc23a3a4a8bfe42f245bbbff6d9e4d4))
+
 ## <small>[2.2.1](https://github.com/peiyanlu/release/compare/v2.2.0...v2.2.1) (2026-11-19)</small>
 
 ### 🐛 Bug 修复
